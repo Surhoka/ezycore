@@ -1,3 +1,30 @@
+<!-- 404 Error Page -->
+<style>
+    [x-icon] svg {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+
+    .text-glow {
+        text-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+    }
+
+    .gradient-text {
+        background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .dark .gradient-text {
+        background: linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+</style>
+
 <div class="relative z-1 flex min-h-[calc(100vh-120px)] flex-col items-center justify-center overflow-hidden p-6"
     x-data="{}">
     <!-- ===== Common Grid Shape Start ===== -->
@@ -36,7 +63,7 @@
 
     <!-- Branding Footer -->
     <div class="mt-16 flex flex-col items-center border-t border-gray-100 pt-8 dark:border-gray-800/50">
-        <a href="#dashboard" class="group flex items-center gap-3 transition-opacity hover:opacity-80">
+        <a href="/" class="group flex items-center gap-3 transition-opacity hover:opacity-80">
             <img :src="blogFavicon" alt="Logo" class="h-8 w-8 rounded-lg shadow-sm" />
             <div class="flex flex-col">
                 <span class="text-xl font-bold tracking-tight text-gray-900 dark:text-white"
