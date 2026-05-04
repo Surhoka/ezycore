@@ -1,0 +1,2 @@
+# ezycore
+Blogger template
