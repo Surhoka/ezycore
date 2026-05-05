@@ -1,0 +1,120 @@
+<div x-data="initPostPage()" x-init="init()" class="max-w-7xl mx-auto px-4 lg:px-6 py-8 animate-fade-in shadow-theme-xs bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700">
+
+    <!-- LOADING STATE -->
+    <div x-show="isLoading" class="flex flex-col items-center justify-center py-32 space-y-4">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div>
+        <p class="text-sm font-medium text-gray-500 animate-pulse">Menyiapkan artikel...</p>
+    </div>
+
+    <!-- ERROR STATE -->
+    <div x-show="!isLoading && error" class="text-center py-20">
+        <div class="w-20 h-20 bg-red-50 dark:bg-red-900/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <span class="w-10 h-10 text-red-500" x-icon="'alert-circle'"></span>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Artikel Tidak Ditemukan</h2>
+        <button @click="window.navigate('post-list')" class="mt-4 bg-brand-500 text-white px-8 py-3 rounded-xl font-bold active:scale-95 transition-all">Kembali ke Daftar Berita</button>
+    </div>
+
+    <!-- POST DETAIL -->
+    <div x-show="!isLoading && !error" x-cloak>
+        <article class="max-w-4xl mx-auto space-y-10">
+            <!-- Featured Image -->
+            <div x-show="content.image || content.imageurl || content.imageUrl" class="aspect-video bg-gray-50 dark:bg-gray-900/50 rounded-[2.5rem] overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm relative group">
+                <img :src="content.image || content.imageurl || content.imageUrl" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                <div class="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/50 to-transparent"></div>
+            </div>
+
+            <!-- Title & Meta -->
+            <div class="space-y-4 text-center max-w-3xl mx-auto">
+                <span class="inline-flex items-center px-4 py-1.5 rounded-full bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 text-xs font-bold uppercase tracking-widest" x-text="content.category || 'Berita'"></span>
+                <h1 class="text-4xl md:text-5xl font-black text-gray-900 dark:text-white leading-tight tracking-tight" x-text="content.title"></h1>
+                
+                <div class="flex items-center justify-center gap-4 text-gray-400 text-sm font-medium">
+                    <span x-text="content.publishdate ? new Date(content.publishdate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Hari ini'"></span>
+                    <span class="w-1.5 h-1.5 rounded-full bg-gray-200 dark:bg-gray-700"></span>
+                    <span class="flex items-center gap-1.5">
+                        <span class="w-4 h-4" x-icon="'user'"></span>
+                        EzyTeam
+                    </span>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="prose prose-lg dark:prose-invert max-w-3xl mx-auto px-4 md:px-0 leading-relaxed text-gray-600 dark:text-gray-300 selection:bg-brand-100 dark:selection:bg-brand-900/50" x-html="content.description || content.content"></div>
+
+            <!-- Share Section -->
+            <div class="pt-10 border-t border-gray-100 dark:border-gray-800 flex flex-col items-center gap-4">
+                <p class="text-sm font-bold text-gray-500 uppercase tracking-widest">Bagikan Artikel Ini</p>
+                <div class="flex gap-4">
+                    <button @click="share('whatsapp')" class="w-12 h-12 rounded-2xl bg-green-50 text-green-600 flex items-center justify-center hover:bg-green-100 transition-all">
+                        <span class="w-6 h-6" x-icon="'phone-call'"></span>
+                    </button>
+                    <button @click="share('facebook')" class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-all">
+                        <span class="w-6 h-6" x-icon="'facebook'"></span>
+                    </button>
+                    <button @click="share('copy')" class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center hover:bg-purple-100 transition-all">
+                        <span class="w-6 h-6" x-icon="'share-2'"></span>
+                    </button>
+                </div>
+            </div>
+        </article>
+    </div>
+
+</div>
+
+<script>
+function initPostPage() {
+    return {
+        isLoading: true,
+        error: false,
+        content: {},
+
+        async init() {
+            const params = window.app.params;
+            const slug = params.slug || params.id;
+            
+            if (!slug) {
+                this.error = true;
+                this.isLoading = false;
+                return;
+            }
+
+            try {
+                const result = await window.CDNFetcher.fetchItemWithFallback(slug, 'post');
+                this.content = result.data;
+                this.updateBreadcrumb();
+            } catch (e) {
+                console.error('Post load failure:', e);
+                this.error = true;
+            } finally {
+                this.isLoading = false;
+            }
+        },
+
+        share(platform) {
+            const url = window.location.href;
+            const title = this.content.title;
+            
+            if (platform === 'whatsapp') {
+                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(title + ' ' + url)}`);
+            } else if (platform === 'facebook') {
+                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`);
+            } else {
+                navigator.clipboard.writeText(url).then(() => {
+                    if (window.showToast) window.showToast('Tautan disalin ke papan klip!', 'success');
+                });
+            }
+        },
+
+        updateBreadcrumb() {
+            if (window.renderBreadcrumb) {
+                window.renderBreadcrumb([
+                    { label: 'Home', link: '/' },
+                    { label: 'News', action: "window.navigate('post-list')" },
+                    { label: this.content.title || 'Artikel' }
+                ]);
+            }
+        }
+    }
+}
+</script>
