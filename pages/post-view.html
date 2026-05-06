@@ -1,4 +1,4 @@
-<div x-data="initPostPage()" x-init="init()" class="max-w-7xl mx-auto px-4 lg:px-6 py-8 animate-fade-in shadow-theme-xs bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700">
+<div x-data="initPostPage()" x-init="init()" class="max-w-7xl mx-auto px-4 lg:px-6 py-8">
 
     <!-- LOADING STATE -->
     <div x-show="isLoading" class="flex flex-col items-center justify-center py-32 space-y-4">
@@ -7,55 +7,125 @@
     </div>
 
     <!-- ERROR STATE -->
-    <div x-show="!isLoading && error" class="text-center py-20">
+    <div x-show="!isLoading && error" x-cloak
+        class="text-center py-20 bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm">
         <div class="w-20 h-20 bg-red-50 dark:bg-red-900/10 rounded-full flex items-center justify-center mx-auto mb-6">
-            <span class="w-10 h-10 text-red-500" x-icon="'alert-circle'"></span>
+            <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+            </svg>
         </div>
         <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Artikel Tidak Ditemukan</h2>
-        <button @click="window.navigate('post-list')" class="mt-4 bg-brand-500 text-white px-8 py-3 rounded-xl font-bold active:scale-95 transition-all">Kembali ke Daftar Berita</button>
+        <p class="text-gray-500 mb-6">Artikel yang Anda cari mungkin telah dipindahkan atau dihapus.</p>
+        <button @click="window.navigate('post-list')"
+            class="bg-brand-600 hover:bg-brand-700 text-white px-8 py-3 rounded-xl font-bold active:scale-95 transition-all">Kembali
+            ke Daftar Berita</button>
     </div>
 
     <!-- POST DETAIL -->
     <div x-show="!isLoading && !error" x-cloak>
-        <article class="max-w-4xl mx-auto space-y-10">
+        <article
+            class="max-w-4xl mx-auto space-y-10 bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm p-6 md:p-10">
+
             <!-- Featured Image -->
-            <div x-show="content.image || content.imageurl || content.imageUrl" class="aspect-video bg-gray-50 dark:bg-gray-900/50 rounded-[2.5rem] overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm relative group">
-                <img :src="content.image || content.imageurl || content.imageUrl" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+            <div x-show="content.image"
+                class="aspect-video bg-gray-50 dark:bg-gray-900/50 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700 relative group">
+                <img :src="content.image" :alt="content.title"
+                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
                 <div class="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/50 to-transparent"></div>
             </div>
 
             <!-- Title & Meta -->
             <div class="space-y-4 text-center max-w-3xl mx-auto">
-                <span class="inline-flex items-center px-4 py-1.5 rounded-full bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 text-xs font-bold uppercase tracking-widest" x-text="content.category || 'Berita'"></span>
-                <h1 class="text-4xl md:text-5xl font-black text-gray-900 dark:text-white leading-tight tracking-tight" x-text="content.title"></h1>
-                
+                <span
+                    class="inline-flex items-center px-4 py-1.5 rounded-full bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 text-xs font-bold uppercase tracking-widest"
+                    x-text="content.category || 'Artikel'"></span>
+                <h1 class="text-3xl md:text-5xl font-black text-gray-900 dark:text-white leading-tight tracking-tight"
+                    x-text="content.title"></h1>
+
                 <div class="flex items-center justify-center gap-4 text-gray-400 text-sm font-medium">
-                    <span x-text="content.publishdate ? new Date(content.publishdate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Hari ini'"></span>
-                    <span class="w-1.5 h-1.5 rounded-full bg-gray-200 dark:bg-gray-700"></span>
-                    <span class="flex items-center gap-1.5">
-                        <span class="w-4 h-4" x-icon="'user'"></span>
-                        EzyTeam
+                    <span
+                        x-text="content.publishdate ? new Date(content.publishdate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : ''"></span>
+                    <span class="w-1.5 h-1.5 rounded-full bg-gray-200 dark:bg-gray-700" x-show="content.author"></span>
+                    <span class="flex items-center gap-1.5" x-show="content.author">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                        </svg>
+                        <span x-text="content.author"></span>
                     </span>
                 </div>
             </div>
 
             <!-- Content Area -->
-            <div class="prose prose-lg dark:prose-invert max-w-3xl mx-auto px-4 md:px-0 leading-relaxed text-gray-600 dark:text-gray-300 selection:bg-brand-100 dark:selection:bg-brand-900/50" x-html="content.description || content.content"></div>
+            <div class="max-w-3xl mx-auto px-2 md:px-0 leading-relaxed text-gray-600 dark:text-gray-300 space-y-4 
+                [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:text-gray-900 [&_h1]:dark:text-white [&_h1]:mt-8 [&_h1]:mb-4
+                [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-gray-900 [&_h2]:dark:text-white [&_h2]:mt-6 [&_h2]:mb-3
+                [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:text-gray-900 [&_h3]:dark:text-white [&_h3]:mt-5 [&_h3]:mb-2
+                [&_p]:mb-4 [&_p]:leading-relaxed
+                [&_a]:text-brand-600 [&_a]:dark:text-brand-400 [&_a]:underline [&_a]:hover:text-brand-700
+                [&_img]:rounded-xl [&_img]:my-6 [&_img]:w-full
+                [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:space-y-2 [&_ul]:my-4
+                [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:space-y-2 [&_ol]:my-4
+                [&_li]:text-gray-600 [&_li]:dark:text-gray-300
+                [&_blockquote]:border-l-4 [&_blockquote]:border-brand-500 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-gray-500 [&_blockquote]:my-6
+                [&_pre]:bg-gray-50 [&_pre]:dark:bg-gray-900 [&_pre]:p-4 [&_pre]:rounded-xl [&_pre]:overflow-x-auto [&_pre]:my-4
+                [&_code]:bg-gray-100 [&_code]:dark:bg-gray-800 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-sm [&_code]:font-mono
+                [&_table]:w-full [&_table]:my-4 [&_table]:border-collapse
+                [&_th]:bg-gray-50 [&_th]:dark:bg-gray-900 [&_th]:px-4 [&_th]:py-2 [&_th]:text-left [&_th]:font-semibold [&_th]:border [&_th]:border-gray-200 [&_th]:dark:border-gray-700
+                [&_td]:px-4 [&_td]:py-2 [&_td]:border [&_td]:border-gray-200 [&_td]:dark:border-gray-700
+                [&_hr]:my-8 [&_hr]:border-gray-200 [&_hr]:dark:border-gray-700
+                " x-html="content.body || content.description || content.content || ''"></div>
 
             <!-- Share Section -->
             <div class="pt-10 border-t border-gray-100 dark:border-gray-800 flex flex-col items-center gap-4">
                 <p class="text-sm font-bold text-gray-500 uppercase tracking-widest">Bagikan Artikel Ini</p>
                 <div class="flex gap-4">
-                    <button @click="share('whatsapp')" class="w-12 h-12 rounded-2xl bg-green-50 text-green-600 flex items-center justify-center hover:bg-green-100 transition-all">
-                        <span class="w-6 h-6" x-icon="'phone-call'"></span>
+                    <button @click="share('whatsapp')"
+                        class="w-12 h-12 rounded-2xl bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 flex items-center justify-center hover:bg-green-100 dark:hover:bg-green-900/40 transition-all active:scale-95"
+                        title="WhatsApp">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                        </svg>
                     </button>
-                    <button @click="share('facebook')" class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-all">
-                        <span class="w-6 h-6" x-icon="'facebook'"></span>
+                    <button @click="share('facebook')"
+                        class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all active:scale-95"
+                        title="Facebook">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" />
+                        </svg>
                     </button>
-                    <button @click="share('copy')" class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center hover:bg-purple-100 transition-all">
-                        <span class="w-6 h-6" x-icon="'share-2'"></span>
+                    <button @click="share('twitter')"
+                        class="w-12 h-12 rounded-2xl bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 flex items-center justify-center hover:bg-sky-100 dark:hover:bg-sky-900/40 transition-all active:scale-95"
+                        title="Twitter">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" />
+                        </svg>
+                    </button>
+                    <button @click="share('copy')"
+                        class="w-12 h-12 rounded-2xl bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-all active:scale-95"
+                        title="Salin Tautan">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                        </svg>
                     </button>
                 </div>
+            </div>
+
+            <!-- Back to List -->
+            <div class="text-center pt-4">
+                <a href="#" @click.prevent="window.navigate('post-list')"
+                    class="inline-flex items-center gap-2 text-sm font-bold text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                    </svg>
+                    Lihat Semua Artikel
+                </a>
             </div>
         </article>
     </div>
@@ -63,58 +133,187 @@
 </div>
 
 <script>
-function initPostPage() {
-    return {
-        isLoading: true,
-        error: false,
-        content: {},
+    function initPostPage() {
+        return {
+            isLoading: true,
+            error: false,
+            content: {},
 
-        async init() {
-            const params = window.app.params;
-            const slug = params.slug || params.id;
-            
-            if (!slug) {
-                this.error = true;
-                this.isLoading = false;
-                return;
-            }
+            async init() {
+                const app = window.app;
+                if (!app) {
+                    this.error = true;
+                    this.isLoading = false;
+                    return;
+                }
 
-            try {
-                const result = await window.CDNFetcher.fetchItemWithFallback(slug, 'post');
-                this.content = result.data;
-                this.updateBreadcrumb();
-            } catch (e) {
-                console.error('Post load failure:', e);
-                this.error = true;
-            } finally {
-                this.isLoading = false;
-            }
-        },
+                const params = app.params || {};
+                const slug = params.slug || params.id;
 
-        share(platform) {
-            const url = window.location.href;
-            const title = this.content.title;
-            
-            if (platform === 'whatsapp') {
-                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(title + ' ' + url)}`);
-            } else if (platform === 'facebook') {
-                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`);
-            } else {
-                navigator.clipboard.writeText(url).then(() => {
-                    if (window.showToast) window.showToast('Tautan disalin ke papan klip!', 'success');
-                });
-            }
-        },
+                if (!slug) {
+                    this.error = true;
+                    this.isLoading = false;
+                    return;
+                }
 
-        updateBreadcrumb() {
-            if (window.renderBreadcrumb) {
-                window.renderBreadcrumb([
-                    { label: 'Home', link: '/' },
-                    { label: 'News', action: "window.navigate('post-list')" },
-                    { label: this.content.title || 'Artikel' }
-                ]);
+                try {
+                    // === STRATEGY 1: Use pre-resolved metadata from Edge Adaptation / Pjax Sniffer ===
+                    if (window._lastResolvedMeta && window._lastResolvedMeta.title) {
+                        console.log('[PostView] Using _lastResolvedMeta:', window._lastResolvedMeta.title);
+                        this.content = this.normalizePost(window._lastResolvedMeta);
+                        // Clear handoff after consuming
+                        this.updateBreadcrumb();
+                        window._lastResolvedMeta = null;
+                        this.isLoading = false;
+                        return;
+                    }
+
+                    // === STRATEGY 2: Fetch from Blogger Post Feed by slug ===
+                    console.log('[PostView] Fetching from Feed for slug:', slug);
+                    const feedUrl = '/feeds/posts/default?alt=json&max-results=500';
+                    const res = await fetch(feedUrl).catch(() => null);
+
+                    if (res && res.ok) {
+                        const json = await res.json();
+                        const entries = json.feed?.entry || [];
+
+                        for (const entry of entries) {
+                            const altLink = (entry.link || []).find(l => l.rel === 'alternate');
+                            const entryHref = altLink?.href || '';
+                            const entrySlug = entryHref.split('/').pop().replace('.html', '');
+
+                            if (entrySlug === slug) {
+                                // Try parsing ezy-meta from content
+                                const html = entry.content ? entry.content.$t : '';
+                                let meta = null;
+                                if (typeof app.parseMetaFromHTML === 'function') {
+                                    meta = app.parseMetaFromHTML(html, entry);
+                                }
+
+                                if (meta && meta.title) {
+                                    // Deep body extraction
+                                    if (!meta.body && !meta.description) {
+                                        meta.body = html;
+                                    }
+                                    this.content = this.normalizePost(meta);
+                                } else {
+                                    // Build from raw Blogger feed entry
+                                    const rawThumb = entry.media$thumbnail?.url || '';
+                                    const thumb = rawThumb ? rawThumb.replace(/\/s\d+(-c)?\//, '/s800/') : '';
+                                    const labels = (entry.category || []).map(c => c.term);
+
+                                    this.content = this.normalizePost({
+                                        title: entry.title?.$t || '',
+                                        image: thumb,
+                                        body: html,
+                                        category: labels[0] || 'Artikel',
+                                        publishdate: entry.published?.$t || '',
+                                        author: entry.author?.[0]?.name?.$t || '',
+                                        slug: entrySlug
+                                    });
+                                }
+                                this.updateBreadcrumb();
+                                this.isLoading = false;
+                                return;
+                            }
+                        }
+                    }
+
+                    // === STRATEGY 3: Direct Fetch from path (Pjax-style) ===
+                    const directPath = params.path || `/p/${slug}.html`;
+                    console.log('[PostView] Attempting direct fetch:', directPath);
+                    const directRes = await fetch(directPath).catch(() => null);
+
+                    if (directRes && directRes.ok) {
+                        const directHtml = await directRes.text();
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(directHtml, 'text/html');
+
+                        let meta = null;
+                        if (typeof app.parseMetaFromHTML === 'function') {
+                            meta = app.parseMetaFromHTML(directHtml);
+                        }
+
+                        // Extract body from various Blogger content containers
+                        const bodyNode = doc.querySelector('.ezy-post-body') || doc.querySelector('.post-body') || doc.querySelector('.entry-content');
+                        const bodyHtml = bodyNode ? bodyNode.innerHTML : '';
+
+                        if (meta && meta.title) {
+                            if (!meta.body && !meta.description) meta.body = bodyHtml;
+                            this.content = this.normalizePost(meta);
+                        } else {
+                            // Fallback: extract title from page
+                            const titleEl = doc.querySelector('h1') || doc.querySelector('.post-title') || doc.querySelector('title');
+                            this.content = this.normalizePost({
+                                title: titleEl?.textContent?.trim() || slug.replace(/-/g, ' '),
+                                body: bodyHtml || directHtml,
+                                slug: slug
+                            });
+                        }
+                        this.updateBreadcrumb();
+                        this.isLoading = false;
+                        return;
+                    }
+
+                    // All strategies exhausted
+                    console.error('[PostView] All fetch strategies failed for:', slug);
+                    this.error = true;
+
+                } catch (e) {
+                    console.error('[PostView] Critical error:', e);
+                    this.error = true;
+                } finally {
+                    this.isLoading = false;
+                }
+            },
+
+            normalizePost(raw) {
+                return {
+                    title: raw.title || '',
+                    image: raw.image || raw.imageurl || raw.imageUrl || '',
+                    body: raw.body || raw.description || raw.content || '',
+                    description: raw.description || '',
+                    content: raw.content || '',
+                    category: Array.isArray(raw.category) ? raw.category[0] : (raw.category || 'Artikel'),
+                    publishdate: raw.publishdate || raw.publishDate || '',
+                    author: raw.author || '',
+                    slug: raw.slug || ''
+                };
+            },
+
+            share(platform) {
+                const url = window.location.href;
+                const title = this.content.title || '';
+
+                if (platform === 'whatsapp') {
+                    window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(title + ' ' + url), '_blank');
+                } else if (platform === 'facebook') {
+                    window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url), '_blank');
+                } else if (platform === 'twitter') {
+                    window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(title) + '&url=' + encodeURIComponent(url), '_blank');
+                } else if (platform === 'copy') {
+                    navigator.clipboard.writeText(url).then(() => {
+                        // Simple visual feedback without dependency
+                        const btn = event.currentTarget;
+                        const original = btn.innerHTML;
+                        btn.innerHTML = '<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>';
+                        setTimeout(() => { btn.innerHTML = original; }, 2000);
+                    });
+                }
+            },
+
+            getSnippet(html) {
+                if (window.app?.getSnippet) return window.app.getSnippet(html);
+                if (!html) return '';
+                const text = html.replace(/<[^>]*>?/gm, ' ').trim();
+                return text.length > 160 ? text.substring(0, 160) + '...' : text;
+            },
+
+            updateBreadcrumb() {
+                if (window.renderBreadcrumb) {
+                    window.renderBreadcrumb(this.content.title || 'Artikel');
+                }
             }
         }
     }
-}
 </script>
