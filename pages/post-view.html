@@ -140,6 +140,11 @@
             content: {},
 
             async init() {
+                // [FIX] Reset state segera agar konten lama hilang saat loading artikel baru
+                this.content = {};
+                this.isLoading = true;
+                this.error = false;
+
                 const app = window.app;
                 if (!app) {
                     this.error = true;
@@ -157,15 +162,19 @@
                 }
 
                 try {
-                    // === STRATEGY 1: Use pre-resolved metadata from Edge Adaptation / Pjax Sniffer ===
-                    if (window._lastResolvedMeta && window._lastResolvedMeta.title) {
-                        console.log('[PostView] Using _lastResolvedMeta:', window._lastResolvedMeta.title);
-                        this.content = this.normalizePost(window._lastResolvedMeta);
-                        // Clear handoff after consuming
-                        this.updateBreadcrumb();
-                        window._lastResolvedMeta = null;
-                        this.isLoading = false;
-                        return;
+                    // === STRATEGY 1: Metadata Hand-off (Fast Path) ===
+                    // Pastikan metadata yang ada cocok dengan slug yang sedang diakses
+                    if (window._lastResolvedMeta && (window._lastResolvedMeta.slug === slug || window._lastResolvedMeta.id === slug)) {
+                        if (window._lastResolvedMeta.title) {
+                            console.log('[PostView] Metadata Hand-off Success:', window._lastResolvedMeta.title);
+                            this.content = this.normalizePost(window._lastResolvedMeta);
+                            this.updateBreadcrumb();
+
+                            // Penting: Hapus metadata setelah dikonsumsi agar tidak tertukar di navigasi berikutnya
+                            window._lastResolvedMeta = null;
+                            this.isLoading = false;
+                            return;
+                        }
                     }
 
                     // === STRATEGY 2: Fetch from Blogger Post Feed by slug ===
