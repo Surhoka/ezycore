@@ -1,11 +1,5 @@
 <div x-data="initPostPage()" x-init="init()" class="max-w-7xl mx-auto px-4 lg:px-6 py-8">
 
-    <!-- LOADING STATE -->
-    <div x-show="isLoading" class="flex flex-col items-center justify-center py-48 space-y-4">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div>
-        <p class="text-sm font-medium text-gray-500 animate-pulse">Menyiapkan artikel...</p>
-    </div>
-
     <!-- ERROR STATE -->
     <template x-if="!isLoading && error">
         <div
