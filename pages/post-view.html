@@ -1,135 +1,229 @@
 <div x-data="initPostPage()" x-init="init()" class="max-w-7xl mx-auto px-4 lg:px-6 py-8">
 
     <!-- LOADING STATE -->
-    <div x-show="isLoading" class="flex flex-col items-center justify-center py-32 space-y-4">
+    <div x-show="isLoading" class="flex flex-col items-center justify-center py-48 space-y-4">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div>
         <p class="text-sm font-medium text-gray-500 animate-pulse">Menyiapkan artikel...</p>
     </div>
 
     <!-- ERROR STATE -->
-    <div x-show="!isLoading && error" x-cloak
-        class="text-center py-20 bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm">
-        <div class="w-20 h-20 bg-red-50 dark:bg-red-900/10 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                stroke-width="1.5">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-            </svg>
+    <template x-if="!isLoading && error">
+        <div
+            class="text-center py-20 bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm">
+            <div
+                class="w-20 h-20 bg-red-50 dark:bg-red-900/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                </svg>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Artikel Tidak Ditemukan</h2>
+            <p class="text-gray-500 mb-6">Artikel yang Anda cari mungkin telah dipindahkan atau dihapus.</p>
+            <button @click="window.navigate('post-list')"
+                class="bg-brand-600 hover:bg-brand-700 text-white px-8 py-3 rounded-xl font-bold active:scale-95 transition-all">Kembali
+                ke Daftar Berita</button>
         </div>
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Artikel Tidak Ditemukan</h2>
-        <p class="text-gray-500 mb-6">Artikel yang Anda cari mungkin telah dipindahkan atau dihapus.</p>
-        <button @click="window.navigate('post-list')"
-            class="bg-brand-600 hover:bg-brand-700 text-white px-8 py-3 rounded-xl font-bold active:scale-95 transition-all">Kembali
-            ke Daftar Berita</button>
-    </div>
+    </template>
 
-    <!-- POST DETAIL -->
-    <div x-show="!isLoading && !error" x-cloak>
-        <article
-            class="max-w-4xl mx-auto space-y-10 bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm p-6 md:p-10">
+    <!-- MAIN CONTENT GRID -->
+    <template x-if="!isLoading && !error">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start" x-cloak>
 
-            <!-- Featured Image -->
-            <div x-show="content.image"
-                class="aspect-video bg-gray-50 dark:bg-gray-900/50 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700 relative group">
-                <img :src="content.image" :alt="content.title"
-                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
-                <div class="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/50 to-transparent"></div>
-            </div>
+            <!-- LEFT: ARTICLE BODY -->
+            <article class="lg:col-span-8 space-y-8">
 
-            <!-- Title & Meta -->
-            <div class="space-y-4 text-center max-w-3xl mx-auto">
-                <span
-                    class="inline-flex items-center px-4 py-1.5 rounded-full bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 text-xs font-bold uppercase tracking-widest"
-                    x-text="content.category || 'Artikel'"></span>
-                <h1 class="text-3xl md:text-5xl font-black text-gray-900 dark:text-white leading-tight tracking-tight"
-                    x-text="content.title"></h1>
+                <!-- Header Section -->
+                <div class="space-y-6">
+                    <h1 class="text-3xl md:text-5xl font-black text-gray-900 dark:text-white leading-tight tracking-tight"
+                        x-text="content.title"></h1>
 
-                <div class="flex items-center justify-center gap-4 text-gray-400 text-sm font-medium">
-                    <span
-                        x-text="content.publishdate ? new Date(content.publishdate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : ''"></span>
-                    <span class="w-1.5 h-1.5 rounded-full bg-gray-200 dark:bg-gray-700" x-show="content.author"></span>
-                    <span class="flex items-center gap-1.5" x-show="content.author">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                        </svg>
-                        <span x-text="content.author"></span>
-                    </span>
+                    <div
+                        class="flex flex-wrap items-center justify-between gap-6 pb-6 border-b border-gray-100 dark:border-gray-800">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center overflow-hidden">
+                                <img src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"
+                                    class="w-full h-full object-cover opacity-50" />
+                            </div>
+                            <div class="text-xs">
+                                <p class="font-black text-gray-900 dark:text-white"
+                                    x-text="content.author || 'Maki M.'"></p>
+                                <p class="text-gray-400 font-medium">
+                                    <span
+                                        x-text="content.publishdate ? new Date(content.publishdate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '3 years ago'"></span>
+                                    <span class="mx-1">·</span>
+                                    <span>3 min read</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-4">
+                            <button
+                                class="flex items-center justify-center w-10 h-10 rounded-lg border border-gray-100 dark:border-gray-800 text-gray-400 hover:text-brand-600 transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                    stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+                                </svg>
+                            </button>
+                            <button @click="share('copy')"
+                                class="flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-brand-600 transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                    stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
+                                </svg>
+                                Share
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Content Area -->
-            <div class="max-w-3xl mx-auto px-2 md:px-0 leading-relaxed text-gray-600 dark:text-gray-300 space-y-4 
-                [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:text-gray-900 [&_h1]:dark:text-white [&_h1]:mt-8 [&_h1]:mb-4
-                [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-gray-900 [&_h2]:dark:text-white [&_h2]:mt-6 [&_h2]:mb-3
-                [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:text-gray-900 [&_h3]:dark:text-white [&_h3]:mt-5 [&_h3]:mb-2
-                [&_p]:mb-4 [&_p]:leading-relaxed
-                [&_a]:text-brand-600 [&_a]:dark:text-brand-400 [&_a]:underline [&_a]:hover:text-brand-700
-                [&_img]:rounded-xl [&_img]:my-6 [&_img]:w-full
-                [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:space-y-2 [&_ul]:my-4
-                [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:space-y-2 [&_ol]:my-4
-                [&_li]:text-gray-600 [&_li]:dark:text-gray-300
-                [&_blockquote]:border-l-4 [&_blockquote]:border-brand-500 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-gray-500 [&_blockquote]:my-6
-                [&_pre]:bg-gray-50 [&_pre]:dark:bg-gray-900 [&_pre]:p-4 [&_pre]:rounded-xl [&_pre]:overflow-x-auto [&_pre]:my-4
-                [&_code]:bg-gray-100 [&_code]:dark:bg-gray-800 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-sm [&_code]:font-mono
-                [&_table]:w-full [&_table]:my-4 [&_table]:border-collapse
-                [&_th]:bg-gray-50 [&_th]:dark:bg-gray-900 [&_th]:px-4 [&_th]:py-2 [&_th]:text-left [&_th]:font-semibold [&_th]:border [&_th]:border-gray-200 [&_th]:dark:border-gray-700
-                [&_td]:px-4 [&_td]:py-2 [&_td]:border [&_td]:border-gray-200 [&_td]:dark:border-gray-700
-                [&_hr]:my-8 [&_hr]:border-gray-200 [&_hr]:dark:border-gray-700
-                " x-html="content.body || content.description || content.content || ''"></div>
-
-            <!-- Share Section -->
-            <div class="pt-10 border-t border-gray-100 dark:border-gray-800 flex flex-col items-center gap-4">
-                <p class="text-sm font-bold text-gray-500 uppercase tracking-widest">Bagikan Artikel Ini</p>
-                <div class="flex gap-4">
-                    <button @click="share('whatsapp')"
-                        class="w-12 h-12 rounded-2xl bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 flex items-center justify-center hover:bg-green-100 dark:hover:bg-green-900/40 transition-all active:scale-95"
-                        title="WhatsApp">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                            <path
-                                d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                        </svg>
-                    </button>
-                    <button @click="share('facebook')"
-                        class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all active:scale-95"
-                        title="Facebook">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" />
-                        </svg>
-                    </button>
-                    <button @click="share('twitter')"
-                        class="w-12 h-12 rounded-2xl bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 flex items-center justify-center hover:bg-sky-100 dark:hover:bg-sky-900/40 transition-all active:scale-95"
-                        title="Twitter">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" />
-                        </svg>
-                    </button>
-                    <button @click="share('copy')"
-                        class="w-12 h-12 rounded-2xl bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-all active:scale-95"
-                        title="Salin Tautan">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
-                        </svg>
-                    </button>
+                <!-- Featured Image -->
+                <div x-show="content.image" class="rounded-xl overflow-hidden bg-gray-50 dark:bg-gray-900">
+                    <img :src="content.image" :alt="content.title" class="w-full h-auto object-cover">
                 </div>
-            </div>
 
-            <!-- Back to List -->
-            <div class="text-center pt-4">
-                <a href="#" @click.prevent="window.navigate('post-list')"
-                    class="inline-flex items-center gap-2 text-sm font-bold text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-                    </svg>
-                    Lihat Semua Artikel
-                </a>
-            </div>
-        </article>
-    </div>
+                <!-- Content Body -->
+                <div class="prose prose-lg dark:prose-invert max-w-none text-gray-600 dark:text-gray-400 leading-relaxed
+                    [&_p]:mb-6 [&_p]:text-[17px]
+                    [&_h2]:text-2xl [&_h2]:font-black [&_h2]:text-gray-900 [&_h2]:dark:text-white [&_h2]:mt-10 [&_h2]:mb-4
+                    [&_img]:rounded-xl [&_img]:my-10" x-html="content.body || content.description || ''">
+                </div>
 
+                <!-- Tags Footer -->
+                <div class="flex flex-wrap items-center gap-3 pt-10 border-t border-gray-100 dark:border-gray-800">
+                    <template x-if="content.category">
+                        <a href="#"
+                            class="px-5 py-2 rounded-full border border-gray-100 dark:border-gray-800 text-xs font-bold text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
+                            x-text="content.category"></a>
+                    </template>
+                    <a href="#"
+                        class="px-5 py-2 rounded-full border border-gray-100 dark:border-gray-800 text-xs font-bold text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors">Heath</a>
+                    <a href="#"
+                        class="px-5 py-2 rounded-full border border-gray-100 dark:border-gray-800 text-xs font-bold text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors">Prevention</a>
+                    <a href="#" class="text-xs font-bold text-gray-400 hover:text-brand-600 ml-2">+1 More...</a>
+                </div>
+            </article>
+
+            <!-- RIGHT: SIDEBAR -->
+            <aside class="lg:col-span-4 space-y-12">
+
+                <!-- Popular Posts Section -->
+                <section>
+                    <div class="flex items-center gap-3 mb-8">
+                        <h3 class="font-black text-gray-900 dark:text-white text-sm uppercase tracking-widest">Popular
+                            Posts</h3>
+                        <div class="h-px w-8 bg-gray-100 dark:bg-gray-800"></div>
+                    </div>
+
+                    <div class="space-y-10">
+                        <!-- Top Featured Popular -->
+                        <template x-if="window.app && window.app.posts && window.app.posts[0]">
+                            <div class="group cursor-pointer space-y-4" @click="viewDetail(window.app.posts[0])">
+                                <div
+                                    class="relative aspect-video rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-900">
+                                    <img :src="window.app.posts[0].image"
+                                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                    <div
+                                        class="absolute top-3 right-3 bg-white/95 dark:bg-gray-900/95 px-2 py-1 rounded-lg flex items-center gap-1.5 shadow-sm">
+                                        <span class="text-[10px] font-black text-gray-600 dark:text-gray-300">8</span>
+                                        <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24" stroke-width="2">
+                                            <path
+                                                d="M7.5 8.25h9m-9 3h9m-9 3h4.5M2.25 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="space-y-2">
+                                    <p class="text-[11px] font-black text-gray-400">
+                                        <span x-text="window.app.formatDate(window.app.posts[0].publishdate)"></span>
+                                        <span class="mx-1.5">·</span>
+                                        <span class="text-gray-600 dark:text-gray-300"
+                                            x-text="window.app.posts[0].category"></span>
+                                    </p>
+                                    <h4 class="font-bold text-gray-900 dark:text-white leading-snug group-hover:text-brand-600 transition-colors"
+                                        x-text="window.app.posts[0].title"></h4>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed"
+                                        x-text="window.app.getSnippet(window.app.posts[0].description)"></p>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Small Popular List -->
+                        <div class="space-y-8">
+                            <template x-for="(pop, index) in (window.app ? window.app.posts : []).slice(1, 5)">
+                                <div class="flex gap-4 group cursor-pointer" @click="viewDetail(pop)">
+                                    <span
+                                        class="text-lg font-black text-gray-200 dark:text-gray-800 transition-colors group-hover:text-brand-600"
+                                        x-text="'0' + (index + 1)"></span>
+                                    <div class="space-y-1">
+                                        <p class="text-[10px] font-black text-gray-400">
+                                            <span x-text="window.app.formatDate(pop.publishdate)"></span>
+                                            <span class="mx-1.5">·</span>
+                                            <span class="text-gray-600 dark:text-gray-300" x-text="pop.category"></span>
+                                        </p>
+                                        <h5 class="text-sm font-bold text-gray-900 dark:text-white leading-tight group-hover:text-brand-600 transition-colors"
+                                            x-text="pop.title"></h5>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Labels Section -->
+                <section>
+                    <div class="flex items-center gap-3 mb-8">
+                        <h3 class="font-black text-gray-900 dark:text-white text-sm uppercase tracking-widest">Labels
+                        </h3>
+                        <div class="h-px w-8 bg-gray-100 dark:bg-gray-800"></div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <template x-for="cat in (window.app ? window.app.categories : []).slice(0, 8)">
+                            <a href="#"
+                                @click.prevent="window.navigate('post-list', { category: cat.slug || cat.name })"
+                                class="flex items-center justify-between p-3.5 rounded-lg border border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all group">
+                                <span
+                                    class="text-xs font-bold text-gray-600 dark:text-gray-400 group-hover:text-brand-600"
+                                    x-text="cat.name"></span>
+                                <div class="flex items-center gap-1 text-[10px] font-black text-gray-300">
+                                    <span x-text="cat.count || 1"></span>
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                        stroke-width="2">
+                                        <path
+                                            d="M7.5 8.25h9m-9 3h9m-9 3h4.5M2.25 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0z" />
+                                    </svg>
+                                </div>
+                            </a>
+                        </template>
+                    </div>
+                    <button class="mt-6 text-xs font-bold text-brand-600 hover:underline">Show all (+25)</button>
+                </section>
+
+                <!-- Ad Placeholder -->
+                <div
+                    class="h-32 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-dashed border-gray-200 dark:border-gray-800 flex items-center justify-center">
+                    <span class="text-xs font-bold text-gray-400 tracking-widest uppercase">Ads go here</span>
+                </div>
+
+                <!-- Sidebar Small Footer -->
+                <div
+                    class="flex flex-wrap items-center gap-x-5 gap-y-3 pt-6 border-t border-gray-100 dark:border-gray-800">
+                    <a href="#"
+                        class="text-[11px] font-black text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors">Term</a>
+                    <a href="#"
+                        class="text-[11px] font-black text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors">Disclaimer</a>
+                    <a href="#"
+                        class="text-[11px] font-black text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors">Privacy</a>
+                    <a href="#"
+                        class="text-[11px] font-black text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors">Faq</a>
+                </div>
+            </aside>
+        </div>
+    </template>
 </div>
 
 <script>
