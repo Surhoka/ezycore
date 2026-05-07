@@ -48,7 +48,7 @@
                             </div>
                             <div class="text-xs">
                                 <p class="font-black text-gray-900 dark:text-white"
-                                    x-text="content.author || 'Maki M.'"></p>
+                                    x-text="content.author || 'Anonim.'"></p>
                                 <p class="text-gray-400 font-medium">
                                     <span
                                         x-text="content.publishdate ? new Date(content.publishdate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '3 years ago'"></span>
@@ -205,22 +205,18 @@
 
                 <!-- Ad Placeholder -->
                 <div
-                    class="h-32 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-dashed border-gray-200 dark:border-gray-800 flex items-center justify-center">
+                    class="h-32 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-dashed border-gray-200 dark:border-gray-800 flex items-center justify-center">
                     <span class="text-xs font-bold text-gray-400 tracking-widest uppercase">Ads go here</span>
                 </div>
 
-                <!-- Sidebar Small Footer -->
-                <div
-                    class="flex flex-wrap items-center gap-x-5 gap-y-3 pt-6 border-t border-gray-100 dark:border-gray-800">
-                    <a href="#"
-                        class="text-[11px] font-black text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors">Term</a>
-                    <a href="#"
-                        class="text-[11px] font-black text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors">Disclaimer</a>
-                    <a href="#"
-                        class="text-[11px] font-black text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors">Privacy</a>
-                    <a href="#"
-                        class="text-[11px] font-black text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors">Faq</a>
-                </div>
+                <!-- Legal Links -->
+                      <div class='mt-10 pt-8 border-t border-gray-100 dark:border-gray-800 text-center'>
+                        <div class='flex flex-wrap justify-center gap-x-4 gap-y-2 mb-4'>
+                          <a class='text-gray-400 hover:text-brand-600 dark:hover:text-white transition-colors text-xs font-bold titlecase tracking-wider' href='/p/privacy-policy.html'>Privacy Policy</a>
+                          <a class='text-gray-400 hover:text-brand-600 dark:hover:text-white transition-colors text-xs font-bold titlecase tracking-wider' href='/p/terms-of-service.html'>Terms of Service</a>
+                          <a class='text-gray-400 hover:text-brand-600 dark:hover:text-white transition-colors text-xs font-bold titlecase tracking-wider' href='/p/cookie-policy.html'>Cookie</a>
+                        </div>
+                      </div>
             </aside>
         </div>
     </template>
