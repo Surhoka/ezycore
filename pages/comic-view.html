@@ -166,7 +166,7 @@
                 if (!this.meta?.description) return;
 
                 // Update Breadcrumb di Parent SPA
-                if (window.app) window.app.updateBreadcrumb('post');
+                if (window.app) window.app.updateBreadcrumb('comic-view'); // Menggunakan label 'comic-view'
 
                 // Extract images from HTML
                 const parser = new DOMParser();
@@ -207,7 +207,7 @@
                     const targetIdx = dir === 'next' ? idx - 1 : idx + 1;
                     const target = allPosts[targetIdx];
                     if (target) {
-                        window.navigate('post', { slug: target.slug, path: target.path });
+                        window.navigate('comic-view', { slug: target.slug, path: target.path }); // Navigasi ke comic-view
                     }
                 }
             },
