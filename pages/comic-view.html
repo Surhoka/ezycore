@@ -114,18 +114,21 @@
             isLoading: true,
             hasNext: false,
             hasPrev: false,
+            isInit: false,
 
             async init() {
+                if (this.isInit) return;
+                this.isInit = true;
                 console.log('[ComicView] Initializing component...');
 
                 // Handoff from Pjax or Edge Adaptation
                 if (window._lastResolvedMeta) {
                     this.meta = window._lastResolvedMeta;
-                    this.renderComic();
                 } else {
                     await this.fetchChapterData();
                 }
 
+                this.renderComic();
                 this.checkNavigation();
             },
 
@@ -163,29 +166,58 @@
             },
 
             renderComic() {
-                if (!this.meta?.description) {
+                if (!this.meta || !this.meta.description) {
                     console.warn('[ComicView] No description/content found to extract images');
+                    this.isLoading = false;
                     return;
                 }
 
                 // Update Breadcrumb di Parent SPA
                 if (window.app) window.app.updateBreadcrumb('comic-view'); // Menggunakan label 'comic-view'
 
-                // Extract images from HTML
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(this.meta.description, 'text/html');
+                try {
+                    // 1. Ekstraksi via DOMParser (Metode Utama)
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(this.meta.description, 'text/html');
+                    const imgNodes = Array.from(doc.querySelectorAll('img'));
 
-                const imgNodes = Array.from(doc.querySelectorAll('img'));
-                this.pages = imgNodes.map(img => {
-                    const parentLink = img.closest('a');
-                    // Prefer higher resolution link if wrapped in Anchor
-                    if (parentLink && parentLink.href.match(/\.(jpg|jpeg|png|gif|webp)/i)) {
-                        return parentLink.href;
+                    let extracted = imgNodes.map(img => {
+                        // Deteksi atribut gambar Blogger (src, data-src, atau original-url)
+                        const src = img.getAttribute('data-src') || img.getAttribute('original-url') || img.src;
+                        const parentLink = img.closest('a');
+
+                        // Gunakan link di Anchor jika mengarah langsung ke file gambar (resolusi lebih tinggi)
+                        if (parentLink && parentLink.href && parentLink.href.match(/\.(jpg|jpeg|png|gif|webp|bmp)/i)) {
+                            return parentLink.href;
+                        }
+                        return src;
+                    });
+
+                    // 2. Fallback: Ekstraksi via Regex (Jika DOMParser gagal karena HTML malformed)
+                    if (extracted.length === 0) {
+                        const regex = /<img[^>]+(?:src|data-src)=["']([^">]+)["']/gi;
+                        let match;
+                        while ((match = regex.exec(this.meta.description)) !== null) {
+                            extracted.push(match[1]);
+                        }
                     }
-                    return img.src;
-                }).filter(src => src && !src.includes('clear.gif') && !src.includes('pixel.gif'));
 
-                console.log(`[ComicView] Extracted ${this.pages.length} pages`);
+                    // 3. Pembersihan & Normalisasi Protocol
+                    this.pages = extracted.map(src => {
+                        if (src && src.startsWith('//')) return 'https:' + src;
+                        return src;
+                    }).filter(src => {
+                        if (!src) return false;
+                        const s = src.toLowerCase();
+                        return !s.includes('clear.gif') && !s.includes('pixel.gif') &&
+                            (s.match(/\.(jpg|jpeg|png|gif|webp|bmp)/i) || s.includes('googleusercontent.com') || s.includes('bp.blogspot.com'));
+                    });
+
+                    console.log(`[ComicView] Extracted ${this.pages.length} pages from description (Length: ${this.meta.description.length})`);
+                } catch (e) {
+                    console.error('[ComicView] Render Error:', e);
+                }
+
                 this.isLoading = false;
             },
 
