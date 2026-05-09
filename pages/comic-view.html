@@ -194,6 +194,7 @@
                 return {
                     title: raw.title || '',
                     description: raw.body || raw.description || raw.content || '',
+                    pages: raw.pages || raw.images || [],
                     image: raw.image || raw.imageurl || raw.imageUrl || '',
                     publishdate: raw.publishdate || '',
                     category: Array.isArray(raw.category) ? raw.category[0] : (raw.category || 'Comic'),
@@ -211,6 +212,21 @@
                     return;
                 }
 
+                // Strategi 1: Gunakan data 'pages' dari metadata JSON (Jika diinput manual/via spreadsheet formula)
+                if (this.meta.pages) {
+                    if (typeof this.meta.pages === 'string' && this.meta.pages.includes('http')) {
+                        this.pages = this.meta.pages.split(',').map(s => s.trim());
+                    } else if (Array.isArray(this.meta.pages) && this.meta.pages.length > 0) {
+                        this.pages = this.meta.pages;
+                    }
+                }
+
+                if (this.pages.length > 0) {
+                    console.log('[ComicView] Berhasil memuat ' + this.pages.length + ' halaman dari JSON.');
+                    this.isLoading = false;
+                    return;
+                }
+
                 // Log cuplikan konten yang akan diparsing
                 console.log('[ComicView] HTML yang akan diparsing (100 char pertama):', this.meta.description.substring(0, 100));
 
@@ -221,7 +237,7 @@
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(this.meta.description, 'text/html');
 
-                const imgNodes = Array.from(doc.querySelectorAll('img'));
+                const imgNodes = Array.from(doc.querySelectorAll('img')).filter(img => !img.closest('.ezy-meta'));
                 console.log('[ComicView] Menemukan ' + imgNodes.length + ' tag <img> di dalam konten.');
 
                 this.pages = imgNodes.map(img => {
