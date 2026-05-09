@@ -161,11 +161,9 @@
 
                             if (meta && meta.title) {
                                 console.log('[ComicView] Metadata Mentah:', JSON.stringify(meta).substring(0, 200) + '...');
-                                // Cek apakah meta memiliki konten body, jika tidak gunakan html mentah
-                                if (!meta.description && !meta.body && !meta.content) {
-                                    console.log('[ComicView] Meta tidak punya body/description. Menggunakan Fallback HTML mentah.');
-                                    meta.description = html;
-                                }
+                                // Selalu gunakan HTML mentah dari Feed untuk ekstraksi gambar komik
+                                // karena meta JSON biasanya hanya berisi snippet teks untuk SEO.
+                                meta.body = html;
                                 this.meta = this.normalizeMeta(meta);
                                 console.log('[ComicView] Metadata berhasil diparsing via app.parseMetaFromHTML');
                             } else {
