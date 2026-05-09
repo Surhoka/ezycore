@@ -149,6 +149,7 @@
                         const entrySlug = altLink?.href.split('/').pop().replace('.html', '');
 
                         if (entrySlug === slug) {
+                            console.log('[ComicView] Postingan ditemukan. Mengolah konten...');
                             const html = entry.content?.$t || entry.summary?.$t || '';
                             let meta = null;
 
@@ -159,7 +160,9 @@
                             if (meta && meta.title) {
                                 if (!meta.description && !meta.body) meta.description = html;
                                 this.meta = this.normalizeMeta(meta);
+                                console.log('[ComicView] Metadata berhasil diparsing via app.parseMetaFromHTML');
                             } else {
+                                console.log('[ComicView] Metadata ezy-meta tidak ditemukan, menggunakan fallback Blogger Feed');
                                 const labels = (entry.category || []).map(c => c.term);
                                 this.meta = {
                                     title: entry.title?.$t || '',
@@ -174,6 +177,7 @@
                             return;
                         }
                     }
+                    console.warn('[ComicView] Postingan dengan slug "' + slug + '" tidak ditemukan di feed.');
                     this.isLoading = false;
                 } catch (e) {
                     console.error('[ComicView] Fetch error:', e);
@@ -193,7 +197,10 @@
             },
 
             renderComic() {
+                console.log('[ComicView] Menjalankan renderComic...');
+
                 if (!this.meta?.description) {
+                    console.error('[ComicView] Gagal: deskripsi konten (HTML) kosong.');
                     this.isLoading = false;
                     return;
                 }
@@ -206,6 +213,8 @@
                 const doc = parser.parseFromString(this.meta.description, 'text/html');
 
                 const imgNodes = Array.from(doc.querySelectorAll('img'));
+                console.log('[ComicView] Menemukan ' + imgNodes.length + ' tag <img> di dalam konten.');
+
                 this.pages = imgNodes.map(img => {
                     const parentLink = img.closest('a');
                     // Prefer higher resolution link if wrapped in Anchor
@@ -214,6 +223,14 @@
                     }
                     return img.src;
                 }).filter(src => src && !src.includes('clear.gif') && !src.includes('pixel.gif'));
+
+                if (imgNodes.length > 0 && this.pages.length === 0) {
+                    console.warn('[ComicView] Peringatan: Gambar ditemukan tapi semuanya terfilter (mungkin link tidak valid atau gambar transparan).');
+                } else if (this.pages.length > 0) {
+                    console.log('[ComicView] Berhasil mengekstrak ' + this.pages.length + ' halaman komik.');
+                } else {
+                    console.warn('[ComicView] Tidak ada gambar sama sekali di dalam deskripsi postingan.');
+                }
 
                 this.isLoading = false;
             },
