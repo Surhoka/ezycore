@@ -163,7 +163,10 @@
             },
 
             renderComic() {
-                if (!this.meta?.description) return;
+                if (!this.meta?.description) {
+                    console.warn('[ComicView] No description/content found to extract images');
+                    return;
+                }
 
                 // Update Breadcrumb di Parent SPA
                 if (window.app) window.app.updateBreadcrumb('comic-view'); // Menggunakan label 'comic-view'
@@ -182,6 +185,7 @@
                     return img.src;
                 }).filter(src => src && !src.includes('clear.gif') && !src.includes('pixel.gif'));
 
+                console.log(`[ComicView] Extracted ${this.pages.length} pages`);
                 this.isLoading = false;
             },
 
