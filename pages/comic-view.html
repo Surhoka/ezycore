@@ -1,0 +1,257 @@
+<!-- COMIC_VIEW_TEMPLATE -->
+<div x-data="comicView()" x-init="init()" class="comic-reader-container animate-fade-in" x-cloak>
+    <!-- Top Navigation & Title Bar -->
+    <div
+        class="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 sticky top-0 z-40 transition-colors duration-300 shadow-sm">
+        <div class="max-w-4xl mx-auto px-4 py-3 md:py-4">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4">
+                <div class="min-w-0">
+                    <h1 class="text-base md:text-lg font-black text-gray-900 dark:text-white truncate"
+                        x-text="meta?.title || 'Loading Chapter...'"></h1>
+                    <div class="flex items-center gap-2 mt-0.5 md:mt-1">
+                        <span class="text-[10px] md:text-xs font-black text-brand-600 uppercase tracking-widest"
+                            x-text="meta?.category || 'Comic'"></span>
+                        <span class="text-gray-300 dark:text-gray-700">•</span>
+                        <span class="text-[10px] md:text-xs font-bold text-gray-500 dark:text-gray-400"
+                            x-text="formatDate(meta?.publishdate)"></span>
+                    </div>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="flex items-center gap-2">
+                    <button @click="navigateChapter('prev')"
+                        class="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs font-bold rounded-lg transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
+                        :disabled="!hasPrev">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                            <path d="M15 19l-7-7 7-7" />
+                        </svg>
+                        Prev
+                    </button>
+                    <button @click="navigateChapter('next')"
+                        class="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-6 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg transition-all shadow-lg shadow-brand-500/20 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
+                        :disabled="!hasNext">
+                        Next
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                            <path d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reader Container -->
+    <div class="max-w-4xl mx-auto min-h-screen bg-[#f4f4f4] dark:bg-black py-2 md:py-4 flex flex-col items-center">
+        <!-- Loading State -->
+        <template x-if="isLoading">
+            <div class="w-full space-y-4 px-4">
+                <div class="aspect-[2/3] w-full bg-gray-200 dark:bg-gray-800 animate-pulse rounded-lg"></div>
+                <div class="aspect-[2/3] w-full bg-gray-200 dark:bg-gray-800 animate-pulse rounded-lg"></div>
+            </div>
+        </template>
+
+        <!-- Images List -->
+        <div class="w-full flex flex-col items-center" id="comic-pages-list">
+            <template x-for="(src, index) in pages" :key="index">
+                <div class="relative w-full group">
+                    <img :src="src" class="w-full h-auto block select-none bg-gray-200 dark:bg-gray-900"
+                        @contextmenu.prevent="" loading="lazy" :alt="'Page ' + (index + 1)">
+                    <!-- Floating Page Count -->
+                    <div class="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                        x-text="(index + 1) + ' / ' + pages.length"></div>
+                </div>
+            </template>
+        </div>
+
+        <!-- Footer Navigation -->
+        <div x-show="!isLoading && pages.length > 0"
+            class="w-full py-16 px-4 text-center bg-white dark:bg-gray-950 border-t border-gray-100 dark:border-gray-900 mt-4 shadow-inner">
+            <div class="mb-8">
+                <h3 class="text-sm font-black text-gray-400 dark:text-gray-600 uppercase tracking-[0.3em]">End of
+                    Chapter</h3>
+            </div>
+
+            <div class="flex flex-col items-center gap-4">
+                <button @click="navigateChapter('next')" x-show="hasNext"
+                    class="inline-flex items-center gap-3 px-12 py-4 bg-brand-600 hover:bg-brand-700 text-white font-black rounded-2xl shadow-xl shadow-brand-500/30 transition-all active:scale-95 uppercase tracking-widest text-sm">
+                    Next Chapter
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                        <path d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                    </svg>
+                </button>
+
+                <div class="flex items-center gap-6 mt-4">
+                    <a x-on:click.prevent="window.navigate('home')" href="/"
+                        class="text-xs font-bold text-gray-400 hover:text-brand-600 transition-colors uppercase tracking-widest">Home</a>
+                    <span class="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-800"></span>
+                    <a href="#header"
+                        class="text-xs font-bold text-gray-400 hover:text-brand-600 transition-colors uppercase tracking-widest">Top</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error/Empty State -->
+        <div x-show="!isLoading && pages.length === 0" class="py-32 text-center px-6">
+            <div
+                class="w-20 h-20 bg-gray-100 dark:bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-300">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+            </div>
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">No Pages Found</h2>
+            <p class="text-gray-500 dark:text-gray-400 text-sm max-w-xs mx-auto">This chapter might be empty or still
+                being processed. Please check back later.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.comicView = function () {
+        return {
+            meta: null,
+            pages: [],
+            isLoading: true,
+            hasNext: false,
+            hasPrev: false,
+
+            async init() {
+                console.log('[ComicView] Initializing component...');
+
+                // Handoff from Pjax or Edge Adaptation
+                if (window._lastResolvedMeta) {
+                    this.meta = window._lastResolvedMeta;
+                    this.renderComic();
+                } else {
+                    await this.fetchChapterData();
+                }
+
+                this.checkNavigation();
+            },
+
+            async fetchChapterData() {
+                try {
+                    const slug = window.app?.params?.slug;
+                    if (!slug) return;
+
+                    // Fetching from Blogger API
+                    const res = await fetch(`/feeds/posts/default?alt=json&q=${slug}&max-results=1`);
+                    if (!res.ok) throw new Error('Network response was not ok');
+
+                    const data = await res.json();
+                    const entry = data.feed?.entry?.[0];
+
+                    if (entry) {
+                        const html = entry.content?.$t || entry.summary?.$t || '';
+                        const altLink = (entry.link || []).find(l => l.rel === 'alternate');
+                        const labels = (entry.category || []).map(c => c.term);
+
+                        this.meta = {
+                            title: entry.title?.$t,
+                            description: html,
+                            publishdate: entry.published?.$t,
+                            category: labels[0] || 'Uncategorized',
+                            slug: slug,
+                            path: altLink?.href ? new URL(altLink.href).pathname : '#'
+                        };
+                        this.renderComic();
+                    }
+                } catch (e) {
+                    console.error('[ComicView] Fetch error:', e);
+                    this.isLoading = false;
+                }
+            },
+
+            renderComic() {
+                if (!this.meta?.description) return;
+
+                // Update Breadcrumb di Parent SPA
+                if (window.app) window.app.updateBreadcrumb('post');
+
+                // Extract images from HTML
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(this.meta.description, 'text/html');
+
+                const imgNodes = Array.from(doc.querySelectorAll('img'));
+                this.pages = imgNodes.map(img => {
+                    const parentLink = img.closest('a');
+                    // Prefer higher resolution link if wrapped in Anchor
+                    if (parentLink && parentLink.href.match(/\.(jpg|jpeg|png|gif|webp)/i)) {
+                        return parentLink.href;
+                    }
+                    return img.src;
+                }).filter(src => src && !src.includes('clear.gif') && !src.includes('pixel.gif'));
+
+                this.isLoading = false;
+            },
+
+            checkNavigation() {
+                const currentSlug = window.app?.params?.slug;
+                const allPosts = window.app?.posts || [];
+
+                if (allPosts.length > 0 && currentSlug) {
+                    const idx = allPosts.findIndex(p => p.slug === currentSlug);
+                    if (idx !== -1) {
+                        this.hasNext = idx > 0;
+                        this.hasPrev = idx < allPosts.length - 1;
+                    }
+                }
+            },
+
+            navigateChapter(dir) {
+                const allPosts = window.app?.posts || [];
+                const currentSlug = window.app?.params?.slug;
+                const idx = allPosts.findIndex(p => p.slug === currentSlug);
+
+                if (idx !== -1) {
+                    const targetIdx = dir === 'next' ? idx - 1 : idx + 1;
+                    const target = allPosts[targetIdx];
+                    if (target) {
+                        window.navigate('post', { slug: target.slug, path: target.path });
+                    }
+                }
+            },
+
+            formatDate(d) {
+                if (!d) return '';
+                return new Date(d).toLocaleDateString('id-ID', {
+                    day: 'numeric', month: 'long', year: 'numeric'
+                });
+            }
+        }
+    };
+
+    // Hook for XML fetchPage mechanism
+    window.initComicPage = function () {
+        console.log('[ComicView] Hook Initialized');
+    };
+</script>
+
+<style>
+    .comic-reader-container img {
+        -webkit-user-drag: none;
+        user-select: none;
+    }
+
+    .animate-fade-in {
+        animation: fadeIn 0.4s ease-out both;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Smooth transition for dark mode theme colors */
+    .comic-reader-container {
+        transition-property: background-color, border-color, color;
+        transition-duration: 300ms;
+    }
+</style>
