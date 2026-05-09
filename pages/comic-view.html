@@ -116,54 +116,87 @@
             hasPrev: false,
 
             async init() {
-                console.log('[ComicView] Initializing component...');
+                // Reset state untuk navigasi baru
+                this.isLoading = true;
+                this.pages = [];
+                const slug = window.app?.params?.slug;
 
-                // Handoff from Pjax or Edge Adaptation
-                if (window._lastResolvedMeta) {
-                    this.meta = window._lastResolvedMeta;
+                // Strategi 1: Metadata Hand-off (Fast Path)
+                if (window._lastResolvedMeta && (window._lastResolvedMeta.slug === slug || window._lastResolvedMeta.id === slug)) {
+                    console.log('[ComicView] Metadata Hand-off Success');
+                    this.meta = this.normalizeMeta(window._lastResolvedMeta);
                     this.renderComic();
                 } else {
-                    await this.fetchChapterData();
+                    await this.fetchChapterData(slug);
                 }
 
                 this.checkNavigation();
             },
 
-            async fetchChapterData() {
+            async fetchChapterData(slug) {
                 try {
-                    const slug = window.app?.params?.slug;
                     if (!slug) return;
+                    console.log('[ComicView] Fetching from Feed for slug:', slug);
 
-                    // Fetching from Blogger API
-                    const res = await fetch(`/feeds/posts/default?alt=json&q=${slug}&max-results=1`);
-                    if (!res.ok) throw new Error('Network response was not ok');
+                    const res = await fetch('/feeds/posts/default?alt=json&max-results=500').catch(() => null);
+                    if (!res || !res.ok) throw new Error('Network error');
 
                     const data = await res.json();
-                    const entry = data.feed?.entry?.[0];
+                    const entries = data.feed?.entry || [];
 
-                    if (entry) {
-                        const html = entry.content?.$t || entry.summary?.$t || '';
+                    for (const entry of entries) {
                         const altLink = (entry.link || []).find(l => l.rel === 'alternate');
-                        const labels = (entry.category || []).map(c => c.term);
+                        const entrySlug = altLink?.href.split('/').pop().replace('.html', '');
 
-                        this.meta = {
-                            title: entry.title?.$t,
-                            description: html,
-                            publishdate: entry.published?.$t,
-                            category: labels[0] || 'Uncategorized',
-                            slug: slug,
-                            path: altLink?.href ? new URL(altLink.href).pathname : '#'
-                        };
-                        this.renderComic();
+                        if (entrySlug === slug) {
+                            const html = entry.content?.$t || entry.summary?.$t || '';
+                            let meta = null;
+
+                            if (typeof window.app?.parseMetaFromHTML === 'function') {
+                                meta = window.app.parseMetaFromHTML(html, entry);
+                            }
+
+                            if (meta && meta.title) {
+                                if (!meta.description && !meta.body) meta.description = html;
+                                this.meta = this.normalizeMeta(meta);
+                            } else {
+                                const labels = (entry.category || []).map(c => c.term);
+                                this.meta = {
+                                    title: entry.title?.$t || '',
+                                    description: html,
+                                    publishdate: entry.published?.$t || '',
+                                    category: labels[0] || 'Comic',
+                                    slug: slug,
+                                    path: altLink?.href ? new URL(altLink.href).pathname : '#'
+                                };
+                            }
+                            this.renderComic();
+                            return;
+                        }
                     }
+                    this.isLoading = false;
                 } catch (e) {
                     console.error('[ComicView] Fetch error:', e);
                     this.isLoading = false;
                 }
             },
 
+            normalizeMeta(raw) {
+                return {
+                    title: raw.title || '',
+                    description: raw.body || raw.description || raw.content || '',
+                    publishdate: raw.publishdate || '',
+                    category: Array.isArray(raw.category) ? raw.category[0] : (raw.category || 'Comic'),
+                    slug: raw.slug || '',
+                    path: raw.path || '#'
+                };
+            },
+
             renderComic() {
-                if (!this.meta?.description) return;
+                if (!this.meta?.description) {
+                    this.isLoading = false;
+                    return;
+                }
 
                 // Update Breadcrumb di Parent SPA
                 if (window.app) window.app.updateBreadcrumb('comic-view'); // Menggunakan label 'comic-view'
