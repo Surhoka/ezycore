@@ -166,7 +166,7 @@
             },
 
             renderComic() {
-                if (!this.meta || (!this.meta.description && !this.meta.content)) {
+                if (!this.meta || (!this.meta.description && !this.meta.content && !this.meta.body)) {
                     console.warn('[ComicView] No description/content found to extract images');
                     this.isLoading = false;
                     return;
@@ -186,22 +186,72 @@
                     }
 
                     // 1. Metode Utama: DOMParser
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(content, 'text/html');
-                    const imgNodes = Array.from(doc.querySelectorAll('img'));
+                    let rawContent = this.meta.description || this.meta.content || this.meta.body || '';
+                    
+                    // Handle encoded HTML (Blogger terkadang mengirim entity &lt; &gt;)
+                    if (rawContent.includes('&lt;') && rawContent.includes('&gt;')) {
+                        const txt = document.createElement('textarea');
+                        txt.innerHTML = rawContent;
+                        rawContent = txt.value;
+                    }
 
-                    let extracted = imgNodes.map(img => {
-                        const src = img.getAttribute('data-src') ||
-                            img.getAttribute('original-url') ||
-                            img.getAttribute('data-original-src') ||
-                            img.src;
+                    // Gunakan elemen sementara agar browser yang melakukan parsing (lebih akurat dari DOMParser)
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = rawContent;
+
+                    let extracted = [];
+
+                    // 1. Ambil gambar standar
+                    const imgNodes = Array.from(tempDiv.querySelectorAll('img'));
+                    imgNodes.forEach(img => {
+                        const src = img.getAttribute('data-src') || img.getAttribute('original-url') || img.getAttribute('data-original-src') || img.src;
                         const parentLink = img.closest('a');
-
                         if (parentLink && parentLink.href && parentLink.href.match(/\.(jpg|jpeg|png|gif|webp|bmp|avif)/i)) {
-                            return parentLink.href;
+                            extracted.push(parentLink.href);
+                        } else {
+                            extracted.push(src);
                         }
-                        return src;
                     });
+
+                    // 2. Ambil gambar yang tersembunyi di dalam tag <noscript> (Sering terjadi di Blogger)
+                    const noscripts = Array.from(tempDiv.querySelectorAll('noscript'));
+                    noscripts.forEach(ns => {
+                        const nsContent = ns.textContent || ns.innerHTML;
+                        const matches = nsContent.match(/src=["']([^"']+)["']/gi);
+                        if (matches) {
+                            matches.forEach(m => {
+                                const src = m.replace(/src=["']|["']/g, '');
+                                extracted.push(src);
+                            });
+                        }
+                    });
+
+                    // 3. Fallback Regex jika masih kosong
+                    if (extracted.length === 0) {
+                        const regex = /<(?:img|source)[^>]+(?:src|data-src|srcset|original-url)=["']([^"'>\s]+)["']/gi;
+                        let match;
+                        while ((match = regex.exec(rawContent)) !== null) {
+                            extracted.push(match[1]);
+                        }
+                    }
+
+                    // 4. Normalisasi, High-Res Upgrade, dan Filter
+                    this.pages = [...new Set(extracted)] // Deduplikasi
+                        .map(src => {
+                            if (!src) return null;
+                            let url = src.startsWith('//') ? 'https:' + src : src;
+                            // Upgrade resolusi Blogger ke s1600 (ukuran asli)
+                            return url.replace(/\/(s\d+(-[a-z]+)?|w\d+-h\d+(-[a-z]+)?)\//, '/s1600/');
+                        })
+                        .filter(src => {
+                            if (!src) return false;
+                            const s = src.toLowerCase();
+                            return !s.includes('clear.gif') && !s.includes('pixel.gif') && 
+                                   (s.match(/\.(jpg|jpeg|png|gif|webp|bmp|avif)/i) || s.includes('googleusercontent.com') || s.includes('bp.blogspot.com'));
+                        });
+
+                    console.log(`[ComicView] Extracted ${this.pages.length} pages from content`);
+                } catch (e) {
 
                     // 2. Fallback: Regex (Sangat berguna untuk gambar di dalam tag <noscript>)
                     if (extracted.length === 0) {
