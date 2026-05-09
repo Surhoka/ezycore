@@ -151,6 +151,8 @@
                         if (entrySlug === slug) {
                             console.log('[ComicView] Postingan ditemukan. Mengolah konten...');
                             const html = entry.content?.$t || entry.summary?.$t || '';
+                            onsole.log('[ComicView] Panjang string HTML dari Feed:', html.length);
+                            console.log('[ComicView] Tipe Konten Feed:', entry.content ? 'Full Content' : 'Summary Only');
                             let meta = null;
 
                             if (typeof window.app?.parseMetaFromHTML === 'function') {
@@ -158,7 +160,12 @@
                             }
 
                             if (meta && meta.title) {
-                                if (!meta.description && !meta.body) meta.description = html;
+                                console.log('[ComicView] Metadata Mentah:', JSON.stringify(meta).substring(0, 200) + '...');
+                                // Cek apakah meta memiliki konten body, jika tidak gunakan html mentah
+                                if (!meta.description && !meta.body && !meta.content) {
+                                    console.log('[ComicView] Meta tidak punya body/description. Menggunakan Fallback HTML mentah.');
+                                    meta.description = html;
+                                }
                                 this.meta = this.normalizeMeta(meta);
                                 console.log('[ComicView] Metadata berhasil diparsing via app.parseMetaFromHTML');
                             } else {
@@ -204,6 +211,9 @@
                     this.isLoading = false;
                     return;
                 }
+
+                // Log cuplikan konten yang akan diparsing
+                console.log('[ComicView] HTML yang akan diparsing (100 char pertama):', this.meta.description.substring(0, 100));
 
                 // Update Breadcrumb di Parent SPA
                 if (window.app) window.app.updateBreadcrumb('comic-view'); // Menggunakan label 'comic-view'
