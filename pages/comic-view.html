@@ -151,7 +151,7 @@
                         if (entrySlug === slug) {
                             console.log('[ComicView] Postingan ditemukan. Mengolah konten...');
                             const html = entry.content?.$t || entry.summary?.$t || '';
-                            onsole.log('[ComicView] Panjang string HTML dari Feed:', html.length);
+                            console.log('[ComicView] Panjang string HTML dari Feed:', html.length);
                             console.log('[ComicView] Tipe Konten Feed:', entry.content ? 'Full Content' : 'Summary Only');
                             let meta = null;
 
@@ -196,6 +196,7 @@
                 return {
                     title: raw.title || '',
                     description: raw.body || raw.description || raw.content || '',
+                    image: raw.image || raw.imageurl || raw.imageUrl || '',
                     publishdate: raw.publishdate || '',
                     category: Array.isArray(raw.category) ? raw.category[0] : (raw.category || 'Comic'),
                     slug: raw.slug || '',
@@ -232,7 +233,13 @@
                         return parentLink.href;
                     }
                     return img.src;
-                }).filter(src => src && !src.includes('clear.gif') && !src.includes('pixel.gif'));
+                }).filter(src => src && !src.includes('clear.gif') && !src.includes('pixel.gif')) || [];
+
+                // FALLBACK: Jika tidak ada <img> di body, gunakan gambar utama dari metadata
+                if (this.pages.length === 0 && this.meta.image) {
+                    console.log('[ComicView] Menggunakan fallback meta.image');
+                    this.pages = [this.meta.image];
+                }
 
                 if (imgNodes.length > 0 && this.pages.length === 0) {
                     console.warn('[ComicView] Peringatan: Gambar ditemukan tapi semuanya terfilter (mungkin link tidak valid atau gambar transparan).');
