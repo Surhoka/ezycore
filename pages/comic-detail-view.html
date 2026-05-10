@@ -11,27 +11,43 @@
 
         loadComic() {
             this.isLoading = true;
-            // Cari data komik dari array global 'posts' berdasarkan slug/id
             const slug = params.id;
-            this.comic = posts.find(p => p.id === slug || (p.path || '').includes(slug));
+            // Cari data komik utama (berdasarkan slug, path, atau judul)
+            this.comic = posts.find(p => p.id === slug || (p.path || '').includes(slug) || p.title === slug);
             
             if (this.comic) {
-                // Simulasi daftar chapter (dalam produksi ini bisa diambil dari feed/metadata)
-                // Kita asumsikan meta data chapter ada di label atau property khusus
-                this.chapters = this.generateMockChapters(this.comic);
+                // Ekstrak Judul Seri secara cerdas (menangani ' - ', '-Chapter', atau ' Chapter')
+                let seriesTitle = this.comic.title.split(' - ')[0];
+                if (seriesTitle.includes('-Chapter')) seriesTitle = seriesTitle.split('-Chapter')[0];
+                else if (seriesTitle.includes(' Chapter')) seriesTitle = seriesTitle.split(' Chapter')[0];
+                else if (seriesTitle.includes(' chapter')) seriesTitle = seriesTitle.split(' chapter')[0];
+                seriesTitle = seriesTitle.trim();
+                
+                // Cari semua postingan yang memiliki judul seri yang sama
+                const relatedPosts = posts.filter(p => {
+                    let pSeries = p.title.split(' - ')[0];
+                    if (pSeries.includes('-Chapter')) pSeries = pSeries.split('-Chapter')[0];
+                    else if (pSeries.includes(' Chapter')) pSeries = pSeries.split(' Chapter')[0];
+                    else if (pSeries.includes(' chapter')) pSeries = pSeries.split(' chapter')[0];
+                    return pSeries.trim() === seriesTitle;
+                });
+
+                // Map menjadi format chapter yang rapi (Hanya jika bukan postingan utama)
+                this.chapters = relatedPosts
+                    .filter(p => p.title !== seriesTitle)
+                    .map(p => {
+                        const chapterLabel = p.title.replace(seriesTitle, '').replace(/^[\s-]*|[\s-]*$/g, '').trim() || 'Chapter 1';
+                        return {
+                            id: chapterLabel.replace(/[^0-9]/g, '') || '1',
+                            title: chapterLabel,
+                            date: formatDate(p.publishdate),
+                            url: p.path,
+                            slug: p.slug
+                        };
+                    }).sort((a, b) => b.id - a.id);
             }
             
-            setTimeout(() => { this.isLoading = false; }, 500);
-        },
-
-        generateMockChapters(comic) {
-            // Logika dummy untuk demo, nanti disesuaikan dengan data real Blogger
-            return Array.from({length: 12}, (_, i) => ({
-                id: 12 - i,
-                title: 'Chapter ' + (12 - i),
-                date: '2 days ago',
-                url: '#!comic-view/' + comic.id + '/ch-' + (12 - i)
-            }));
+            setTimeout(() => { this.isLoading = false; }, 300);
         }
     }">
 
@@ -121,12 +137,15 @@
                 <div class="flex-1 space-y-10">
                     <!-- Actions -->
                     <div
-                        class="flex flex-wrap gap-4 p-6 bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm">
+                        class="flex flex-wrap gap-4 p-6 bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm"
+                        x-show="chapters.length > 0">
                         <a href="#"
+                            @click.prevent="window.navigate('comic-view', { slug: chapters[chapters.length-1].slug, path: chapters[chapters.length-1].url })"
                             class="flex-1 min-w-[200px] bg-brand-600 text-white p-4 rounded-2xl font-black uppercase text-xs tracking-widest text-center hover:bg-brand-700 transition-all shadow-lg shadow-brand-600/20">
                             Read First Chapter
                         </a>
                         <a href="#"
+                            @click.prevent="window.navigate('comic-view', { slug: chapters[0].slug, path: chapters[0].url })"
                             class="flex-1 min-w-[200px] bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white p-4 rounded-2xl font-black uppercase text-xs tracking-widest text-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-all">
                             Read Last Chapter
                         </a>
@@ -158,7 +177,8 @@
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <template x-for="ch in chapters" :key="ch.id">
-                                <a :href="ch.url"
+                                <a href="#"
+                                    @click.prevent="window.navigate('comic-view', { slug: ch.slug, path: ch.url })"
                                     class="group flex items-center justify-between p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-brand-500 hover:shadow-lg hover:shadow-brand-500/5 transition-all">
                                     <div class="flex items-center gap-4">
                                         <div class="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-xs font-black text-gray-400 group-hover:text-brand-600 transition-colors"
