@@ -14,7 +14,7 @@
             this.isLoading = true;
             // Cari data komik dari array global 'posts' berdasarkan slug/id
             const slug = params.id;
-            this.comic = posts.find(p => p.id === slug || p.url.includes(slug));
+            this.comic = posts.find(p => p.id === slug || (p.path || '').includes(slug));
             
             if (this.comic) {
                 // Simulasi daftar chapter (dalam produksi ini bisa diambil dari feed/metadata)

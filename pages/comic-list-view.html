@@ -23,15 +23,19 @@
         const activeGenre = params.category || this.selectedGenre;
         const activeStatus = params.status || this.selectedStatus;
         return posts.filter(item => {
-            if (this.searchQuery && !item.title.toLowerCase().includes(this.searchQuery.toLowerCase())) return false;
+            const title = item.title || '';
+            const tags = item.tags || '';
+            
+            if (this.searchQuery && !title.toLowerCase().includes(this.searchQuery.toLowerCase())) return false;
+            
             if (activeStatus !== 'All') {
-                const isCompleted = (item.tags || '').toLowerCase().includes('completed');
+                const isCompleted = tags.toLowerCase().includes('completed');
                 if (activeStatus === 'Completed' && !isCompleted) return false;
                 if (activeStatus === 'Ongoing' && isCompleted) return false;
             }
-            if (activeGenre && !(item.tags || '').includes(activeGenre)) return false;
+            if (activeGenre && !tags.includes(activeGenre)) return false;
             if (activeChar !== 'all') {
-                const firstChar = item.title.trim().charAt(0).toUpperCase();
+                const firstChar = title.trim().charAt(0).toUpperCase();
                 if (activeChar === '0-9') {
                     if (!/[0-9]/.test(firstChar)) return false;
                 } else {
