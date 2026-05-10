@@ -1,65 +1,47 @@
-<div id="comic-list-view" class="animate-fade-in" 
-    x-data="{ 
-        selectedStatus: 'All',
-        selectedGenre: '',
-        searchQuery: '',
-        selectedChar: 'all',
-
-        init() {
-            // Sinkronisasi awal
+<div id="comic-list-view" class="animate-fade-in" x-data="{ 
+    selectedStatus: 'All',
+    selectedGenre: '',
+    searchQuery: '',
+    selectedChar: 'all',
+    init() {
+        this.syncParams();
+        this.$watch('params', () => {
+            console.log('[ComicView] Params changed');
             this.syncParams();
-            
-            // Pantau perubahan parameter secara reaktif
-            this.$watch('params', () => {
-                console.log('[ComicView] Params changed, re-syncing...');
-                this.syncParams();
-            });
-        },
-
-        syncParams() {
-            if (params.id) this.selectedChar = params.id;
-            else if (params.char) this.selectedChar = params.char;
-            else this.selectedChar = 'all';
-
-            if (params.category) this.selectedGenre = params.category;
-            if (params.status) this.selectedStatus = params.status;
-            if (params.q) this.searchQuery = params.q;
-        },
-
-        get filteredComics() {
-            // Gunakan parameter dari router secara langsung agar reaktif terhadap perubahan URL
-            const activeChar = params.char || params.id || this.selectedChar;
-            const activeGenre = params.category || this.selectedGenre;
-            const activeStatus = params.status || this.selectedStatus;
-
-            return posts.filter(item => {
-                // Filter by Search Query
-                if (this.searchQuery && !item.title.toLowerCase().includes(this.searchQuery.toLowerCase())) return false;
-                
-                // Filter by Status
-                if (activeStatus !== 'All') {
-                    const isCompleted = (item.tags || '').toLowerCase().includes('completed');
-                    if (activeStatus === 'Completed' && !isCompleted) return false;
-                    if (activeStatus === 'Ongoing' && isCompleted) return false;
+        });
+    },
+    syncParams() {
+        if (params.id) this.selectedChar = params.id;
+        else if (params.char) this.selectedChar = params.char;
+        else this.selectedChar = 'all';
+        if (params.category) this.selectedGenre = params.category;
+        if (params.status) this.selectedStatus = params.status;
+        if (params.q) this.searchQuery = params.q;
+    },
+    get filteredComics() {
+        const activeChar = params.char || params.id || this.selectedChar;
+        const activeGenre = params.category || this.selectedGenre;
+        const activeStatus = params.status || this.selectedStatus;
+        return posts.filter(item => {
+            if (this.searchQuery && !item.title.toLowerCase().includes(this.searchQuery.toLowerCase())) return false;
+            if (activeStatus !== 'All') {
+                const isCompleted = (item.tags || '').toLowerCase().includes('completed');
+                if (activeStatus === 'Completed' && !isCompleted) return false;
+                if (activeStatus === 'Ongoing' && isCompleted) return false;
+            }
+            if (activeGenre && !(item.tags || '').includes(activeGenre)) return false;
+            if (activeChar !== 'all') {
+                const firstChar = item.title.trim().charAt(0).toUpperCase();
+                if (activeChar === '0-9') {
+                    if (!/[0-9]/.test(firstChar)) return false;
+                } else {
+                    if (firstChar !== activeChar) return false;
                 }
-
-                // Filter by Genre
-                if (activeGenre && !(item.tags || '').includes(activeGenre)) return false;
-
-                // Filter by Alphabet (A-Z)
-                if (activeChar !== 'all') {
-                    const firstChar = item.title.trim().charAt(0).toUpperCase();
-                    if (activeChar === '0-9') {
-                        if (!/[0-9]/.test(firstChar)) return false;
-                    } else {
-                        if (firstChar !== activeChar) return false;
-                    }
-                }
-
-                return true;
-            });
-        }
-    }">
+            }
+            return true;
+        });
+    }
+}">
     <!-- Page Header & Search -->
     <div class='relative py-12 mb-8 bg-gray-900 rounded-3xl overflow-hidden shadow-2xl shadow-black/20'>
         <div class='absolute inset-0 opacity-20'>
