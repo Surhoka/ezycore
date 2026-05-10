@@ -9,9 +9,8 @@
             this.$watch('params.id', () => this.loadComic());
         },
 
-        loadComic() {
+        async loadComic() {
             this.isLoading = true;
-            // Ambil identifier (bisa ID atau Slug dari URL)
             const identifier = params.id || params.slug;
             
             if (!identifier) {
@@ -19,22 +18,43 @@
                 return;
             }
 
-            // Cari data komik utama (berdasarkan ID, Path, atau Judul)
+            // 1. Cari di array posts global (Fast Path)
             const searchKey = identifier.toLowerCase();
             this.comic = posts.find(p => {
                 const pId = String(p.id || '').toLowerCase();
                 const pPath = String(p.path || '').toLowerCase();
                 const pTitle = String(p.title || '').toLowerCase();
-                
                 return pId === searchKey || pPath.includes(searchKey) || pTitle === searchKey;
             });
             
             if (this.comic) {
-                // Ambil deskripsi/sinopsis dari metadata
-                // Prioritas: description > snippet
-                this.comic.summary = this.comic.description || this.comic.snippet || 'No synopsis available.';
+                // Set sinopsis awal dari snippet
+                this.comic.summary = this.comic.description || this.comic.snippet || 'Loading synopsis...';
 
-                // Ekstrak Judul Seri secara cerdas (menangani ' - ', '-Chapter', atau ' Chapter')
+                // 2. Strategi Deep Fetch (Mirip post-view.html)
+                // Jika sinopsis terasa pendek atau kita ingin data yang lebih akurat
+                if (this.comic.path && (this.comic.summary.length < 100 || this.comic.summary === 'Loading synopsis...')) {
+                    try {
+                        const res = await fetch(this.comic.path);
+                        if (res.ok) {
+                            const html = await res.text();
+                            // Gunakan parser metadata global jika ada
+                            if (window.app && typeof window.app.parseMetaFromHTML === 'function') {
+                                const deepMeta = window.app.parseMetaFromHTML(html);
+                                if (deepMeta && (deepMeta.description || deepMeta.body)) {
+                                    this.comic.summary = deepMeta.description || deepMeta.body;
+                                }
+                            } else {
+                                // Fallback manual: Ambil dari container body standar
+                                const doc = new DOMParser().parseFromString(html, 'text/html');
+                                const bodyNode = doc.querySelector('.ezy-post-body') || doc.querySelector('.post-body') || doc.querySelector('.entry-content');
+                                if (bodyNode) this.comic.summary = bodyNode.innerHTML;
+                            }
+                        }
+                    } catch (e) { console.warn('Deep fetch synopsis failed', e); }
+                }
+
+                // Ekstrak Judul Seri secara cerdas
                 let seriesTitle = this.comic.title.split(' - ')[0];
                 if (seriesTitle.includes('-Chapter')) seriesTitle = seriesTitle.split('-Chapter')[0];
                 else if (seriesTitle.includes(' Chapter')) seriesTitle = seriesTitle.split(' Chapter')[0];
