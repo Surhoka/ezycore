@@ -17,28 +17,32 @@
         },
 
         get filteredComics() {
+            // Gunakan parameter dari router secara langsung agar reaktif terhadap perubahan URL
+            const activeChar = params.char || params.id || this.selectedChar;
+            const activeGenre = params.category || this.selectedGenre;
+            const activeStatus = params.status || this.selectedStatus;
+
             return posts.filter(item => {
                 // Filter by Search Query
                 if (this.searchQuery && !item.title.toLowerCase().includes(this.searchQuery.toLowerCase())) return false;
                 
                 // Filter by Status
-                if (this.selectedStatus !== "All") {
-                    // Logika status bisa disesuaikan dengan data post (misal dari tags atau metadata)
+                if (activeStatus !== "All") {
                     const isCompleted = (item.tags || "").toLowerCase().includes("completed");
-                    if (this.selectedStatus === "Completed" && !isCompleted) return false;
-                    if (this.selectedStatus === "Ongoing" && isCompleted) return false;
+                    if (activeStatus === "Completed" && !isCompleted) return false;
+                    if (activeStatus === "Ongoing" && isCompleted) return false;
                 }
 
                 // Filter by Genre
-                if (this.selectedGenre && !(item.tags || "").includes(this.selectedGenre)) return false;
+                if (activeGenre && !(item.tags || "").includes(activeGenre)) return false;
 
                 // Filter by Alphabet (A-Z)
-                if (this.selectedChar !== "all") {
+                if (activeChar !== "all") {
                     const firstChar = item.title.trim().charAt(0).toUpperCase();
-                    if (this.selectedChar === "0-9") {
+                    if (activeChar === "0-9") {
                         if (!/[0-9]/.test(firstChar)) return false;
                     } else {
-                        if (firstChar !== this.selectedChar) return false;
+                        if (firstChar !== activeChar) return false;
                     }
                 }
 
