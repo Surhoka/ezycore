@@ -1,4 +1,4 @@
-<div id='comic-list-view' class='animate-fade-in' 
+<div id="comic-list-view" class="animate-fade-in" 
     x-data="{ 
         selectedStatus: 'All',
         selectedGenre: '',
@@ -59,7 +59,7 @@
                 return true;
             });
         }
-    }'>
+    }">
     <!-- Page Header & Search -->
     <div class='relative py-12 mb-8 bg-gray-900 rounded-3xl overflow-hidden shadow-2xl shadow-black/20'>
         <div class='absolute inset-0 opacity-20'>
@@ -98,10 +98,10 @@
                     Status
                 </h3>
                 <div class='flex flex-col gap-2'>
-                    <template x-for='stat in ["All", "Ongoing", "Completed"]'>
-                        <label class='flex items-center gap-3 p-2 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group'>
-                            <input type='radio' name='status' :value='stat' x-model='selectedStatus' class='w-4 h-4 text-brand-600 border-gray-300 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800' />
-                            <span class='text-sm font-bold text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors' x-text='stat'></span>
+                    <template x-for="stat in ['All', 'Ongoing', 'Completed']">
+                        <label class="flex items-center gap-3 p-2 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group">
+                            <input type="radio" name="status" :value="stat" x-model="selectedStatus" class="w-4 h-4 text-brand-600 border-gray-300 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800" />
+                            <span class="text-sm font-bold text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors" x-text="stat"></span>
                         </label>
                     </template>
                 </div>
@@ -114,12 +114,12 @@
                     Genre Popular
                 </h3>
                 <div class='flex flex-wrap gap-2'>
-                    <template x-for='genre in allGenres.slice(0, 15)' :key='genre'>
+                    <template x-for="genre in allGenres.slice(0, 15)" :key="genre">
                         <button 
-                            @click='selectedGenre = genre'
-                            :class='selectedGenre === genre ? "bg-brand-600 text-white shadow-lg shadow-brand-500/20" : "bg-gray-50 dark:bg-gray-800 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"'
-                            class='px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all'
-                            x-text='genre'>
+                            @click="selectedGenre = genre"
+                            :class="selectedGenre === genre ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/20' : 'bg-gray-50 dark:bg-gray-800 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700'"
+                            class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all"
+                            x-text="genre">
                         </button>
                     </template>
                 </div>
