@@ -18,14 +18,16 @@
                 return;
             }
 
-            // 1. Cari di array posts global (Fast Path)
+            // Cari data komik utama dengan prioritas:
+            // 1. Judul Sama Persis (Case Insensitive)
+            // 2. ID Sama Persis
+            // 3. Path Matching (Fallback terakhir)
             const searchKey = identifier.toLowerCase();
-            this.comic = posts.find(p => {
-                const pId = String(p.id || '').toLowerCase();
-                const pPath = String(p.path || '').toLowerCase();
-                const pTitle = String(p.title || '').toLowerCase();
-                return pId === searchKey || pPath.includes(searchKey) || pTitle === searchKey;
-            });
+            
+            // Urutan prioritas sangat penting
+            this.comic = posts.find(p => String(p.title || '').toLowerCase() === searchKey) ||
+                         posts.find(p => String(p.id || '').toLowerCase() === searchKey) ||
+                         posts.find(p => String(p.path || '').toLowerCase().includes(searchKey));
             
             if (this.comic) {
                 // Set sinopsis awal dari snippet
