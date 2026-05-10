@@ -11,9 +11,23 @@
 
         loadComic() {
             this.isLoading = true;
-            const slug = params.id;
-            // Cari data komik utama (berdasarkan slug, path, atau judul)
-            this.comic = posts.find(p => p.id === slug || (p.path || '').includes(slug) || p.title === slug);
+            // Ambil identifier (bisa ID atau Slug dari URL)
+            const identifier = params.id || params.slug;
+            
+            if (!identifier) {
+                this.isLoading = false;
+                return;
+            }
+
+            // Cari data komik utama (berdasarkan ID, Path, atau Judul)
+            const searchKey = identifier.toLowerCase();
+            this.comic = posts.find(p => {
+                const pId = String(p.id || '').toLowerCase();
+                const pPath = String(p.path || '').toLowerCase();
+                const pTitle = String(p.title || '').toLowerCase();
+                
+                return pId === searchKey || pPath.includes(searchKey) || pTitle === searchKey;
+            });
             
             if (this.comic) {
                 // Ekstrak Judul Seri secara cerdas (menangani ' - ', '-Chapter', atau ' Chapter')
