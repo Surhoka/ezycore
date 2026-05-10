@@ -143,8 +143,8 @@
 
             <!-- Grid -->
             <div class='grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-6' x-show='!isLoading && filteredComics.length > 0'>
-                <template x-for='(item, index) in filteredComics' :key='index'>
-                    <div class='group cursor-pointer' @click='window.navigate("post", { slug: item.slug, path: item.path })'>
+                <template x-for="(item, index) in filteredComics" :key="index">
+                    <div class="group cursor-pointer" @click="window.navigate('comic-detail', { id: item.id || item.slug })">
                         <div class='relative aspect-[3/4] rounded-2xl overflow-hidden mb-4 shadow-lg border border-gray-100 dark:border-gray-800'>
                             <img :src='item.image || "https://dummyimage.com/300x400/374151/9ca3af&text=."' class='w-full h-full object-cover transition-transform duration-500 group-hover:scale-110' />
                             
