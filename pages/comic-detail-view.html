@@ -30,6 +30,10 @@
             });
             
             if (this.comic) {
+                // Ambil deskripsi/sinopsis dari metadata
+                // Prioritas: description > snippet
+                this.comic.summary = this.comic.description || this.comic.snippet || 'No synopsis available.';
+
                 // Ekstrak Judul Seri secara cerdas (menangani ' - ', '-Chapter', atau ' Chapter')
                 let seriesTitle = this.comic.title.split(' - ')[0];
                 if (seriesTitle.includes('-Chapter')) seriesTitle = seriesTitle.split('-Chapter')[0];
@@ -173,7 +177,7 @@
                             Synopsis
                         </h3>
                         <div class="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-800 leading-relaxed text-gray-600 dark:text-gray-400 text-sm italic shadow-sm"
-                            x-text="comic.summary">
+                            x-html="comic.summary">
                         </div>
                     </section>
 
