@@ -199,7 +199,7 @@
                 return {
                     title: raw.title || '',
                     description: raw.body || raw.description || raw.content || '',
-                    pages: raw.pages || raw.images || [],
+                    pages: raw.pages || raw.images || raw.comicImages || [],
                     image: raw.image || raw.imageurl || raw.imageUrl || '',
                     publishdate: raw.publishdate || '',
                     category: Array.isArray(raw.category) ? raw.category[0] : (raw.category || 'Comic'),
