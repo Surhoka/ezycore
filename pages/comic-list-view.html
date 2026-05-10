@@ -1,9 +1,9 @@
 <div id='comic-list-view' class='animate-fade-in' 
-    x-data='{ 
-        selectedStatus: "All",
-        selectedGenre: "",
-        searchQuery: "",
-        selectedChar: "all",
+    x-data="{ 
+        selectedStatus: 'All',
+        selectedGenre: '',
+        searchQuery: '',
+        selectedChar: 'all',
 
         init() {
             // Sinkronisasi awal
@@ -11,7 +11,7 @@
             
             // Pantau perubahan parameter secara reaktif
             this.$watch('params', () => {
-                console.log("[ComicView] Params changed, re-syncing...");
+                console.log('[ComicView] Params changed, re-syncing...');
                 this.syncParams();
             });
         },
