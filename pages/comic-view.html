@@ -228,31 +228,28 @@
 
                 if (this.pages.length > 0) {
                     console.log('[ComicView] Berhasil memuat ' + this.pages.length + ' halaman dari JSON.');
-                    this.isLoading = false;
-                    return;
+                } else {
+                    // Strategi 2: Ekstrak dari HTML jika Strategi 1 gagal atau kosong
+                    console.log('[ComicView] Mencoba ekstraksi dari HTML...');
+                    
+                    // Update Breadcrumb di Parent SPA
+                    if (window.app) window.app.updateBreadcrumb('comic-view');
+
+                    // Extract images from HTML
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(this.meta.description, 'text/html');
+
+                    const imgNodes = Array.from(doc.querySelectorAll('img')).filter(img => !img.closest('.ezy-meta'));
+                    console.log('[ComicView] Menemukan ' + imgNodes.length + ' tag <img> di dalam konten.');
+
+                    this.pages = imgNodes.map(img => {
+                        const parentLink = img.closest('a');
+                        if (parentLink && parentLink.href.match(/\.(jpg|jpeg|png|gif|webp)/i)) {
+                            return parentLink.href;
+                        }
+                        return img.src;
+                    }).filter(src => src && !src.includes('clear.gif') && !src.includes('pixel.gif')) || [];
                 }
-
-                // Log cuplikan konten yang akan diparsing
-                console.log('[ComicView] HTML yang akan diparsing (100 char pertama):', this.meta.description.substring(0, 100));
-
-                // Update Breadcrumb di Parent SPA
-                if (window.app) window.app.updateBreadcrumb('comic-view'); // Menggunakan label 'comic-view'
-
-                // Extract images from HTML
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(this.meta.description, 'text/html');
-
-                const imgNodes = Array.from(doc.querySelectorAll('img')).filter(img => !img.closest('.ezy-meta'));
-                console.log('[ComicView] Menemukan ' + imgNodes.length + ' tag <img> di dalam konten.');
-
-                this.pages = imgNodes.map(img => {
-                    const parentLink = img.closest('a');
-                    // Prefer higher resolution link if wrapped in Anchor
-                    if (parentLink && parentLink.href.match(/\.(jpg|jpeg|png|gif|webp)/i)) {
-                        return parentLink.href;
-                    }
-                    return img.src;
-                }).filter(src => src && !src.includes('clear.gif') && !src.includes('pixel.gif')) || [];
 
                 // Strategi 3: Tambahkan Gambar Utama (Cover) ke urutan pertama jika belum ada
                 if (this.meta.image && !this.pages.includes(this.meta.image)) {
