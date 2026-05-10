@@ -153,16 +153,16 @@
                     <div
                         class="flex flex-wrap gap-4 p-6 bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm"
                         x-show="chapters.length > 0">
-                        <a href="#"
-                            @click.prevent="window.navigate('comic-view', { slug: chapters[chapters.length-1].slug, path: chapters[chapters.length-1].url })"
+                        <button
+                            @click="window.navigate('comic-view', { slug: chapters[chapters.length-1].slug, path: chapters[chapters.length-1].url })"
                             class="flex-1 min-w-[200px] bg-brand-600 text-white p-4 rounded-2xl font-black uppercase text-xs tracking-widest text-center hover:bg-brand-700 transition-all shadow-lg shadow-brand-600/20">
                             Read First Chapter
-                        </a>
-                        <a href="#"
-                            @click.prevent="window.navigate('comic-view', { slug: chapters[0].slug, path: chapters[0].url })"
+                        </button>
+                        <button
+                            @click="window.navigate('comic-view', { slug: chapters[0].slug, path: chapters[0].url })"
                             class="flex-1 min-w-[200px] bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white p-4 rounded-2xl font-black uppercase text-xs tracking-widest text-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-all">
                             Read Last Chapter
-                        </a>
+                        </button>
                     </div>
 
                     <!-- Synopsis -->
@@ -191,9 +191,9 @@
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <template x-for="ch in chapters" :key="ch.id">
-                                <a href="#"
-                                    @click.prevent="window.navigate('comic-view', { slug: ch.slug, path: ch.url })"
-                                    class="group flex items-center justify-between p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-brand-500 hover:shadow-lg hover:shadow-brand-500/5 transition-all">
+                                <button
+                                    @click="window.navigate('comic-view', { slug: ch.slug, path: ch.url })"
+                                    class="group w-full flex items-center justify-between p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-brand-500 hover:shadow-lg hover:shadow-brand-500/5 transition-all text-left">
                                     <div class="flex items-center gap-4">
                                         <div class="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-xs font-black text-gray-400 group-hover:text-brand-600 transition-colors"
                                             x-text="'#' + ch.id"></div>
@@ -202,7 +202,7 @@
                                             x-text="ch.title"></span>
                                     </div>
                                     <span class="text-[10px] font-medium text-gray-400 italic" x-text="ch.date"></span>
-                                </a>
+                                </button>
                             </template>
                         </div>
                     </section>
