@@ -10,89 +10,116 @@
         },
 
         async loadComic() {
-            this.isLoading = true;
             const identifier = params.id || params.slug;
-            
             if (!identifier) {
                 this.isLoading = false;
                 return;
             }
 
+            this.isLoading = true;
             const searchKey = identifier.toLowerCase();
 
-            // Cari data komik utama dengan prioritas:
-            // 1. Metadata Hand-off (Sangat penting saat reload)
+            // === STRATEGY 1: Metadata Hand-off (Sangat penting saat reload) ===
             if (window._lastResolvedMeta && (
                 String(window._lastResolvedMeta.title || '').toLowerCase() === searchKey ||
-                String(window._lastResolvedMeta.id || '').toLowerCase() === searchKey ||
-                String(window._lastResolvedMeta.slug || '').toLowerCase() === searchKey
+                String(window._lastResolvedMeta.slug || '').toLowerCase() === searchKey ||
+                String(window._lastResolvedMeta.id || '').toLowerCase() === searchKey
             )) {
+                console.log('[ComicDetail] Using Hand-off Meta');
                 this.comic = window._lastResolvedMeta;
+                this.isLoading = false; // Tampilkan info utama segera!
+                
+                // Jangan return, kita tetap butuh memproses chapters jika posts sudah ada
+                this.processComicData();
             }
 
-            // 2. Cari di array posts global (Jika Hand-off tidak tersedia)
-            if (!this.comic) {
-                this.comic = (window.posts || []).find(p => String(p.title || '').toLowerCase() === searchKey) ||
-                             (window.posts || []).find(p => String(p.id || '').toLowerCase() === searchKey) ||
-                             (window.posts || []).find(p => String(p.path || '').toLowerCase().includes(searchKey));
-            }
-            
-            if (this.comic) {
-                // Set sinopsis awal dari snippet
-                this.comic.summary = this.comic.description || this.comic.snippet || 'Loading synopsis...';
+            // === STRATEGY 2: Search in Global Posts ===
+            // Jika hand-off tidak ada atau kita ingin memastikan data terbaru
+            const findInPosts = () => {
+                if (!window.posts || window.posts.length === 0) return null;
+                return window.posts.find(p => 
+                    String(p.title || '').toLowerCase() === searchKey ||
+                    String(p.id || '').toLowerCase() === searchKey ||
+                    String(p.path || '').toLowerCase().includes(searchKey)
+                );
+            };
 
-                // 2. Strategi Deep Fetch (Mirip post-view.html)
-                if (this.comic.path && (this.comic.summary.length < 100 || this.comic.summary === 'Loading synopsis...')) {
-                    try {
-                        const res = await fetch(this.comic.path);
+            const found = findInPosts();
+            if (found) {
+                this.comic = found;
+                this.processComicData();
+                this.isLoading = false;
+            } else if (!this.comic) {
+                // === STRATEGY 3: Deep Fetch (Jika benar-benar tidak ada di mana pun) ===
+                try {
+                    const path = params.path || (window.location.pathname.includes('/20') ? window.location.pathname : null);
+                    if (path) {
+                        const res = await fetch(path);
                         if (res.ok) {
                             const html = await res.text();
-                            if (window.app && typeof window.app.parseMetaFromHTML === 'function') {
+                            if (window.app?.parseMetaFromHTML) {
                                 const deepMeta = window.app.parseMetaFromHTML(html);
-                                if (deepMeta && (deepMeta.description || deepMeta.body)) {
-                                    this.comic.summary = deepMeta.description || deepMeta.body;
+                                if (deepMeta) {
+                                    this.comic = deepMeta;
+                                    this.processComicData();
                                 }
-                            } else {
-                                const doc = new DOMParser().parseFromString(html, 'text/html');
-                                const bodyNode = doc.querySelector('.ezy-post-body') || doc.querySelector('.post-body') || doc.querySelector('.entry-content');
-                                if (bodyNode) this.comic.summary = bodyNode.innerHTML;
                             }
                         }
-                    } catch (e) { console.warn('Deep fetch synopsis failed', e); }
-                }
-
-                // Ekstrak Judul Seri secara cerdas
-                let seriesTitle = this.comic.title.split(' - ')[0];
-                if (seriesTitle.includes('-Chapter')) seriesTitle = seriesTitle.split('-Chapter')[0];
-                else if (seriesTitle.includes(' Chapter')) seriesTitle = seriesTitle.split(' Chapter')[0];
-                else if (seriesTitle.includes(' chapter')) seriesTitle = seriesTitle.split(' chapter')[0];
-                seriesTitle = seriesTitle.trim();
-                
-                // Cari semua postingan yang memiliki judul seri yang sama
-                const relatedPosts = (window.posts || []).filter(p => {
-                    let pSeries = p.title.split(' - ')[0];
-                    if (pSeries.includes('-Chapter')) pSeries = pSeries.split('-Chapter')[0];
-                    else if (pSeries.includes(' Chapter')) pSeries = pSeries.split(' Chapter')[0];
-                    else if (pSeries.includes(' chapter')) pSeries = pSeries.split(' chapter')[0];
-                    return pSeries.trim() === seriesTitle;
-                });
-
-                // Map menjadi format chapter yang rapi (Hanya jika bukan postingan utama)
-                this.chapters = relatedPosts
-                    .filter(p => p.title !== seriesTitle)
-                    .map(p => {
-                        const chapterLabel = p.title.replace(seriesTitle, '').replace(/^[\s-]*|[\s-]*$/g, '').trim() || 'Chapter 1';
-                        return {
-                            id: chapterLabel.replace(/[^0-9]/g, '') || '1',
-                            title: chapterLabel,
-                            date: formatDate(p.publishdate),
-                            url: p.path,
-                            slug: p.slug
-                        };
-                    }).sort((a, b) => b.id - a.id);
+                    }
+                } catch (e) { console.error('Deep fetch failed', e); }
             }
+
+            // [REACTIVE CHAPTERS] Jika posts belum dimuat, tunggu sampai dimuat
+            if (this.chapters.length === 0) {
+                const checkInterval = setInterval(() => {
+                    if (window.posts && window.posts.length > 0) {
+                        console.log('[ComicDetail] Posts loaded, updating chapters...');
+                        this.processComicData();
+                        clearInterval(checkInterval);
+                    }
+                }, 1000);
+                // Timeout setelah 10 detik
+                setTimeout(() => clearInterval(checkInterval), 10000);
+            }
+
+            setTimeout(() => { this.isLoading = false; }, 500);
+        },
+
+        processComicData() {
+            if (!this.comic) return;
+
+            // 1. Sync Synopsis
+            if (!this.comic.summary) {
+                this.comic.summary = this.comic.description || this.comic.snippet || 'No synopsis available.';
+            }
+
+            // 2. Extract Chapters from Global Posts
+            let seriesTitle = this.comic.title.split(' - ')[0];
+            if (seriesTitle.includes('-Chapter')) seriesTitle = seriesTitle.split('-Chapter')[0];
+            else if (seriesTitle.includes(' Chapter')) seriesTitle = seriesTitle.split(' Chapter')[0];
+            else if (seriesTitle.includes(' chapter')) seriesTitle = seriesTitle.split(' chapter')[0];
+            seriesTitle = seriesTitle.trim();
             
-            setTimeout(() => { this.isLoading = false; }, 300);
+            const relatedPosts = (window.posts || []).filter(p => {
+                let pSeries = p.title.split(' - ')[0];
+                if (pSeries.includes('-Chapter')) pSeries = pSeries.split('-Chapter')[0];
+                else if (pSeries.includes(' Chapter')) pSeries = pSeries.split(' Chapter')[0];
+                else if (pSeries.includes(' chapter')) pSeries = pSeries.split(' chapter')[0];
+                return pSeries.trim() === seriesTitle;
+            });
+
+            this.chapters = relatedPosts
+                .filter(p => p.title !== seriesTitle)
+                .map(p => {
+                    const chapterLabel = p.title.replace(seriesTitle, '').replace(/^[\s-]*|[\s-]*$/g, '').trim() || 'Chapter 1';
+                    return {
+                        id: chapterLabel.replace(/[^0-9]/g, '') || '1',
+                        title: chapterLabel,
+                        date: formatDate(p.publishdate),
+                        url: p.path,
+                        slug: p.slug
+                    };
+                }).sort((a, b) => b.id - a.id);
         },
     }">
 
