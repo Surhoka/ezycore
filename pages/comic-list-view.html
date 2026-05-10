@@ -6,14 +6,24 @@
         selectedChar: "all",
 
         init() {
-            // Sinkronisasi dengan parameter dari URL/Router
+            // Sinkronisasi awal
+            this.syncParams();
+            
+            // Pantau perubahan parameter secara reaktif
+            this.$watch('params', () => {
+                console.log("[ComicView] Params changed, re-syncing...");
+                this.syncParams();
+            });
+        },
+
+        syncParams() {
             if (params.id) this.selectedChar = params.id;
-            if (params.char) this.selectedChar = params.char;
+            else if (params.char) this.selectedChar = params.char;
+            else this.selectedChar = "all";
+
             if (params.category) this.selectedGenre = params.category;
             if (params.status) this.selectedStatus = params.status;
             if (params.q) this.searchQuery = params.q;
-            
-            console.log("[ComicView] Initialized with:", { char: this.selectedChar, genre: this.selectedGenre });
         },
 
         get filteredComics() {
@@ -150,7 +160,7 @@
             </div>
 
             <!-- Grid -->
-            <div class='grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-6' x-show='!isLoading'>
+            <div class='grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-6' x-show='!isLoading && filteredComics.length > 0'>
                 <template x-for='(item, index) in filteredComics' :key='index'>
                     <div class='group cursor-pointer' @click='window.navigate("post", { slug: item.slug, path: item.path })'>
                         <div class='relative aspect-[3/4] rounded-2xl overflow-hidden mb-4 shadow-lg border border-gray-100 dark:border-gray-800'>
@@ -179,6 +189,18 @@
                         <p class='text-[11px] text-gray-500 dark:text-gray-400 font-bold mt-1'>Chapter 124</p>
                     </div>
                 </template>
+            </div>
+
+            <!-- No Post Found State -->
+            <div class='py-20 text-center' x-show='!isLoading && filteredComics.length === 0'>
+                <div class='inline-flex items-center justify-center w-20 h-20 bg-gray-50 dark:bg-gray-800 rounded-3xl mb-6'>
+                    <svg class='w-10 h-10 text-gray-300 dark:text-gray-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                        <path d='M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5'/>
+                    </svg>
+                </div>
+                <h3 class='text-xl font-black text-gray-900 dark:text-white mb-2 uppercase tracking-tighter'>No Comics Found</h3>
+                <p class='text-gray-500 dark:text-gray-400 text-sm max-w-xs mx-auto'>Maaf, tidak ada komik yang sesuai dengan filter atau kriteria pencarian Anda.</p>
+                <button @click='selectedChar = "all"; selectedGenre = ""; selectedStatus = "All"; searchQuery = ""' class='mt-8 text-xs font-black text-brand-600 uppercase tracking-widest hover:text-brand-700 transition-colors'>Clear All Filters</button>
             </div>
 
             <!-- Pagination -->
