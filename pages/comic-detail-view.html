@@ -18,36 +18,41 @@
                 return;
             }
 
-            // Cari data komik utama dengan prioritas:
-            // 1. Judul Sama Persis (Case Insensitive)
-            // 2. ID Sama Persis
-            // 3. Path Matching (Fallback terakhir)
             const searchKey = identifier.toLowerCase();
-            
-            // Urutan prioritas sangat penting
-            this.comic = posts.find(p => String(p.title || '').toLowerCase() === searchKey) ||
-                         posts.find(p => String(p.id || '').toLowerCase() === searchKey) ||
-                         posts.find(p => String(p.path || '').toLowerCase().includes(searchKey));
+
+            // Cari data komik utama dengan prioritas:
+            // 1. Metadata Hand-off (Sangat penting saat reload)
+            if (window._lastResolvedMeta && (
+                String(window._lastResolvedMeta.title || '').toLowerCase() === searchKey ||
+                String(window._lastResolvedMeta.id || '').toLowerCase() === searchKey ||
+                String(window._lastResolvedMeta.slug || '').toLowerCase() === searchKey
+            )) {
+                this.comic = window._lastResolvedMeta;
+            }
+
+            // 2. Cari di array posts global (Jika Hand-off tidak tersedia)
+            if (!this.comic) {
+                this.comic = (window.posts || []).find(p => String(p.title || '').toLowerCase() === searchKey) ||
+                             (window.posts || []).find(p => String(p.id || '').toLowerCase() === searchKey) ||
+                             (window.posts || []).find(p => String(p.path || '').toLowerCase().includes(searchKey));
+            }
             
             if (this.comic) {
                 // Set sinopsis awal dari snippet
                 this.comic.summary = this.comic.description || this.comic.snippet || 'Loading synopsis...';
 
                 // 2. Strategi Deep Fetch (Mirip post-view.html)
-                // Jika sinopsis terasa pendek atau kita ingin data yang lebih akurat
                 if (this.comic.path && (this.comic.summary.length < 100 || this.comic.summary === 'Loading synopsis...')) {
                     try {
                         const res = await fetch(this.comic.path);
                         if (res.ok) {
                             const html = await res.text();
-                            // Gunakan parser metadata global jika ada
                             if (window.app && typeof window.app.parseMetaFromHTML === 'function') {
                                 const deepMeta = window.app.parseMetaFromHTML(html);
                                 if (deepMeta && (deepMeta.description || deepMeta.body)) {
                                     this.comic.summary = deepMeta.description || deepMeta.body;
                                 }
                             } else {
-                                // Fallback manual: Ambil dari container body standar
                                 const doc = new DOMParser().parseFromString(html, 'text/html');
                                 const bodyNode = doc.querySelector('.ezy-post-body') || doc.querySelector('.post-body') || doc.querySelector('.entry-content');
                                 if (bodyNode) this.comic.summary = bodyNode.innerHTML;
@@ -64,7 +69,7 @@
                 seriesTitle = seriesTitle.trim();
                 
                 // Cari semua postingan yang memiliki judul seri yang sama
-                const relatedPosts = posts.filter(p => {
+                const relatedPosts = (window.posts || []).filter(p => {
                     let pSeries = p.title.split(' - ')[0];
                     if (pSeries.includes('-Chapter')) pSeries = pSeries.split('-Chapter')[0];
                     else if (pSeries.includes(' Chapter')) pSeries = pSeries.split(' Chapter')[0];
@@ -88,7 +93,7 @@
             }
             
             setTimeout(() => { this.isLoading = false; }, 300);
-        }
+        },
     }">
 
     <!-- Error State -->
