@@ -254,16 +254,16 @@
                     return img.src;
                 }).filter(src => src && !src.includes('clear.gif') && !src.includes('pixel.gif')) || [];
 
-                // FALLBACK: Jika tidak ada <img> di body, gunakan gambar utama dari metadata
-                if (this.pages.length === 0 && this.meta.image) {
-                    console.log('[ComicView] Menggunakan fallback meta.image');
-                    this.pages = [this.meta.image];
+                // Strategi 3: Tambahkan Gambar Utama (Cover) ke urutan pertama jika belum ada
+                if (this.meta.image && !this.pages.includes(this.meta.image)) {
+                    console.log('[ComicView] Menyisipkan meta.image sebagai cover.');
+                    this.pages.unshift(this.meta.image);
                 }
 
-                if (imgNodes.length > 0 && this.pages.length === 0) {
+                if (imgNodes && imgNodes.length > 0 && this.pages.length === 0) {
                     console.warn('[ComicView] Peringatan: Gambar ditemukan tapi semuanya terfilter (mungkin link tidak valid atau gambar transparan).');
                 } else if (this.pages.length > 0) {
-                    console.log('[ComicView] Berhasil mengekstrak ' + this.pages.length + ' halaman komik.');
+                    console.log('[ComicView] Berhasil memuat ' + this.pages.length + ' halaman komik.');
                 } else {
                     console.warn('[ComicView] Tidak ada gambar sama sekali di dalam deskripsi postingan.');
                 }
