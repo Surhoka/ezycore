@@ -1,9 +1,51 @@
-<div id='comic-list-view' class='animate-fade-in' x-data='{ 
-    currentFilter: "all",
-    currentSort: "latest",
-    searchQuery: "",
-    selectedChar: "all"
-}'>
+<div id='comic-list-view' class='animate-fade-in' 
+    x-data='{ 
+        selectedStatus: "All",
+        selectedGenre: "",
+        searchQuery: "",
+        selectedChar: "all",
+
+        init() {
+            // Sinkronisasi dengan parameter dari URL/Router
+            if (params.id) this.selectedChar = params.id;
+            if (params.char) this.selectedChar = params.char;
+            if (params.category) this.selectedGenre = params.category;
+            if (params.status) this.selectedStatus = params.status;
+            if (params.q) this.searchQuery = params.q;
+            
+            console.log("[ComicView] Initialized with:", { char: this.selectedChar, genre: this.selectedGenre });
+        },
+
+        get filteredComics() {
+            return posts.filter(item => {
+                // Filter by Search Query
+                if (this.searchQuery && !item.title.toLowerCase().includes(this.searchQuery.toLowerCase())) return false;
+                
+                // Filter by Status
+                if (this.selectedStatus !== "All") {
+                    // Logika status bisa disesuaikan dengan data post (misal dari tags atau metadata)
+                    const isCompleted = (item.tags || "").toLowerCase().includes("completed");
+                    if (this.selectedStatus === "Completed" && !isCompleted) return false;
+                    if (this.selectedStatus === "Ongoing" && isCompleted) return false;
+                }
+
+                // Filter by Genre
+                if (this.selectedGenre && !(item.tags || "").includes(this.selectedGenre)) return false;
+
+                // Filter by Alphabet (A-Z)
+                if (this.selectedChar !== "all") {
+                    const firstChar = item.title.trim().charAt(0).toUpperCase();
+                    if (this.selectedChar === "0-9") {
+                        if (!/[0-9]/.test(firstChar)) return false;
+                    } else {
+                        if (firstChar !== this.selectedChar) return false;
+                    }
+                }
+
+                return true;
+            });
+        }
+    }'>
     <!-- Page Header & Search -->
     <div class='relative py-12 mb-8 bg-gray-900 rounded-3xl overflow-hidden shadow-2xl shadow-black/20'>
         <div class='absolute inset-0 opacity-20'>
@@ -44,7 +86,7 @@
                 <div class='flex flex-col gap-2'>
                     <template x-for='stat in ["All", "Ongoing", "Completed"]'>
                         <label class='flex items-center gap-3 p-2 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group'>
-                            <input type='radio' name='status' :value='stat' class='w-4 h-4 text-brand-600 border-gray-300 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800' checked />
+                            <input type='radio' name='status' :value='stat' x-model='selectedStatus' class='w-4 h-4 text-brand-600 border-gray-300 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800' />
                             <span class='text-sm font-bold text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors' x-text='stat'></span>
                         </label>
                     </template>
@@ -77,9 +119,16 @@
                 <div class='flex flex-col md:flex-row justify-between items-center gap-4'>
                     <!-- A-Z Navigation Mini -->
                     <div class='flex flex-wrap gap-1 justify-center'>
-                        <button class='w-8 h-8 flex items-center justify-center text-[10px] font-bold rounded-lg bg-brand-600 text-white shadow-sm'>ALL</button>
+                        <button 
+                            @click='selectedChar = "all"'
+                            :class='selectedChar === "all" ? "bg-brand-600 text-white shadow-sm" : "bg-gray-50 dark:bg-gray-800 text-gray-500"'
+                            class='w-8 h-8 flex items-center justify-center text-[10px] font-bold rounded-lg transition-all'>ALL</button>
                         <template x-for='char in "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")' :key='char'>
-                            <button class='w-8 h-8 flex items-center justify-center text-[10px] font-bold rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors' x-text='char'></button>
+                            <button 
+                                @click='selectedChar = char'
+                                :class='selectedChar === char ? "bg-brand-600 text-white shadow-sm" : "bg-gray-50 dark:bg-gray-800 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"'
+                                class='w-8 h-8 flex items-center justify-center text-[10px] font-bold rounded-lg transition-colors' 
+                                x-text='char'></button>
                         </template>
                     </div>
 
@@ -98,7 +147,7 @@
 
             <!-- Grid -->
             <div class='grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-6' x-show='!isLoading'>
-                <template x-for='(item, index) in posts.slice(0, 12)' :key='index'>
+                <template x-for='(item, index) in filteredComics' :key='index'>
                     <div class='group cursor-pointer' @click='window.navigate("post", { slug: item.slug, path: item.path })'>
                         <div class='relative aspect-[3/4] rounded-2xl overflow-hidden mb-4 shadow-lg border border-gray-100 dark:border-gray-800'>
                             <img :src='item.image || "https://dummyimage.com/300x400/374151/9ca3af&text=."' class='w-full h-full object-cover transition-transform duration-500 group-hover:scale-110' />
