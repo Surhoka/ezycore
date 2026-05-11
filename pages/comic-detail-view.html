@@ -4,13 +4,15 @@
         isLoading: true,
 
         init() {
-            this.loadComic();
-            this.$watch('window.app?.params.id', () => this.loadComic());
+            // Pastikan window.app sudah tersedia sebelum memuat komik
+            this.$nextTick(() => {
+                this.loadComic();
+                this.$watch('window.app.params.id', () => this.loadComic());
+            });
         },
 
         async loadComic() {
-            const appParams = window.app?.params || {};
-            const identifier = appParams.id || appParams.slug;
+            const identifier = window.app?.params?.id || window.app?.params?.slug;
             if (!identifier) {
                 this.isLoading = false;
                 return;
@@ -18,14 +20,12 @@
 
             this.isLoading = true;
             const searchKey = identifier.toLowerCase();
-            this.comic = null; // Reset comic data
-            this.chapters = []; // Reset chapters
 
             // === STRATEGY 1: Metadata Hand-off (Sangat penting saat reload) ===
             if (window._lastResolvedMeta && (
                 String(window._lastResolvedMeta.title || '').toLowerCase() === searchKey ||
                 String(window._lastResolvedMeta.slug || '').toLowerCase() === searchKey ||
-                String(window._lastResolvedMeta.id || '').toLowerCase() === searchKey
+                String(window._lastResolvedMeta.id || '').toLowerCase().includes(searchKey) // Gunakan includes untuk ID yang mungkin lebih panjang
             )) {
                 console.log('[ComicDetail] Using Hand-off Meta');
                 this.comic = window._lastResolvedMeta;
@@ -38,9 +38,8 @@
             // === STRATEGY 2: Search in Global Posts ===
             // Jika hand-off tidak ada atau kita ingin memastikan data terbaru
             const findInPosts = () => {
-                const allPosts = window.app?.posts || [];
-                if (allPosts.length === 0) return null;
-                return allPosts.find(p => 
+                if (!window.app?.posts || window.app.posts.length === 0) return null;
+                return window.app.posts.find(p => 
                     String(p.title || '').toLowerCase() === searchKey ||
                     String(p.id || '').toLowerCase() === searchKey ||
                     String(p.path || '').toLowerCase().includes(searchKey)
@@ -55,7 +54,7 @@
             } else if (!this.comic) {
                 // === STRATEGY 3: Deep Fetch (Jika benar-benar tidak ada di mana pun) ===
                 try {
-                    const path = appParams.path || (window.location.pathname.includes('/20') ? window.location.pathname : null);
+                    const path = window.app?.params?.path || (window.location.pathname.includes('/20') ? window.location.pathname : null);
                     if (path) {
                         const res = await fetch(path);
                         if (res.ok) {
@@ -74,14 +73,14 @@
 
             // [REACTIVE CHAPTERS] Jika posts belum dimuat, tunggu sampai dimuat
             if (this.chapters.length === 0) {
+                // Gunakan window.app.posts untuk konsistensi
                 const checkInterval = setInterval(() => {
-                    const allPosts = window.app?.posts || [];
-                    if (allPosts.length > 0) {
+                    if (window.app?.posts && window.app.posts.length > 0) {
                         console.log('[ComicDetail] Posts loaded, updating chapters...');
                         this.processComicData();
                         clearInterval(checkInterval);
                     }
-                }, 1000);
+                }, 200); // Cek lebih sering
                 // Timeout setelah 10 detik
                 setTimeout(() => clearInterval(checkInterval), 10000);
             }
@@ -94,18 +93,17 @@
 
             // 1. Sync Synopsis
             if (!this.comic.summary) {
-                this.comic.summary = this.stripHtmlTags(this.comic.description || this.comic.snippet || 'No synopsis available.');
+                this.comic.summary = this.comic.description || this.comic.snippet || 'No synopsis available.';
             }
 
             // 2. Extract Chapters from Global Posts
-            let seriesTitle = this.comic.title.split(' - ')[0];
+            let seriesTitle = this.comic.title.split(' - ')[0]; // Mengambil bagian sebelum ' - '
             if (seriesTitle.includes('-Chapter')) seriesTitle = seriesTitle.split('-Chapter')[0];
             else if (seriesTitle.includes(' Chapter')) seriesTitle = seriesTitle.split(' Chapter')[0];
             else if (seriesTitle.includes(' chapter')) seriesTitle = seriesTitle.split(' chapter')[0];
             seriesTitle = seriesTitle.trim();
             
-            const allPosts = window.app?.posts || [];
-            const relatedPosts = allPosts.filter(p => {
+            const relatedPosts = (window.app?.posts || []).filter(p => {
                 let pSeries = p.title.split(' - ')[0];
                 if (pSeries.includes('-Chapter')) pSeries = pSeries.split('-Chapter')[0];
                 else if (pSeries.includes(' Chapter')) pSeries = pSeries.split(' Chapter')[0];
@@ -117,33 +115,22 @@
                 .filter(p => p.title !== seriesTitle)
                 .map(p => {
                     const chapterLabel = p.title.replace(seriesTitle, '').replace(/^[\s-]*|[\s-]*$/g, '').trim() || 'Chapter 1';
+                    // Pastikan window.app.formatDate tersedia
+                    const formattedDate = window.app?.formatDate ? window.app.formatDate(p.publishdate) : p.publishdate;
                     return {
                         id: chapterLabel.replace(/[^0-9]/g, '') || '1',
                         title: chapterLabel,
-                        date: this.formatDate(p.publishdate),
+                        date: formattedDate,
                         url: p.path,
                         slug: p.slug
                     };
                 }).sort((a, b) => b.id - a.id);
-        },
 
-        formatDate(d) {
-            if (!d) return '';
-            return new Date(d).toLocaleDateString('id-ID', {
-                day: 'numeric', month: 'long', year: 'numeric'
-            });
-        },
-
-        stripHtmlTags(html) {
-            if (!html) return '';
-            try {
-                const tmp = document.createElement('div');
-                tmp.innerHTML = html;
-                return (tmp.textContent || tmp.innerText || '').trim();
-            } catch (e) {
-                return html.replace(/<[^>]*>?/gm, ' ').trim();
+            // Update breadcrumb setelah data komik dimuat
+            if (window.app?.updateBreadcrumb) {
+                window.app.updateBreadcrumb('comic-detail');
             }
-        }
+        },
     }">
 
     <!-- Error State -->
@@ -348,7 +335,7 @@
                                 <button @click="window.navigate('comic-view', { slug: ch.slug, path: ch.url })"
                                     class="w-full flex items-center justify-between p-4 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-800 hover:border-brand-500 dark:hover:border-brand-500 transition-all text-left group mb-2">
                                     <span
-                                        class="font-bold text-gray-800 dark:text-gray-200 group-hover:text-brand-600 dark:group-hover:text-brand-400 cursor-pointer"
+                                        class="font-bold text-gray-800 dark:text-gray-200 group-hover:text-brand-600 dark:group-hover:text-brand-400"
                                         x-text="ch.title"></span>
                                     <span class="text-xs font-medium text-gray-400 dark:text-gray-500"
                                         x-text="ch.date"></span>
