@@ -4,7 +4,7 @@
         isLoading: true,
         
         init() {
-            this.loadComic();
+            this.loadComi();
             this.$watch('window.app?.params.id', () => this.loadComic());
         },
 
@@ -339,7 +339,7 @@
                                 <button @click="window.navigate('comic-view', { slug: ch.slug, path: ch.url })"
                                     class="w-full flex items-center justify-between p-4 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-800 hover:border-brand-500 dark:hover:border-brand-500 transition-all text-left group mb-2">
                                     <span
-                                        class="font-bold text-gray-800 dark:text-gray-200 group-hover:text-brand-600 dark:group-hover:text-brand-400"
+                                        class="font-bold text-gray-800 dark:text-gray-200 group-hover:text-brand-600 dark:group-hover:text-brand-400 cursor-pointer"
                                         x-text="ch.title"></span>
                                     <span class="text-xs font-medium text-gray-400 dark:text-gray-500"
                                         x-text="ch.date"></span>
