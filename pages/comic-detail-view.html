@@ -153,58 +153,113 @@
     <!-- Main Content -->
     <template x-if="!isLoading && comic">
         <div class="space-y-8">
-            <!-- Hero Header -->
-            <div class="relative rounded-3xl overflow-hidden bg-gray-900 shadow-2xl shadow-black/30">
-                <!-- Blurred Background Cover -->
-                <div class="absolute inset-0 opacity-40 blur-2xl scale-110">
-                    <img :src="comic.image" class="w-full h-full object-cover" />
-                    <div class="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent"></div>
-                </div>
-
-                <div class="relative z-10 p-6 md:p-10 flex flex-col md:flex-row gap-8 items-start md:items-end">
-                    <!-- Cover Image -->
-                    <div
-                        class="w-48 md:w-64 flex-shrink-0 shadow-2xl shadow-black/50 rounded-2xl overflow-hidden transform md:-mb-16 ring-4 ring-white/10">
-                        <img :src="comic.image" class="w-full aspect-[3/4] object-cover" />
+            <!-- Hero Header - Two Column Layout -->
+            <div class="bg-gray-800 rounded-2xl overflow-hidden shadow-2xl">
+                <div class="flex flex-col md:flex-row gap-8 p-6 md:p-10">
+                    <!-- Cover Image - Left Side -->
+                    <div class="w-full md:w-56 flex-shrink-0">
+                        <img :src="comic.image" class="w-full aspect-[3/4] object-cover rounded-xl shadow-lg" />
                     </div>
 
-                    <!-- Info Info -->
-                    <div class="flex-1 text-white pb-4">
-                        <div class="flex flex-wrap gap-2 mb-4">
-                            <span
-                                class="px-3 py-1 bg-brand-600 text-[10px] font-black uppercase rounded-full tracking-wider"
-                                x-text="comic.status || 'Ongoing'"></span>
-                            <span
-                                class="px-3 py-1 bg-white/10 backdrop-blur-md text-[10px] font-black uppercase rounded-full tracking-wider"
-                                x-text="comic.type || 'Manga'"></span>
-                        </div>
-                        <h1 class="text-3xl md:text-5xl font-black mb-4 tracking-tighter leading-none uppercase"
-                            x-text="comic.title"></h1>
+                    <!-- Title & Info - Right Side -->
+                    <div class="flex-1 text-white flex flex-col justify-between">
+                        <!-- Title Section -->
+                        <div>
+                            <h1 class="text-2xl md:text-3xl font-black mb-2 uppercase" x-text="comic.title"></h1>
+                            <p class="text-sm text-gray-300 italic mb-4" x-text="comic.subtitle || 'Warm Evening Rain'"></p>
 
-                        <div class="flex flex-wrap items-center gap-6 text-sm text-gray-300 font-medium italic">
-                            <div class="flex items-center gap-2 text-yellow-400">
+                            <!-- Genre Tags as Buttons -->
+                            <div class="flex flex-wrap gap-2 mb-6">
+                                <template x-for="tag in (comic.tags || '').split(',')" :key="tag">
+                                    <template x-if="tag.trim()">
+                                        <button
+                                            class="px-4 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded text-xs font-bold uppercase tracking-wider transition-colors"
+                                            x-text="tag.trim()"></button>
+                                    </template>
+                                </template>
+                            </div>
+
+                            <!-- Synopsis Preview -->
+                            <div class="text-xs text-gray-300 leading-relaxed mb-4 line-clamp-3" x-text="comic.summary"></div>
+                        </div>
+
+                        <!-- Bookmark & Rating -->
+                        <div class="flex items-center justify-between pt-4 border-t border-gray-700">
+                            <button class="flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-sm transition-colors">
                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path
-                                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                    <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
                                 </svg>
-                                <span class="font-bold text-white not-italic">4.8</span>
-                                <span>Rating</span>
-                            </div>
-                            <div>
-                                <span class="font-bold text-white not-italic" x-text="comic.author || 'Unknown'"></span>
-                                <span>Author</span>
-                            </div>
-                            <div>
-                                <span class="font-bold text-white not-italic">1.2M</span>
-                                <span>Views</span>
+                                Bookmark
+                            </button>
+                            <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-1">
+                                    <template x-for="i in [1,2,3,4]">
+                                        <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                        </svg>
+                                    </template>
+                                    <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                    </svg>
+                                </div>
+                                <span class="text-sm font-bold">7.7</span>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Info Table -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 bg-gray-700 text-white border-t border-gray-600 text-xs">
+                    <div>
+                        <span class="text-gray-400 block text-[10px] font-bold uppercase mb-1">Status</span>
+                        <span class="font-bold" x-text="comic.status || 'Ongoing'"></span>
+                    </div>
+                    <div>
+                        <span class="text-gray-400 block text-[10px] font-bold uppercase mb-1">Type</span>
+                        <span class="font-bold">Manga</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-400 block text-[10px] font-bold uppercase mb-1">Released</span>
+                        <span class="font-bold">2023</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-400 block text-[10px] font-bold uppercase mb-1">Author</span>
+                        <span class="font-bold" x-text="comic.author || 'Unknown'"></span>
                     </div>
                 </div>
             </div>
 
+            <!-- Social Sharing Buttons -->
+            <div class="flex flex-wrap justify-center gap-3 py-6">
+                <a href="#" class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 0a10 10 0 1010 10A10 10 0 0010 0zm3.6 10.4h-2.2v7h-2.8v-7h-2v-2.4h2v-1.5c0-1.6.8-4 4-4 1.2 0 2 .1 2 .1v2.3h-1.4c-1.1 0-1.3.5-1.3 1.3v1.8h2.6z"/></svg>
+                    Facebook
+                </a>
+                <a href="#" class="flex items-center gap-2 px-4 py-2 bg-sky-400 text-white rounded-lg text-sm font-bold hover:bg-sky-500 transition-colors">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M19 3.8a7.9 7.9 0 01-2.1.6A3.7 3.7 0 0018.5 3c-.8.5-1.7.8-2.7.9a3.7 3.7 0 00-6.2 3.4A10.5 10.5 0 012.8 3.8a3.7 3.7 0 001.1 4.9A3.6 3.6 0 012 8.3v.1a3.7 3.7 0 003 3.6 3.7 3.7 0 01-1.6.1 3.7 3.7 0 003.5 2.5A7.4 7.4 0 011 15.8a10.4 10.4 0 005.7 1.7c6.8 0 10.5-5.6 10.5-10.5 0-.2 0-.4 0-.6.7-.5 1.4-1.2 1.9-2"/></svg>
+                    Twitter
+                </a>
+                <a href="#" class="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-bold hover:bg-green-600 transition-colors">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 0a10 10 0 1010 10A10 10 0 0010 0zm4.5 8.7c0 2.5-2 4.5-4.5 4.5s-4.5-2-4.5-4.5 2-4.5 4.5-4.5 4.5 2 4.5 4.5z"/></svg>
+                    WhatsApp
+                </a>
+                <a href="#" class="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 transition-colors">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 0a10 10 0 1010 10A10 10 0 0010 0zm1.5 13h-3v-8h3z"/></svg>
+                    Pinterest
+                </a>
+                <a href="#" class="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg text-sm font-bold hover:bg-sky-700 transition-colors">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 0a10 10 0 1010 10A10 10 0 0010 0zm4 10.5l-5.5 3.5v-7z"/></svg>
+                    Telegram
+                </a>
+            </div>
+
+            <!-- ADS Area -->
+            <div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-8 text-center text-gray-400 font-bold mb-8">
+                ADS AREA 728 x 90
+            </div>
+
             <!-- Content Body -->
-            <div class="flex flex-col lg:flex-row gap-10 pt-4 md:pt-16">
+            <div class="flex flex-col lg:flex-row gap-10">
                 <!-- Main Info -->
                 <div class="flex-1 space-y-10">
                     <!-- Actions -->
@@ -312,23 +367,45 @@
                         </div>
                     </div>
 
-                    <!-- Ad Space or Recommendation Mini -->
-                    <div class="bg-brand-600 rounded-3xl p-6 text-white overflow-hidden relative group">
-                        <div class="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform">
-                            <svg class="w-32 h-32" fill="currentColor" viewBox="0 0 24 24">
-                                <path
-                                    d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                            </svg>
-                        </div>
-                        <h4 class="text-sm font-black uppercase tracking-widest mb-2">Support Us</h4>
-                        <p class="text-xs text-brand-100 mb-4 leading-relaxed font-medium">Bantu kami tetap hidup dengan
-                            membagikan komik ini ke teman-temanmu!</p>
-                        <button
-                            class="w-full bg-white text-brand-600 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl">Share
-                            Series</button>
-                    </div>
                 </aside>
             </div>
+
+            <!-- Related Series Section -->
+            <section class="mt-12">
+                <h2 class="text-lg font-black text-gray-900 dark:text-white uppercase mb-6">Related Series</h2>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4 overflow-x-auto pb-4">
+                    <template x-for="related in chapters.slice(0, 7)" :key="related.id">
+                        <div class="flex-shrink-0 w-32 group cursor-pointer">
+                            <div class="relative rounded-xl overflow-hidden bg-gray-200 dark:bg-gray-700 aspect-[3/4] mb-2 shadow-md group-hover:shadow-lg transition-all">
+                                <img :src="comic.image" class="w-full h-full object-cover" />
+                                <div class="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded text-[10px] font-bold">
+                                    ONGOING
+                                </div>
+                            </div>
+                            <h4 class="text-xs font-bold text-gray-900 dark:text-white line-clamp-2 mb-1" x-text="related.title"></h4>
+                            <div class="flex items-center gap-1">
+                                <svg class="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                <span class="text-[10px] font-bold text-gray-600 dark:text-gray-400">7.3</span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </section>
+
+            <!-- Comment Section -->
+            <section class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
+                <h2 class="text-lg font-black text-gray-900 dark:text-white uppercase mb-6">Comment</h2>
+                
+                <div class="bg-white dark:bg-gray-900 rounded-2xl p-8 border border-gray-100 dark:border-gray-800 text-center">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Leave a Reply</h3>
+                    <p class="text-sm text-gray-500 mb-6">You must be logged in to post a comment.</p>
+                    <button class="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors">
+                        Log In
+                    </button>
+                </div>
+            </section>
         </div>
     </template>
 </div>
