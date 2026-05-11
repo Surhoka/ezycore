@@ -4,15 +4,12 @@
         isLoading: true,
 
         init() {
-            // Pastikan window.app sudah tersedia sebelum memuat komik
-            this.$nextTick(() => {
-                this.loadComic();
-                this.$watch('window.app.params.id', () => this.loadComic());
-            });
+            this.loadComic();
+            this.$watch('params.id', () => this.loadComic());
         },
 
         async loadComic() {
-            const identifier = window.app?.params?.id || window.app?.params?.slug;
+            const identifier = params.id || params.slug;
             if (!identifier) {
                 this.isLoading = false;
                 return;
@@ -25,7 +22,7 @@
             if (window._lastResolvedMeta && (
                 String(window._lastResolvedMeta.title || '').toLowerCase() === searchKey ||
                 String(window._lastResolvedMeta.slug || '').toLowerCase() === searchKey ||
-                String(window._lastResolvedMeta.id || '').toLowerCase().includes(searchKey) // Gunakan includes untuk ID yang mungkin lebih panjang
+                String(window._lastResolvedMeta.id || '').toLowerCase() === searchKey
             )) {
                 console.log('[ComicDetail] Using Hand-off Meta');
                 this.comic = window._lastResolvedMeta;
@@ -38,8 +35,8 @@
             // === STRATEGY 2: Search in Global Posts ===
             // Jika hand-off tidak ada atau kita ingin memastikan data terbaru
             const findInPosts = () => {
-                if (!window.app?.posts || window.app.posts.length === 0) return null;
-                return window.app.posts.find(p => 
+                if (!window.posts || window.posts.length === 0) return null;
+                return window.posts.find(p => 
                     String(p.title || '').toLowerCase() === searchKey ||
                     String(p.id || '').toLowerCase() === searchKey ||
                     String(p.path || '').toLowerCase().includes(searchKey)
@@ -54,7 +51,7 @@
             } else if (!this.comic) {
                 // === STRATEGY 3: Deep Fetch (Jika benar-benar tidak ada di mana pun) ===
                 try {
-                    const path = window.app?.params?.path || (window.location.pathname.includes('/20') ? window.location.pathname : null);
+                    const path = params.path || (window.location.pathname.includes('/20') ? window.location.pathname : null);
                     if (path) {
                         const res = await fetch(path);
                         if (res.ok) {
@@ -73,14 +70,13 @@
 
             // [REACTIVE CHAPTERS] Jika posts belum dimuat, tunggu sampai dimuat
             if (this.chapters.length === 0) {
-                // Gunakan window.app.posts untuk konsistensi
                 const checkInterval = setInterval(() => {
-                    if (window.app?.posts && window.app.posts.length > 0) {
+                    if (window.posts && window.posts.length > 0) {
                         console.log('[ComicDetail] Posts loaded, updating chapters...');
                         this.processComicData();
                         clearInterval(checkInterval);
                     }
-                }, 200); // Cek lebih sering
+                }, 1000);
                 // Timeout setelah 10 detik
                 setTimeout(() => clearInterval(checkInterval), 10000);
             }
