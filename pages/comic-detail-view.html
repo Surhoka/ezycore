@@ -2,19 +2,10 @@
         comic: null,
         chapters: [],
         isLoading: true,
-        
+
         init() {
             this.loadComic();
-            this.$watch('window.app?.params', () => this.loadComic());
-        },
-
-        getSeriesTitle(rawTitle) {
-            if (!rawTitle) return '';
-            let t = rawTitle.split(' - ')[0];
-            if (t.includes('-Chapter')) t = t.split('-Chapter')[0];
-            else if (t.includes(' Chapter')) t = t.split(' Chapter')[0];
-            else if (t.includes(' chapter')) t = t.split(' chapter')[0];
-            return t.trim();
+            this.$watch('window.app?.params.id', () => this.loadComic());
         },
 
         async loadComic() {
@@ -29,34 +20,38 @@
             const searchKey = identifier.toLowerCase();
             this.comic = null; // Reset comic data
             this.chapters = []; // Reset chapters
-            
-            const allPosts = window.app?.posts || [];
 
             // === STRATEGY 1: Metadata Hand-off (Sangat penting saat reload) ===
-            let baseMeta = null;
             if (window._lastResolvedMeta && (
                 String(window._lastResolvedMeta.title || '').toLowerCase() === searchKey ||
                 String(window._lastResolvedMeta.slug || '').toLowerCase() === searchKey ||
                 String(window._lastResolvedMeta.id || '').toLowerCase() === searchKey
             )) {
                 console.log('[ComicDetail] Using Hand-off Meta');
-                baseMeta = window._lastResolvedMeta;
+                this.comic = window._lastResolvedMeta;
+                this.isLoading = false; // Tampilkan info utama segera!
+                
+                // Jangan return, kita tetap butuh memproses chapters jika posts sudah ada
+                this.processComicData();
             }
 
             // === STRATEGY 2: Search in Global Posts ===
-            const foundPost = baseMeta || allPosts.find(p => 
-                String(p.slug || '').toLowerCase() === searchKey ||
-                String(p.title || '').toLowerCase() === searchKey
-            );
+            // Jika hand-off tidak ada atau kita ingin memastikan data terbaru
+            const findInPosts = () => {
+                const allPosts = window.app?.posts || [];
+                if (allPosts.length === 0) return null;
+                return allPosts.find(p => 
+                    String(p.title || '').toLowerCase() === searchKey ||
+                    String(p.id || '').toLowerCase() === searchKey ||
+                    String(p.path || '').toLowerCase().includes(searchKey)
+                );
+            };
 
-            if (foundPost) {
-                // Anti-Leak: Cari postingan SERI (tanpa akhiran chapter) agar synopsis tidak bocor
-                const seriesTitle = this.getSeriesTitle(foundPost.title);
-                const canonicalSeries = allPosts.find(p => p.title.trim() === seriesTitle);
-                
-                this.comic = canonicalSeries ? { ...canonicalSeries } : { ...foundPost };
-                this.comic.displayTitle = seriesTitle;
+            const found = findInPosts();
+            if (found) {
+                this.comic = found;
                 this.processComicData();
+                this.isLoading = false;
             } else if (!this.comic) {
                 // === STRATEGY 3: Deep Fetch (Jika benar-benar tidak ada di mana pun) ===
                 try {
@@ -98,18 +93,24 @@
             if (!this.comic) return;
 
             // 1. Sync Synopsis
-            // Jika meta mengandung banyak tag img, kemungkinan ini konten chapter, jangan tampilkan sebagai sinopsis
-            const desc = this.comic.description || this.comic.body || '';
-            const isChapterContent = (desc.match(/<img/g) || []).length > 3;
-            
-            this.comic.summary = isChapterContent ? 'No synopsis available.' : (desc || this.comic.snippet || 'No synopsis available.');
+            if (!this.comic.summary) {
+                this.comic.summary = this.comic.description || this.comic.snippet || 'No synopsis available.';
+            }
 
             // 2. Extract Chapters from Global Posts
-            const seriesTitle = this.comic.displayTitle;
+            let seriesTitle = this.comic.title.split(' - ')[0];
+            if (seriesTitle.includes('-Chapter')) seriesTitle = seriesTitle.split('-Chapter')[0];
+            else if (seriesTitle.includes(' Chapter')) seriesTitle = seriesTitle.split(' Chapter')[0];
+            else if (seriesTitle.includes(' chapter')) seriesTitle = seriesTitle.split(' chapter')[0];
+            seriesTitle = seriesTitle.trim();
             
             const allPosts = window.app?.posts || [];
             const relatedPosts = allPosts.filter(p => {
-                return this.getSeriesTitle(p.title) === seriesTitle;
+                let pSeries = p.title.split(' - ')[0];
+                if (pSeries.includes('-Chapter')) pSeries = pSeries.split('-Chapter')[0];
+                else if (pSeries.includes(' Chapter')) pSeries = pSeries.split(' Chapter')[0];
+                else if (pSeries.includes(' chapter')) pSeries = pSeries.split(' chapter')[0];
+                return pSeries.trim() === seriesTitle;
             });
 
             this.chapters = relatedPosts
@@ -117,13 +118,13 @@
                 .map(p => {
                     const chapterLabel = p.title.replace(seriesTitle, '').replace(/^[\s-]*|[\s-]*$/g, '').trim() || 'Chapter 1';
                     return {
-                        id: parseFloat(chapterLabel.replace(/[^0-9.]/g, '')) || 0,
+                        id: chapterLabel.replace(/[^0-9]/g, '') || '1',
                         title: chapterLabel,
                         date: this.formatDate(p.publishdate),
                         url: p.path,
                         slug: p.slug
                     };
-                }).sort((a, b) => b.id - a.id); // Urutkan chapter secara numerik menurun
+                }).sort((a, b) => b.id - a.id);
         },
 
         formatDate(d) {
@@ -252,7 +253,7 @@
                 <!-- Title & Genre -->
                 <div class="pt-2 lg:pt-6">
                     <h1 class="text-3xl lg:text-4xl font-black text-gray-900 dark:text-white mb-2 uppercase tracking-tight"
-                        x-text="comic.displayTitle || comic.title"></h1>
+                        x-text="comic.title"></h1>
                     <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-6" x-text="comic.subtitle || ''">
                     </p>
 
@@ -271,8 +272,7 @@
                 <!-- Synopsis Section -->
                 <section class="space-y-3">
                     <h2 class="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest">Synopsis
-                        <span x-text="comic.displayTitle || comic.title"></span>
-                    </h2>
+                        <span x-text="comic.title"></span></h2>
                     <div class="text-[15px] text-gray-600 dark:text-gray-400 leading-relaxed bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-100 dark:border-gray-800"
                         x-html="comic.summary"></div>
                 </section>
@@ -328,7 +328,7 @@
                 <!-- Chapters Section -->
                 <section class="space-y-4">
                     <h2 class="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest">Chapter <span
-                            x-text="comic.displayTitle || comic.title"></span></h2>
+                            x-text="comic.title"></span></h2>
 
                     <div class="grid grid-cols-1 gap-2">
                         <div class="max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
@@ -336,7 +336,7 @@
                                 <button @click="window.navigate('comic-view', { slug: ch.slug, path: ch.url })"
                                     class="w-full flex items-center justify-between p-4 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-800 hover:border-brand-500 dark:hover:border-brand-500 transition-all text-left group mb-2">
                                     <span
-                                        class="font-bold text-gray-800 dark:text-gray-200 group-hover:text-brand-600 dark:group-hover:text-brand-400 cursor-pointer"
+                                        class="font-bold text-gray-800 dark:text-gray-200 group-hover:text-brand-600 dark:group-hover:text-brand-400"
                                         x-text="ch.title"></span>
                                     <span class="text-xs font-medium text-gray-400 dark:text-gray-500"
                                         x-text="ch.date"></span>
