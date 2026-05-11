@@ -107,34 +107,33 @@
                 return pSeries.trim() === seriesTitle;
             });
 
-            // 3. Pola group.chapters: Temukan postingan " Induk" (Judul Utama) // Jika ditemukan postingan yang
-    judulnya tepat sama dengan seriesTitle, // gunakan data tersebut sebagai sumber informasi utama (Sinopsis, Author,
-    Image). const mainPost=relatedPosts.find(p=> p.title.trim() === seriesTitle);
-    if (mainPost) {
-    this.comic = { ...mainPost };
-    }
+            // 3. Pola group.chapters: Temukan postingan induk
+            const mainPost = relatedPosts.find(p => p.title.trim() === seriesTitle);
+            if (mainPost) {
+                this.comic = { ...mainPost };
+            }
 
-    // Sinkronisasi sinopsis agar tidak kosong
-    this.comic.summary = this.comic.description || this.comic.snippet || 'No synopsis available.';
+            // Sinkronisasi sinopsis agar tidak kosong
+            this.comic.summary = this.comic.description || this.comic.snippet || 'No synopsis available.';
 
-    // 4. Filter Daftar Chapter (Semua yang BUKAN postingan utama)
-    this.chapters = relatedPosts
-    .filter(p => p.title.trim() !== seriesTitle)
-    .map(p => {
-    const chapterLabel = p.title.replace(seriesTitle, '').replace(/^[\s-]*|[\s-]*$/g, '').trim() || 'Chapter 1';
-    return {
-    id: chapterLabel.replace(/[^0-9]/g, '') || '1',
-    title: chapterLabel,
-    date: window.app?.formatDate ? window.app.formatDate(p.publishdate) : p.publishdate,
-    url: p.path,
-    slug: p.slug
-    };
-    }).sort((a, b) => b.id - a.id);
+            // 4. Filter Daftar Chapter (Semua yang BUKAN postingan utama)
+            this.chapters = relatedPosts
+                .filter(p => p.title.trim() !== seriesTitle) // Memastikan hanya chapter yang berbeda dari judul seri utama yang masuk
+                .map(p => {
+                    const chapterLabel = p.title.replace(seriesTitle, '').replace(/^[\s-]*|[\s-]*$/g, '').trim() || 'Chapter 1';
+                    return {
+                        id: chapterLabel.replace(/[^0-9]/g, '') || '1',
+                        title: chapterLabel,
+                        date: window.app?.formatDate ? window.app.formatDate(p.publishdate) : p.publishdate,
+                        url: p.path,
+                        slug: p.slug
+                    };
+                }).sort((a, b) => b.id - a.id);
 
-    if (window.app?.updateBreadcrumb) {
-    window.app.updateBreadcrumb('comic-detail');
-    }
-    },
+            if (window.app?.updateBreadcrumb) {
+                window.app.updateBreadcrumb('comic-detail');
+            }
+        },
     }">
 
     <!-- Error State -->
