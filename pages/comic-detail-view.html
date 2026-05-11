@@ -2,9 +2,9 @@
         comic: null,
         chapters: [],
         isLoading: true,
-
+        
         init() {
-            this.loadComic();
+            this.loadComicData();
             this.$watch('window.app?.params.id', () => this.loadComic());
         },
 
@@ -17,7 +17,8 @@
             }
 
             this.isLoading = true;
-            const searchKey = identifier.toLowerCase();
+            this.comic = null; // Reset comic data
+            this.chapters = []; // Reset chapters
 
             // === STRATEGY 1: Metadata Hand-off (Sangat penting saat reload) ===
             if (window._lastResolvedMeta && (
