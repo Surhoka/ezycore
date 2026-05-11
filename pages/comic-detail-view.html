@@ -94,7 +94,7 @@
 
             // 1. Sync Synopsis
             if (!this.comic.summary) {
-                this.comic.summary = this.comic.description || this.comic.snippet || 'No synopsis available.';
+                this.comic.summary = this.stripHtmlTags(this.comic.description || this.comic.snippet || 'No synopsis available.');
             }
 
             // 2. Extract Chapters from Global Posts
@@ -133,6 +133,17 @@
                 day: 'numeric', month: 'long', year: 'numeric'
             });
         },
+
+        stripHtmlTags(html) {
+            if (!html) return '';
+            try {
+                const tmp = document.createElement('div');
+                tmp.innerHTML = html;
+                return (tmp.textContent || tmp.innerText || '').trim();
+            } catch (e) {
+                return html.replace(/<[^>]*>?/gm, ' ').trim();
+            }
+        }
     }">
 
     <!-- Error State -->
@@ -272,7 +283,8 @@
                 <!-- Synopsis Section -->
                 <section class="space-y-3">
                     <h2 class="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest">Synopsis
-                        <span x-text="comic.title"></span></h2>
+                        <span x-text="comic.title"></span>
+                    </h2>
                     <div class="text-[15px] text-gray-600 dark:text-gray-400 leading-relaxed bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-100 dark:border-gray-800"
                         x-html="comic.summary"></div>
                 </section>
@@ -336,7 +348,7 @@
                                 <button @click="window.navigate('comic-view', { slug: ch.slug, path: ch.url })"
                                     class="w-full flex items-center justify-between p-4 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-800 hover:border-brand-500 dark:hover:border-brand-500 transition-all text-left group mb-2">
                                     <span
-                                        class="font-bold text-gray-800 dark:text-gray-200 group-hover:text-brand-600 dark:group-hover:text-brand-400"
+                                        class="font-bold text-gray-800 dark:text-gray-200 group-hover:text-brand-600 dark:group-hover:text-brand-400 cursor-pointer"
                                         x-text="ch.title"></span>
                                     <span class="text-xs font-medium text-gray-400 dark:text-gray-500"
                                         x-text="ch.date"></span>
