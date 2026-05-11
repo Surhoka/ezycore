@@ -285,9 +285,9 @@
                     
                     <div class="grid grid-cols-1 gap-2">
                         <div class="max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                            <template x-for="ch in chapters" :key="ch.id">
+                            <template x-for='(ch, chIdx) in group.chapters.slice(0, 3)' :key='chIdx'>
                                 <button
-                                    @click="window.navigate('comic-view', { slug: ch.slug, path: ch.url })"
+                                    @click="window.navigate('comic', { slug: ch.slug, path: ch.path })"
                                     class="w-full flex items-center justify-between p-4 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-800 hover:border-brand-500 dark:hover:border-brand-500 transition-all text-left group mb-2">
                                     <span class="font-bold text-gray-800 dark:text-gray-200 group-hover:text-brand-600 dark:group-hover:text-brand-400" x-text="ch.title"></span>
                                     <span class="text-xs font-medium text-gray-400 dark:text-gray-500" x-text="ch.date"></span>
