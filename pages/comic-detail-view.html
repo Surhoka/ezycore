@@ -2,7 +2,6 @@
         comic: null,
         chapters: [],
         isLoading: true,
-        error: false, // Tambahkan state error
 
         init() {
             this.loadComic();
@@ -18,7 +17,6 @@
 
             this.isLoading = true;
             const searchKey = identifier.toLowerCase();
-            let fetchedComic = null;
 
             // === STRATEGY 1: Metadata Hand-off (Sangat penting saat reload) ===
             if (window._lastResolvedMeta && (
@@ -27,338 +25,51 @@
                 String(window._lastResolvedMeta.id || '').toLowerCase() === searchKey
             )) {
                 console.log('[ComicDetail] Using Hand-off Meta');
-                fetchedComic = window._lastResolvedMeta;
-                window._lastResolvedMeta = null; // Konsumsi metadata setelah digunakan
+                this.comic = window._lastResolvedMeta;
+                this.isLoading = false; // Tampilkan info utama segera!
+                
+                // Jangan return, kita tetap butuh memproses chapters jika posts sudah ada
+                this.processComicData();
             }
 
-            // === STRATEGY 2: Search in Global Posts (jika sudah dimuat) ===
-            if (!fetchedComic && window.app?.posts && window.app.posts.length > 0) {
-                fetchedComic = window.app.posts.find(p =>
+            // === STRATEGY 2: Search in Global Posts ===
+            // Jika hand-off tidak ada atau kita ingin memastikan data terbaru
+            const findInPosts = () => {
+                if (!window.posts || window.posts.length === 0) return null;
+                return window.posts.find(p => 
                     String(p.title || '').toLowerCase() === searchKey ||
                     String(p.id || '').toLowerCase() === searchKey ||
                     String(p.path || '').toLowerCase().includes(searchKey)
                 );
-            }
+            };
 
-            // === STRATEGY 3: Deep Fetch (Jika benar-benar tidak ada di mana pun) ===
-            if (!fetchedComic) {
+            const found = findInPosts();
+            if (found) {
+                this.comic = found;
+                this.processComicData();
+                this.isLoading = false;
+            } else if (!this.comic) {
                 // === STRATEGY 3: Deep Fetch (Jika benar-benar tidak ada di mana pun) ===
                 try {
                     const path = params.path || (window.location.pathname.includes('/20') ? window.location.pathname : null);
                     if (path) {
-                        const res = await fetch(path).catch(() => null);
+                        const res = await fetch(path);
                         if (res.ok) {
                             const html = await res.text();
                             if (window.app?.parseMetaFromHTML) {
                                 const deepMeta = window.app.parseMetaFromHTML(html);
                                 if (deepMeta) {
-                                    fetchedComic = deepMeta;
+                                    this.comic = deepMeta;
+                                    this.processComicData();
                                 }
                             }
                         }
                     }
                 } catch (e) { console.error('Deep fetch failed', e); }
             }
-            
-            if (fetchedComic) {
-                this.comic = fetchedComic;
-                this.processComicData(); // Proses data komik utama (sinopsis, breadcrumb)
-                await this.fetchAllChaptersForSeries(this.comic.title); // Ambil semua chapter secara spesifik
-            } else {
-                console.error('[ComicDetail] Comic not found after all strategies:', identifier);
-                this.error = true;
-            }
 
-            this.isLoading = false;
-        },
-
-        async fetchAllChaptersForSeries(seriesTitle) {
-            if (!seriesTitle) return;
-
-            let baseSeriesTitle = seriesTitle.split(' - ')[0];
-            if (baseSeriesTitle.includes('-Chapter')) baseSeriesTitle = baseSeriesTitle.split('-Chapter')[0];
-            else if (baseSeriesTitle.includes(' Chapter')) baseSeriesTitle = baseSeriesTitle.split(' Chapter')[0];
-            else if (baseSeriesTitle.includes(' chapter')) baseSeriesTitle = baseSeriesTitle.split(' chapter')[0];
-            baseSeriesTitle = baseSeriesTitle.trim();
-
-            if (!baseSeriesTitle) return;
-
-            console.log(`[ComicDetail] Fetching all chapters for series: "${baseSeriesTitle}"`);
-            try {
-                // Query Blogger API for posts starting with the series title
-                // Max-results 999 is a common workaround for "all" in Blogger API
-                const feedUrl = `/feeds/posts/default/-/Comic?alt=json&q=${encodeURIComponent(baseSeriesTitle)}&max-results=999`;
-                const res = await fetch(feedUrl);
-                if (!res.ok) throw new Error(`Failed to fetch chapters: ${res.statusText}`);
-
-                const json = await res.json();
-                const entries = json.feed?.entry || [];
-
-                const allSeriesChapters = entries
-                    .filter(entry => {
-                        const entryTitle = entry.title?.$t || '';
-                        // Pastikan ini adalah chapter dari seri ini, bukan hanya postingan yang mengandung nama seri
-                        return entryTitle.startsWith(baseSeriesTitle) && entryTitle !== seriesTitle;
-                    })
-                    .map(entry => {
-                        const altLink = (entry.link || []).find(l => l.rel === 'alternate');
-                        const chapterLabel = (entry.title?.$t || '').replace(baseSeriesTitle, '').replace(/^[\s-]*|[\s-]*$/g, '').trim() || 'Chapter 1';
-                        return {
-                            id: chapterLabel.replace(/[^0-9]/g, '') || '1', // Ekstrak nomor untuk sorting
-                            title: chapterLabel,
-                            date: window.app ? window.app.formatDate(entry.published?.$t) : new Date(entry.published?.$t).toLocaleDateString(),
-                            publishDate: entry.published?.$t,
-                            url: altLink?.href ? new URL(altLink.href).pathname : '#',
-                            slug: altLink?.href ? altLink.href.split('/').pop().replace('.html', '') : ''
-                        };
-                    })
-                    .sort((a, b) => {
-                        // Urutkan berdasarkan tanggal publikasi terbaru
-                        return new Date(b.publishDate) - new Date(a.publishDate);
-                    });
-
-                this.chapters = allSeriesChapters;
-                console.log(`[ComicDetail] Found ${this.chapters.length} chapters for "${baseSeriesTitle}".`);
-
-            } catch (e) {
-                console.error('[ComicDetail] Error fetching all chapters:', e);
-                // Jika gagal, kita bisa fallback ke chapters yang mungkin sudah ada dari window.posts
-                // atau biarkan chapters kosong jika tidak ada fallback yang relevan.
-            }
-        },
-
-        processComicData() {
-            if (!this.comic) return;
-
-            // 1. Sinkronkan Sinopsis
-            if (!this.comic.summary) {
-                this.comic.summary = this.comic.description || this.comic.snippet || 'No synopsis available.';
-            }
-
-            // 2. Perbarui Breadcrumb
-            if (window.app) window.app.updateBreadcrumb('comic-detail');
-
-            // Catatan: Chapters akan diisi oleh fetchAllChaptersForSeries,
-            // jadi tidak perlu memprosesnya dari window.posts di sini lagi.
-            // Fungsi ini sekarang terutama menangani metadata komik dan breadcrumb.
-        },
-    }">
-
-    <!-- Error State -->
-    <template x-if="!isLoading && !comic && error">
-        <div class="py-20 text-center">
-            <div
-                class="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-400">
-                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                        stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
-                </svg>
-            </div>
-            <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-2">Comic Not Found</h2>
-            <p class="text-gray-500 mb-8">Maaf, data komik tidak dapat ditemukan atau telah dihapus.</p>
-            <a href="#!comic-list"
-                class="inline-flex items-center gap-2 px-6 py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 transition-all">
-                Back to Collection
-            </a>
-        </div>
-    </template>
-
-    <!-- Loading State -->
-    <div x-show="isLoading" class="py-20 text-center">
-        <div class="inline-block w-12 h-12 border-4 border-brand-600/20 border-t-brand-600 rounded-full animate-spin">
-        </div>
-        <p class="mt-4 text-sm font-bold text-gray-500 uppercase tracking-widest">Loading Details...</p>
-    </div>
-
-    <!-- Main Content -->
-    <template x-if="!isLoading && comic">
-        <div class="flex flex-col lg:flex-row gap-8">
-            <!-- LEFT SIDEBAR -->
-            <aside class="w-full lg:w-80 flex-shrink-0">
-                <div class="bg-white dark:bg-gray-900 rounded-xl overflow-hidden sticky top-0 border border-gray-100 dark:border-gray-800 shadow-sm">
-                    <!-- Cover Image -->
-                    <div class="aspect-[3/4] overflow-hidden bg-gray-100 dark:bg-gray-800">
-                        <img :src="comic.image" class="w-full h-full object-cover" />
-                    </div>
-
-                    <!-- Bookmark Button -->
-                    <div class="p-6 space-y-4 border-t border-gray-100 dark:border-gray-800">
-                        <button class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold text-sm transition-all active:scale-95 shadow-lg shadow-brand-500/20">
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
-                            </svg>
-                            Bookmark
-                        </button>
-
-                        <!-- Followers -->
-                        <p class="text-center text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Followed by 28 people</p>
-
-                        <!-- Rating -->
-                        <div class="flex items-center justify-center gap-3 pt-2 border-t border-gray-100 dark:border-gray-800">
-                            <div class="flex items-center gap-0.5">
-                                <template x-for="i in [1,2,3,4]">
-                                    <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                    </svg>
-                                </template>
-                                <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
-                            </div>
-                            <span class="text-sm font-black text-gray-900 dark:text-white">7.7</span>
-                        </div>
-                    </div>
-
-                    <!-- Info Table -->
-                    <div class="p-4 space-y-3 border-t border-gray-100 dark:border-gray-800 text-xs">
-                        <div class="flex justify-between">
-                            <span class="text-gray-500 dark:text-gray-400">Status</span>
-                            <span class="font-bold text-gray-900 dark:text-gray-200" x-text="comic.status || 'Ongoing'"></span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500 dark:text-gray-400">Type</span>
-                            <span class="font-bold text-gray-900 dark:text-gray-200">Manga</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500 dark:text-gray-400">Released</span>
-                            <span class="font-bold text-gray-900 dark:text-gray-200">2017</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500 dark:text-gray-400">Author</span>
-                            <span class="font-bold text-gray-900 dark:text-gray-200" x-text="comic.author || 'Unknown'"></span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500 dark:text-gray-400">Serialization</span>
-                            <span class="font-bold text-gray-900 dark:text-gray-200">Magazine</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500 dark:text-gray-400">Posted By</span>
-                            <span class="font-bold text-gray-900 dark:text-gray-200">goku</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500 dark:text-gray-400">Posted On</span>
-                            <span class="font-bold text-gray-900 dark:text-gray-200">April 6, 2019</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500 dark:text-gray-400">Updated On</span>
-                            <span class="font-bold text-gray-900 dark:text-gray-200">April 6, 2019</span>
-                        </div>
-                    </div>
-                </div>
-            </aside>
-
-            <!-- RIGHT CONTENT AREA -->
-            <main class="flex-1 space-y-8 pb-8 lg:pr-8">
-                <!-- Title & Genre -->
-                <div class="pt-2 lg:pt-6">
-                    <h1 class="text-3xl lg:text-4xl font-black text-gray-900 dark:text-white mb-2 uppercase tracking-tight" x-text="comic.title"></h1>
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-6" x-text="comic.subtitle || ''"></p>
-                    
-                    <!-- Genre Tags -->
-                    <div class="flex flex-wrap gap-3">
-                        <template x-for="tag in (comic.tags || '').split(',')" :key="tag">
-                            <template x-if="tag.trim()">
-                                <button @click="window.navigate('comic-list', { category: tag.trim() })" 
-                                    class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-brand-500 dark:hover:border-brand-500 text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 rounded-lg text-xs font-black uppercase transition-all" x-text="tag.trim()"></button>
-                            </template>
-                        </template>
-                    </div>
-                </div>
-
-                <!-- Synopsis Section -->
-                <section class="space-y-3">
-                    <h2 class="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest">Synopsis <span x-text="comic.title"></span></h2>
-                    <div class="text-[15px] text-gray-600 dark:text-gray-400 leading-relaxed bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-100 dark:border-gray-800" x-html="comic.summary"></div>
-                </section>
-
-                <!-- Social Sharing -->
-                <div class="flex flex-wrap justify-center gap-3 py-4">
-                    <a href="#" class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded font-bold text-xs hover:bg-blue-700 transition-colors">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 0a10 10 0 1010 10A10 10 0 0010 0zm3.6 10.4h-2.2v7h-2.8v-7h-2v-2.4h2v-1.5c0-1.6.8-4 4-4 1.2 0 2 .1 2 .1v2.3h-1.4c-1.1 0-1.3.5-1.3 1.3v1.8h2.6z"/></svg>
-                        Facebook
-                    </a>
-                    <a href="#" class="flex items-center gap-2 px-4 py-2 bg-cyan-500 text-white rounded font-bold text-xs hover:bg-cyan-600 transition-colors">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M19 3.8a7.9 7.9 0 01-2.1.6A3.7 3.7 0 0018.5 3c-.8.5-1.7.8-2.7.9a3.7 3.7 0 00-6.2 3.4A10.5 10.5 0 012.8 3.8a3.7 3.7 0 001.1 4.9A3.6 3.6 0 012 8.3v.1a3.7 3.7 0 003 3.6 3.7 3.7 0 01-1.6.1 3.7 3.7 0 003.5 2.5A7.4 7.4 0 011 15.8a10.4 10.4 0 005.7 1.7c6.8 0 10.5-5.6 10.5-10.5 0-.2 0-.4 0-.6.7-.5 1.4-1.2 1.9-2"/></svg>
-                        Twitter
-                    </a>
-                    <a href="#" class="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded font-bold text-xs hover:bg-green-600 transition-colors">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 0a10 10 0 1010 10A10 10 0 0010 0zm4.5 8.7c0 2.5-2 4.5-4.5 4.5s-4.5-2-4.5-4.5 2-4.5 4.5-4.5 4.5 2 4.5 4.5z"/></svg>
-                        WhatsApp
-                    </a>
-                    <a href="#" class="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded font-bold text-xs hover:bg-red-700 transition-colors">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 0a10 10 0 1010 10A10 10 0 0010 0zm1.5 13h-3v-8h3z"/></svg>
-                        Pinterest
-                    </a>
-                    <a href="#" class="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded font-bold text-xs hover:bg-cyan-700 transition-colors">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 0a10 10 0 1010 10A10 10 0 0010 0zm4 10.5l-5.5 3.5v-7z"/></svg>
-                        Telegram
-                    </a>
-                </div>
-
-                <!-- ADS Area -->
-                <div class="bg-gray-50 dark:bg-gray-900/50 text-gray-400 border border-dashed border-gray-200 dark:border-gray-800 rounded-xl p-12 text-center font-black text-xl uppercase tracking-[0.2em]">
-                    Advertisement Space
-                </div>
-
-                <!-- Chapters Section -->
-                <section class="space-y-4">
-                    <h2 class="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest">Chapter <span x-text="comic.title"></span></h2>
-                    
-                    <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-100 dark:border-gray-800">
-                        <div class="max-h-[500px] overflow-y-auto pr-3 custom-scrollbar">
-                            <ul class="space-y-3">
-                                <template x-for="(ch, index) in chapters" :key="ch.slug">
-                                    <li class="flex items-center justify-between text-[12px] group/ch cursor-pointer border-b border-gray-50 dark:border-gray-800/50 pb-3 last:border-0 last:pb-0" 
-                                        @click="window.navigate('comic-view', { slug: ch.slug, path: ch.url })">
-                                        <div class="flex items-center gap-3 text-gray-700 dark:text-gray-300 font-bold">
-                                            <div class="w-1.5 h-1.5 rounded-full" :class="index === 0 ? 'bg-brand-600 shadow-[0_0_8px_rgba(37,99,235,0.6)]' : 'bg-gray-400'"></div>
-                                            <span class="group-hover/ch:text-brand-600 transition-colors" x-text="ch.title"></span>
-                                        </div>
-                                        <span class="text-gray-400 dark:text-gray-500 font-medium" x-text="window.app ? window.app.formatTimeAgo(ch.publishDate) : ch.date"></span>
-                                    </li>
-                                </template>
-                            </ul>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Related Series Section -->
-                <section class="mt-12">
-                    <h2 class="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tight mb-6">Related Series</h2>
-                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-7 gap-4 overflow-x-auto pb-4 custom-scrollbar">
-                        <template x-for="relatedComic in (window.app?.posts || []).filter(p => p.id !== comic.id).slice(0, 7)" :key="relatedComic.id">
-                            <div class="flex-shrink-0 w-32 group cursor-pointer" @click="window.navigate('comic-detail', { id: relatedComic.id || relatedComic.slug, path: relatedComic.path })">
-                                <div class="relative rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 aspect-[3/4] mb-2 shadow-sm border border-gray-100 dark:border-gray-800">
-                                    <img :src="relatedComic.image" class="w-full h-full object-cover" :alt="relatedComic.title" />
-                                </div>
-                                <h4 class="text-[11px] font-black text-gray-900 dark:text-gray-200 line-clamp-2 leading-tight group-hover:text-brand-600 transition-colors" x-text="relatedComic.title"></h4>
-                                <div class="flex items-center gap-1">
-                                    <svg class="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                    </svg>
-                                    <span class="text-[10px] font-black text-gray-500 dark:text-gray-400">7.3</span>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
-                </section>
-
-                <!-- Comment Section -->
-                <section class="mt-12 pt-8 border-t border-gray-100 dark:border-gray-800">
-                    <h2 class="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tight mb-6">Comment</h2>
-                    <div class="bg-white dark:bg-gray-900 rounded-2xl p-8 border border-gray-100 dark:border-gray-800 text-center shadow-sm">
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Leave a Reply</h3>
-                        <p class="text-sm text-gray-400 mb-6">You must be logged in to post a comment.</p>
-                        <button class="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors">
-                            Log In
-                        </button>
-                    </div>
-                </section>
-            </main>
-        </div>
-    </template>
-</div>
+            // [REACTIVE CHAPTERS] Jika posts belum dimuat, tunggu sampai dimuat
+            if (this.chapters.length === 0) {
                 const checkInterval = setInterval(() => {
                     if (window.posts && window.posts.length > 0) {
                         console.log('[ComicDetail] Posts loaded, updating chapters...');
@@ -404,7 +115,6 @@
                         id: chapterLabel.replace(/[^0-9]/g, '') || '1',
                         title: chapterLabel,
                         date: formatDate(p.publishdate),
-                        publishDate: p.publishdate,
                         url: p.path,
                         slug: p.slug
                     };
@@ -583,20 +293,6 @@
                                     <span class="text-xs font-medium text-gray-400 dark:text-gray-500" x-text="ch.date"></span>
                                 </button>
                             </template>
-                    <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-100 dark:border-gray-800">
-                        <div class="max-h-[500px] overflow-y-auto pr-3 custom-scrollbar">
-                            <ul class="space-y-3">
-                                <template x-for="(ch, index) in chapters" :key="ch.slug">
-                                    <li class="flex items-center justify-between text-[12px] group/ch cursor-pointer border-b border-gray-50 dark:border-gray-800/50 pb-3 last:border-0 last:pb-0" 
-                                        @click="window.navigate('comic-view', { slug: ch.slug, path: ch.url })">
-                                        <div class="flex items-center gap-3 text-gray-700 dark:text-gray-300 font-bold">
-                                            <div class="w-1.5 h-1.5 rounded-full" :class="index === 0 ? 'bg-brand-600 shadow-[0_0_8px_rgba(37,99,235,0.6)]' : 'bg-gray-400'"></div>
-                                            <span class="group-hover/ch:text-brand-600 transition-colors" x-text="ch.title"></span>
-                                        </div>
-                                        <span class="text-gray-400 dark:text-gray-500 font-medium" x-text="window.app ? window.app.formatTimeAgo(ch.publishDate) : ch.date"></span>
-                                    </li>
-                                </template>
-                            </ul>
                         </div>
                     </div>
                 </section>
