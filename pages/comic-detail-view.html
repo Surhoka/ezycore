@@ -91,14 +91,15 @@
             if (!this.comic.summary) {
                 this.comic.summary = this.comic.description || this.comic.snippet || 'No synopsis available.';
             }
-
             // 2. Extract Chapters from Global Posts
             let seriesTitle = this.comic.title.split(' - ')[0];
             if (seriesTitle.includes('-Chapter')) seriesTitle = seriesTitle.split('-Chapter')[0];
             else if (seriesTitle.includes(' Chapter')) seriesTitle = seriesTitle.split(' Chapter')[0];
             else if (seriesTitle.includes(' chapter')) seriesTitle = seriesTitle.split(' chapter')[0];
             seriesTitle = seriesTitle.trim();
-            
+
+            // Ensure seriesTitle is not empty to prevent matching all posts
+            if (!seriesTitle) return;
             const relatedPosts = (window.posts || []).filter(p => {
                 let pSeries = p.title.split(' - ')[0];
                 if (pSeries.includes('-Chapter')) pSeries = pSeries.split('-Chapter')[0];
@@ -111,8 +112,9 @@
                 .filter(p => p.title !== seriesTitle)
                 .map(p => {
                     const chapterLabel = p.title.replace(seriesTitle, '').replace(/^[\s-]*|[\s-]*$/g, '').trim() || 'Chapter 1';
+                    const chapterId = parseFloat(chapterLabel.replace(/[^0-9.]/g, '')) || 1; // Ensure ID is a number for proper sorting
                     return {
-                        id: chapterLabel.replace(/[^0-9]/g, '') || '1',
+                        id: chapterId,
                         title: chapterLabel,
                         date: formatDate(p.publishdate),
                         url: p.path,
@@ -282,19 +284,25 @@
                 <!-- Chapters Section -->
                 <section class="space-y-4">
                     <h2 class="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest">Chapter <span x-text="comic.title"></span></h2>
-                    
-                    <div class="grid grid-cols-1 gap-2">
-                        <div class="max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                            <template x-for='(ch, chIdx) in group.chapters.slice(0, 3)' :key='chIdx'>
-                                      <li class='flex items-center justify-between text-[12px] group/ch cursor-pointer' 
-                                          x-on:click='window.navigate("comic", { slug: ch.slug, path: ch.path })'>
-                                        <div class='flex items-center gap-3 text-gray-700 dark:text-gray-300 font-bold'>
-                                           <div class='w-1.5 h-1.5 rounded-full' :class='chIdx === 0 ? "bg-brand-600" : "bg-gray-400"'></div>
-                                           <span class='group-hover/ch:text-brand-600 transition-colors' x-text='ch.label'></span>
-                                        </div>
-                                        <span class='text-gray-400 dark:text-gray-500 font-medium' x-text='formatTimeAgo(ch.publishDate)'></span>
-                                      </li>
-                                    </template>
+
+                    <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
+                        <!-- Chapter List Header -->
+                        <div class="flex items-center font-bold text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+                            <div class="w-1/6 flex-none">#</div>
+                            <div class="flex-1 px-2">Title</div>
+                            <div class="w-1/4 flex-none text-right">Date</div>
+                        </div>
+
+                        <div class="max-h-[500px] overflow-y-auto custom-scrollbar">
+                            <template x-for="ch in chapters" :key="ch.id">
+                                <button
+                                    @click="window.navigate('comic-view', { slug: ch.slug, path: ch.url })"
+                                    class="w-full flex items-center p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all text-left group border-b border-gray-100 dark:border-gray-800 last:border-b-0">
+                                    <div class="w-1/6 flex-none font-bold text-gray-800 dark:text-gray-200 group-hover:text-brand-600 dark:group-hover:text-brand-400" x-text="ch.id"></div>
+                                    <div class="flex-1 px-2 font-bold text-gray-800 dark:text-gray-200 group-hover:text-brand-600 dark:group-hover:text-brand-400 line-clamp-1" x-text="ch.title"></div>
+                                    <div class="w-1/4 flex-none text-right text-xs font-medium text-gray-400 dark:text-gray-500" x-text="ch.date"></div>
+                                </button>
+                            </template>
                         </div>
                     </div>
                 </section>
