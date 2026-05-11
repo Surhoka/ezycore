@@ -4,7 +4,7 @@
         isLoading: true,
         
         init() {
-            this.loadComicData();
+            this.loadComic();
             this.$watch('window.app?.params.id', () => this.loadComic());
         },
 
