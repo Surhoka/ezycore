@@ -112,7 +112,7 @@
             });
 
             this.chapters = relatedPosts
-                .filter(p => p.title !== seriesTitle)
+                .filter(p => p.title.trim() !== seriesTitle) // Memastikan hanya chapter yang berbeda dari judul seri utama yang masuk
                 .map(p => {
                     const chapterLabel = p.title.replace(seriesTitle, '').replace(/^[\s-]*|[\s-]*$/g, '').trim() || 'Chapter 1';
                     // Pastikan window.app.formatDate tersedia
