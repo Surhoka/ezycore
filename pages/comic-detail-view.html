@@ -95,20 +95,22 @@
                 this.comic.summary = this.comic.description || this.comic.snippet || 'No synopsis available.';
             }
 
+            // Helper untuk membersihkan judul dari embel-embel Chapter
+            const getSeriesTitle = (rawTitle) => {
+                let t = rawTitle.split(' - ')[0];
+                if (t.includes('-Chapter')) t = t.split('-Chapter')[0];
+                else if (t.includes(' Chapter')) t = t.split(' Chapter')[0];
+                else if (t.includes(' chapter')) t = t.split(' chapter')[0];
+                return t.trim();
+            };
+
             // 2. Extract Chapters from Global Posts
-            let seriesTitle = this.comic.title.split(' - ')[0];
-            if (seriesTitle.includes('-Chapter')) seriesTitle = seriesTitle.split('-Chapter')[0];
-            else if (seriesTitle.includes(' Chapter')) seriesTitle = seriesTitle.split(' Chapter')[0];
-            else if (seriesTitle.includes(' chapter')) seriesTitle = seriesTitle.split(' chapter')[0];
-            seriesTitle = seriesTitle.trim();
+            const seriesTitle = getSeriesTitle(this.comic.title);
+            this.comic.displayTitle = seriesTitle;
             
             const allPosts = window.app?.posts || [];
             const relatedPosts = allPosts.filter(p => {
-                let pSeries = p.title.split(' - ')[0];
-                if (pSeries.includes('-Chapter')) pSeries = pSeries.split('-Chapter')[0];
-                else if (pSeries.includes(' Chapter')) pSeries = pSeries.split(' Chapter')[0];
-                else if (pSeries.includes(' chapter')) pSeries = pSeries.split(' chapter')[0];
-                return pSeries.trim() === seriesTitle;
+                return getSeriesTitle(p.title) === seriesTitle;
             });
 
             this.chapters = relatedPosts
@@ -251,7 +253,7 @@
                 <!-- Title & Genre -->
                 <div class="pt-2 lg:pt-6">
                     <h1 class="text-3xl lg:text-4xl font-black text-gray-900 dark:text-white mb-2 uppercase tracking-tight"
-                        x-text="comic.title"></h1>
+                        x-text="comic.displayTitle || comic.title"></h1>
                     <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-6" x-text="comic.subtitle || ''">
                     </p>
 
@@ -270,7 +272,8 @@
                 <!-- Synopsis Section -->
                 <section class="space-y-3">
                     <h2 class="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest">Synopsis
-                        <span x-text="comic.title"></span></h2>
+                        <span x-text="comic.displayTitle || comic.title"></span>
+                    </h2>
                     <div class="text-[15px] text-gray-600 dark:text-gray-400 leading-relaxed bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-100 dark:border-gray-800"
                         x-html="comic.summary"></div>
                 </section>
@@ -326,7 +329,7 @@
                 <!-- Chapters Section -->
                 <section class="space-y-4">
                     <h2 class="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest">Chapter <span
-                            x-text="comic.title"></span></h2>
+                            x-text="comic.displayTitle || comic.title"></span></h2>
 
                     <div class="grid grid-cols-1 gap-2">
                         <div class="max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
