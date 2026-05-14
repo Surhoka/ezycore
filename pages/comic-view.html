@@ -51,7 +51,13 @@
         </template>
 
         <!-- Images List -->
-        <div class="w-full flex flex-col items-center" id="comic-pages-list">
+        <div class="w-full flex flex-col items-center" id="comic-pages-list" style="container-type: inline-size; position: relative;">
+            
+            <!-- Render Text Bubbles as Overlay -->
+            <template x-for="(bubble, index) in bubbles" :key="'bubble-'+index">
+                <div x-html="bubble"></div>
+            </template>
+
             <template x-for="(src, index) in pages" :key="index">
                 <div class="relative w-full group">
                     <!-- Lapisan Pelindung Transparan -->
@@ -116,6 +122,7 @@
         return {
             meta: null,
             pages: [],
+            bubbles: [], // Menyimpan elemen speech-bubble
             isLoading: true,
             hasNext: false,
             hasPrev: false,
@@ -124,6 +131,7 @@
                 // Reset state untuk navigasi baru
                 this.isLoading = true;
                 this.pages = [];
+                this.bubbles = [];
                 const slug = window.app?.params?.slug;
 
                 // Strategi 1: Metadata Hand-off (Fast Path)
@@ -239,6 +247,11 @@
                     // Extract images from HTML
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(this.meta.description, 'text/html');
+
+                    // Extract text bubbles
+                    const bubbleNodes = Array.from(doc.querySelectorAll('.speech-bubble'));
+                    this.bubbles = bubbleNodes.map(bubble => bubble.outerHTML);
+                    console.log('[ComicView] Menemukan ' + this.bubbles.length + ' teks dialog komik.');
 
                     imgNodes = Array.from(doc.querySelectorAll('img')).filter(img => !img.closest('.ezy-meta'));
                     console.log('[ComicView] Menemukan ' + imgNodes.length + ' tag <img> di dalam konten.');
