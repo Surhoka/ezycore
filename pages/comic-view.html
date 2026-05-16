@@ -323,29 +323,58 @@
 
             checkNavigation() {
                 const currentSlug = window.app?.params?.slug;
-                const allPosts = window.app?.posts || [];
+                const seriesPosts = this.getSeriesPosts();
 
-                if (allPosts.length > 0 && currentSlug) {
-                    const idx = allPosts.findIndex(p => p.slug === currentSlug);
+                if (seriesPosts.length > 0 && currentSlug) {
+                    const idx = seriesPosts.findIndex(p => p.slug === currentSlug);
                     if (idx !== -1) {
-                        this.hasNext = idx > 0;
-                        this.hasPrev = idx < allPosts.length - 1;
+                        // Dalam urutan ASC (Ch 1, Ch 2, Ch 3):
+                        // Next adalah index + 1
+                        // Prev adalah index - 1
+                        this.hasNext = idx < seriesPosts.length - 1;
+                        this.hasPrev = idx > 0;
                     }
                 }
             },
 
             navigateChapter(dir) {
-                const allPosts = window.app?.posts || [];
+                const seriesPosts = this.getSeriesPosts();
                 const currentSlug = window.app?.params?.slug;
-                const idx = allPosts.findIndex(p => p.slug === currentSlug);
+                const idx = seriesPosts.findIndex(p => p.slug === currentSlug);
 
                 if (idx !== -1) {
-                    const targetIdx = dir === 'next' ? idx - 1 : idx + 1;
-                    const target = allPosts[targetIdx];
+                    const targetIdx = dir === 'next' ? idx + 1 : idx - 1;
+                    const target = seriesPosts[targetIdx];
                     if (target) {
-                        window.navigate('comic', { slug: target.slug, path: target.path }); // Navigasi ke rute comic
+                        window.navigate('comic', { slug: target.slug, path: target.path });
                     }
                 }
+            },
+
+            getSeriesPosts() {
+                if (!this.meta?.title) return [];
+
+                // 1. Ekstrak Judul Seri (Induk)
+                let seriesTitle = this.meta.title.split(' - ')[0];
+                if (seriesTitle.includes('-Chapter')) seriesTitle = seriesTitle.split('-Chapter')[0];
+                else if (seriesTitle.includes(' Chapter')) seriesTitle = seriesTitle.split(' Chapter')[0];
+                seriesTitle = seriesTitle.trim();
+
+                // 2. Filter posts yang satu grup
+                const allPosts = window.app?.posts || [];
+                return allPosts.filter(p => {
+                    let pSeries = (p.title || '').split(' - ')[0];
+                    if (pSeries.includes('-Chapter')) pSeries = pSeries.split('-Chapter')[0];
+                    else if (pSeries.includes(' Chapter')) pSeries = pSeries.split(' Chapter')[0];
+                    return pSeries.trim() === seriesTitle;
+                }).sort((a, b) => {
+                    // Sorting Numerik Chapter (ASC: 1, 2, 3...)
+                    const getNum = (t) => {
+                        const m = t.match(/Chapter\s*(\d+)/i) || t.match(/-(\d+)$/);
+                        return m ? parseInt(m[1]) : 0;
+                    };
+                    return getNum(a.title) - getNum(b.title);
+                });
             },
 
             formatDate(d) {
