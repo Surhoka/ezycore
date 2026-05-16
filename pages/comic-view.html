@@ -128,79 +128,88 @@
             hasPrev: false,
 
             async init() {
-                // Reset state untuk navigasi baru
-                this.isLoading = true;
-                this.pages = [];
-                this.bubbles = [];
-                const slug = window.app?.params?.slug;
-
-                // Strategi 1: Metadata Hand-off (Fast Path)
-                if (window._lastResolvedMeta && (window._lastResolvedMeta.slug === slug || window._lastResolvedMeta.id === slug)) {
-                    console.log('[ComicView] Metadata Hand-off Success');
-                    this.meta = this.normalizeMeta(window._lastResolvedMeta);
-                    this.renderComic();
-                } else {
-                    await this.fetchChapterData(slug);
-                }
-
-                this.checkNavigation();
+                this.loadChapter();
+                this.$watch('params.slug', () => this.loadChapter());
             },
 
-            async fetchChapterData(slug) {
-                try {
-                    if (!slug) return;
-                    console.log('[ComicView] Fetching from Feed for slug:', slug);
-
-                    const res = await fetch('/feeds/posts/default?alt=json&max-results=500').catch(() => null);
-                    if (!res || !res.ok) throw new Error('Network error');
-
-                    const data = await res.json();
-                    const entries = data.feed?.entry || [];
-
-                    for (const entry of entries) {
-                        const altLink = (entry.link || []).find(l => l.rel === 'alternate');
-                        const entrySlug = altLink?.href.split('/').pop().replace('.html', '');
-
-                        if (entrySlug === slug) {
-                            console.log('[ComicView] Postingan ditemukan. Mengolah konten...');
-                            const html = entry.content?.$t || entry.summary?.$t || '';
-                            console.log('[ComicView] Panjang string HTML dari Feed:', html.length);
-                            console.log('[ComicView] Tipe Konten Feed:', entry.content ? 'Full Content' : 'Summary Only');
-                            let meta = null;
-
-                            if (typeof window.app?.parseMetaFromHTML === 'function') {
-                                meta = window.app.parseMetaFromHTML(html, entry);
-                            }
-
-                            if (meta && meta.title) {
-                                console.log('[ComicView] Metadata Mentah:', JSON.stringify(meta).substring(0, 200) + '...');
-                                // Selalu gunakan HTML mentah dari Feed untuk ekstraksi gambar komik
-                                // karena meta JSON biasanya hanya berisi snippet teks untuk SEO.
-                                meta.body = html;
-                                this.meta = this.normalizeMeta(meta);
-                                console.log('[ComicView] Metadata berhasil diparsing via app.parseMetaFromHTML');
-                            } else {
-                                console.log('[ComicView] Metadata ezy-meta tidak ditemukan, menggunakan fallback Blogger Feed');
-                                const labels = (entry.category || []).map(c => c.term);
-                                this.meta = {
-                                    title: entry.title?.$t || '',
-                                    description: html,
-                                    publishdate: entry.published?.$t || '',
-                                    category: labels[0] || 'Comic',
-                                    slug: slug,
-                                    path: altLink?.href ? new URL(altLink.href).pathname : '#'
-                                };
-                            }
-                            this.renderComic();
-                            return;
-                        }
-                    }
-                    console.warn('[ComicView] Postingan dengan slug "' + slug + '" tidak ditemukan di feed.');
+            async loadChapter() {
+                const slug = window.app?.params?.slug;
+                if (!slug) {
                     this.isLoading = false;
-                } catch (e) {
-                    console.error('[ComicView] Fetch error:', e);
+                    return;
+                }
+
+                this.isLoading = true;
+                const searchKey = slug.toLowerCase();
+
+                // === STRATEGY 1: Metadata Hand-off (Fast Path) ===
+                if (window._lastResolvedMeta && (
+                    String(window._lastResolvedMeta.slug || '').toLowerCase() === searchKey ||
+                    String(window._lastResolvedMeta.id || '').toLowerCase() === searchKey
+                )) {
+                    console.log('[ComicView] Using Hand-off Meta');
+                    this.meta = this.normalizeMeta(window._lastResolvedMeta);
+                    this.renderComic();
                     this.isLoading = false;
                 }
+
+                // === STRATEGY 2: Search in Global Posts ===
+                const findInPosts = () => {
+                    const allPosts = window.app?.posts || window.posts || [];
+                    if (allPosts.length === 0) return null;
+                    return allPosts.find(p => 
+                        String(p.slug || '').toLowerCase() === searchKey ||
+                        String(p.id || '').toLowerCase() === searchKey ||
+                        String(p.path || '').toLowerCase().includes(searchKey)
+                    );
+                };
+
+                const found = findInPosts();
+                if (found) {
+                    console.log('[ComicView] Found in Global Posts');
+                    this.meta = this.normalizeMeta(found);
+                    this.renderComic();
+                    this.isLoading = false;
+                } else if (!this.meta) {
+                    // === STRATEGY 3: Deep Fetch (Direct from URL) ===
+                    try {
+                        const path = window.app?.params?.path || window.location.pathname;
+                        if (path && path.includes('/20')) {
+                            console.log('[ComicView] Performing Deep Fetch from:', path);
+                            const res = await fetch(path);
+                            if (res.ok) {
+                                const html = await res.text();
+                                if (window.app?.parseMetaFromHTML) {
+                                    const deepMeta = window.app.parseMetaFromHTML(html);
+                                    if (deepMeta) {
+                                        this.meta = this.normalizeMeta(deepMeta);
+                                        this.renderComic();
+                                    }
+                                }
+                            }
+                        }
+                    } catch (e) { console.error('[ComicView] Deep fetch failed', e); }
+                }
+
+                // [REACTIVE NAV] Tunggu posts dimuat untuk navigasi Prev/Next
+                const checkPosts = setInterval(() => {
+                    const allPosts = window.app?.posts || window.posts || [];
+                    if (allPosts.length > 0) {
+                        this.checkNavigation();
+                        // Jika Strategy 2 tadi gagal karena posts belum ada, coba render sekarang
+                        if (!this.meta) {
+                            const lateFound = findInPosts();
+                            if (lateFound) {
+                                this.meta = this.normalizeMeta(lateFound);
+                                this.renderComic();
+                            }
+                        }
+                        clearInterval(checkPosts);
+                    }
+                }, 1000);
+                setTimeout(() => clearInterval(checkPosts), 10000);
+
+                setTimeout(() => { this.isLoading = false; }, 500);
             },
 
             normalizeMeta(raw) {
