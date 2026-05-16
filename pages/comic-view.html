@@ -55,7 +55,7 @@
             
             <!-- Render Text Bubbles as Overlay -->
             <template x-for="(bubble, index) in bubbles" :key="'bubble-'+index">
-                <div x-html="bubble"></div>
+                <div x-html="bubble" class="comic-bubble-overlay"></div>
             </template>
 
             <template x-for="(src, index) in pages" :key="index">
