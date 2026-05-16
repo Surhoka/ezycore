@@ -218,66 +218,59 @@
 
             renderComic() {
                 console.log('[ComicView] Menjalankan renderComic...');
-                let imgNodes = [];
-
+                
                 if (!this.meta?.description) {
-                    console.error('[ComicView] Gagal: deskripsi konten (HTML) kosong.');
+                    console.error('[ComicView] Gagal: deskripsi konten kosong.');
                     this.isLoading = false;
                     return;
                 }
 
-                // Strategi 1: Gunakan data 'pages' dari metadata JSON (Jika diinput manual/via spreadsheet formula)
-                if (this.meta.pages) {
-                    if (typeof this.meta.pages === 'string' && this.meta.pages.includes('http')) {
-                        this.pages = this.meta.pages.split(',').map(s => s.trim());
-                    } else if (Array.isArray(this.meta.pages) && this.meta.pages.length > 0) {
-                        this.pages = this.meta.pages;
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(this.meta.description, 'text/html');
+
+                // 1. Ekstrak Bubble (PENTING: Harus di luar blok gambar agar selalu jalan)
+                const bubbleNodes = Array.from(doc.querySelectorAll('.speech-bubble'));
+                this.bubbles = bubbleNodes.map(bubble => {
+                    // Fix: Pastikan isi bubble terbungkus class bahasa jika belum ada
+                    if (!bubble.querySelector('.lang-id, .lang-en, .lang-in')) {
+                        const originalContent = bubble.innerHTML;
+                        bubble.innerHTML = `<div class="lang-id">${originalContent}</div>`;
                     }
+                    return bubble.outerHTML;
+                });
+                console.log(`[ComicView] Ditemukan ${this.bubbles.length} teks dialog komik.`);
+
+                // 2. Ekstrak Halaman Gambar
+                let foundPages = [];
+
+                // Strategi A: Dari data 'pages' JSON (Prioritas)
+                if (this.meta.pages && (Array.isArray(this.meta.pages) && this.meta.pages.length > 0)) {
+                    foundPages = this.meta.pages;
+                } else if (typeof this.meta.pages === 'string' && this.meta.pages.includes('http')) {
+                    foundPages = this.meta.pages.split(',').map(s => s.trim());
                 }
 
-                if (this.pages.length > 0) {
-                    console.log('[ComicView] Berhasil memuat ' + this.pages.length + ' halaman dari JSON.');
-                } else {
-                    // Strategi 2: Ekstrak dari HTML jika Strategi 1 gagal atau kosong
-                    console.log('[ComicView] Mencoba ekstraksi dari HTML...');
-                    
-                    // Update Breadcrumb di Parent SPA
-                    if (window.app) window.app.updateBreadcrumb('comic');
-
-                    // Extract images from HTML
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(this.meta.description, 'text/html');
-
-                    // Extract text bubbles
-                    const bubbleNodes = Array.from(doc.querySelectorAll('.speech-bubble'));
-                    this.bubbles = bubbleNodes.map(bubble => bubble.outerHTML);
-                    console.log('[ComicView] Menemukan ' + this.bubbles.length + ' teks dialog komik.');
-
-                    imgNodes = Array.from(doc.querySelectorAll('img')).filter(img => !img.closest('.ezy-meta'));
-                    console.log('[ComicView] Menemukan ' + imgNodes.length + ' tag <img> di dalam konten.');
-
-                    this.pages = imgNodes.map(img => {
+                // Strategi B: Jika JSON kosong, ambil dari tag <img> di HTML
+                if (foundPages.length === 0) {
+                    console.log('[ComicView] JSON Pages kosong, mengekstrak dari HTML...');
+                    const imgNodes = Array.from(doc.querySelectorAll('img')).filter(img => !img.closest('.ezy-meta'));
+                    foundPages = imgNodes.map(img => {
                         const parentLink = img.closest('a');
                         if (parentLink && parentLink.href.match(/\.(jpg|jpeg|png|gif|webp)/i)) {
                             return parentLink.href;
                         }
                         return img.src;
-                    }).filter(src => src && !src.includes('clear.gif') && !src.includes('pixel.gif')) || [];
+                    });
                 }
 
-                // Strategi 3: Tambahkan Gambar Utama (Cover) ke urutan pertama jika belum ada
-                if (this.meta.image && !this.pages.includes(this.meta.image)) {
-                    console.log('[ComicView] Menyisipkan meta.image sebagai cover.');
-                    this.pages.unshift(this.meta.image);
+                // Strategi C: Tambahkan Cover jika belum ada dalam list
+                if (this.meta.image && !foundPages.includes(this.meta.image)) {
+                    foundPages.unshift(this.meta.image);
                 }
 
-                if (imgNodes && imgNodes.length > 0 && this.pages.length === 0) {
-                    console.warn('[ComicView] Peringatan: Gambar ditemukan tapi semuanya terfilter (mungkin link tidak valid atau gambar transparan).');
-                } else if (this.pages.length > 0) {
-                    console.log('[ComicView] Berhasil memuat ' + this.pages.length + ' halaman komik.');
-                } else {
-                    console.warn('[ComicView] Tidak ada gambar sama sekali di dalam deskripsi postingan.');
-                }
+                // Bersihkan URL dan simpan ke state
+                this.pages = foundPages.filter(src => src && !src.includes('clear.gif') && !src.includes('pixel.gif'));
+                console.log(`[ComicView] Berhasil memuat ${this.pages.length} halaman komik.`);
 
                 this.isLoading = false;
             },
