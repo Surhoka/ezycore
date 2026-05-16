@@ -170,8 +170,24 @@
                     this.meta = this.normalizeMeta(found);
                     this.renderComic();
                     this.isLoading = false;
-                } else if (!this.meta) {
-                    // === STRATEGY 3: Deep Fetch (Direct from URL) ===
+                } 
+                
+                // === STRATEGY 3: Specialized Chapter Feed Filter ===
+                // Jika tidak ada di cache, tarik feed khusus label 'Chapter'
+                if (!this.meta || (window.app?.posts || []).length === 0) {
+                    console.log('[ComicView] Fetching specialized Chapter feed...');
+                    await this.fetchChapterFeed();
+                    
+                    const lateFound = findInPosts();
+                    if (lateFound) {
+                        this.meta = this.normalizeMeta(lateFound);
+                        this.renderComic();
+                        this.isLoading = false;
+                    }
+                }
+
+                if (!this.meta) {
+                    // === STRATEGY 4: Deep Fetch (Direct from URL) ===
                     try {
                         const path = window.app?.params?.path || window.location.pathname;
                         if (path && path.includes('/20')) {
@@ -191,25 +207,46 @@
                     } catch (e) { console.error('[ComicView] Deep fetch failed', e); }
                 }
 
-                // [REACTIVE NAV] Tunggu posts dimuat untuk navigasi Prev/Next
-                const checkPosts = setInterval(() => {
-                    const allPosts = window.app?.posts || window.posts || [];
-                    if (allPosts.length > 0) {
-                        this.checkNavigation();
-                        // Jika Strategy 2 tadi gagal karena posts belum ada, coba render sekarang
-                        if (!this.meta) {
-                            const lateFound = findInPosts();
-                            if (lateFound) {
-                                this.meta = this.normalizeMeta(lateFound);
-                                this.renderComic();
-                            }
-                        }
-                        clearInterval(checkPosts);
-                    }
-                }, 1000);
-                setTimeout(() => clearInterval(checkPosts), 10000);
-
+                this.checkNavigation();
                 setTimeout(() => { this.isLoading = false; }, 500);
+            },
+
+            async fetchChapterFeed() {
+                try {
+                    // Filter feed khusus untuk label 'Chapter'
+                    const res = await fetch('/feeds/posts/default/-/Chapter?alt=json&max-results=500');
+                    if (res.ok) {
+                        const json = await res.json();
+                        const entries = json.feed?.entry || [];
+                        const chapterPosts = entries.map(entry => {
+                            const altLink = (entry.link || []).find(l => l.rel === 'alternate');
+                            const html = entry.content?.$t || '';
+                            let meta = null;
+                            if (window.app?.parseMetaFromHTML) meta = window.app.parseMetaFromHTML(html, entry);
+                            
+                            return {
+                                id: entry.id?.$t?.split('post-').pop(),
+                                title: entry.title?.$t,
+                                slug: altLink?.href.split('/').pop().replace('.html', ''),
+                                path: altLink?.href ? new URL(altLink.href).pathname : '#',
+                                publishdate: entry.published?.$t,
+                                category: 'Chapter',
+                                description: html,
+                                ...meta
+                            };
+                        });
+
+                        if (window.app) {
+                            // Gabungkan dengan posts yang sudah ada tanpa duplikasi
+                            const existingIds = new Set(window.app.posts.map(p => p.id));
+                            chapterPosts.forEach(p => {
+                                if (!existingIds.has(p.id)) window.app.posts.push(p);
+                            });
+                            // Urutkan berdasarkan tanggal rilis terbaru
+                            window.app.posts.sort((a, b) => new Date(b.publishdate) - new Date(a.publishdate));
+                        }
+                    }
+                } catch (e) { console.warn('[ComicView] Chapter feed fetch failed', e); }
             },
 
             normalizeMeta(raw) {
