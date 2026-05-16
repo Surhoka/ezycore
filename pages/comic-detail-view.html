@@ -109,8 +109,17 @@
                 this.comic = { ...mainPost };
             }
 
-            // Sinkronisasi sinopsis agar tidak kosong
-            this.comic.summary = this.comic.description || this.comic.snippet || 'No synopsis available.';
+            // Sinkronisasi sinopsis: Bersihkan dari gambar dan balon teks (hanya teks narasi)
+            let rawSummary = this.comic.description || this.comic.snippet || 'No synopsis available.';
+            try {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = rawSummary;
+                // Hapus semua elemen non-teks yang tidak diinginkan di sinopsis
+                tempDiv.querySelectorAll('img, .speech-bubble, script, style').forEach(el => el.remove());
+                this.comic.summary = tempDiv.innerHTML.trim() || this.comic.snippet || 'No synopsis available.';
+            } catch (e) {
+                this.comic.summary = rawSummary;
+            }
 
             // 4. Filter Daftar Chapter (Semua yang BUKAN postingan utama)
             this.chapters = relatedPosts
