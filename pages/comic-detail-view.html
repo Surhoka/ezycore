@@ -107,7 +107,10 @@
             const mainPost = relatedPosts.find(p => p.title.trim() === seriesTitle);
             if (mainPost) {
                 this.comic = { ...mainPost };
+            } else {
+                this.comic.title = seriesTitle;
             }
+            window._lastResolvedMeta = this.comic;
 
             // Sinkronisasi sinopsis: Bersihkan dari gambar dan balon teks (hanya teks narasi)
             let rawSummary = this.comic.description || this.comic.snippet || 'No synopsis available.';
