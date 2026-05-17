@@ -36,11 +36,21 @@
             // Jika hand-off tidak ada atau kita ingin memastikan data terbaru
             const findInPosts = () => {
                 if (!window.posts || window.posts.length === 0) return null;
-                return window.posts.find(p => 
-                    String(p.title || '').toLowerCase() === searchKey ||
-                    String(p.id || '').toLowerCase() === searchKey ||
-                    String(p.path || '').toLowerCase().includes(searchKey)
-                );
+                return window.posts.find(p => {
+                    const postTitle = String(p.title || '').toLowerCase();
+                    const cleanPostTitle = window.app?.cleanSeriesTitle ? window.app.cleanSeriesTitle(p.title).toLowerCase() : postTitle;
+                    
+                    const searchKeyClean = searchKey.replace(/-/g, ' ').trim();
+                    const searchKeySlug = searchKey.replace(/\s+/g, '-').trim();
+
+                    return postTitle === searchKey ||
+                           cleanPostTitle === searchKey ||
+                           cleanPostTitle === searchKeyClean ||
+                           String(p.id || '').toLowerCase() === searchKey ||
+                           String(p.slug || '').toLowerCase() === searchKey ||
+                           String(p.slug || '').toLowerCase() === searchKeySlug ||
+                           String(p.path || '').toLowerCase().includes(searchKeyClean.replace(/\s+/g, '-'));
+                });
             };
 
             const found = findInPosts();
