@@ -51,8 +51,9 @@
         </template>
 
         <!-- Images List -->
-        <div class="w-full flex flex-col items-center" id="comic-pages-list" style="container-type: inline-size; position: relative;">
-            
+        <div class="w-full flex flex-col items-center" id="comic-pages-list"
+            style="container-type: inline-size; position: relative;">
+
             <!-- Render Text Bubbles as Overlay -->
             <template x-for="(bubble, index) in bubbles" :key="'bubble-'+index">
                 <div x-html="bubble" class="comic-bubble-overlay"></div>
@@ -157,7 +158,7 @@
                 const findInPosts = () => {
                     const allPosts = window.app?.posts || window.posts || [];
                     if (allPosts.length === 0) return null;
-                    return allPosts.find(p => 
+                    return allPosts.find(p =>
                         String(p.slug || '').toLowerCase() === searchKey ||
                         String(p.id || '').toLowerCase() === searchKey ||
                         String(p.path || '').toLowerCase().includes(searchKey)
@@ -170,14 +171,14 @@
                     this.meta = this.normalizeMeta(found);
                     this.renderComic();
                     this.isLoading = false;
-                } 
-                
+                }
+
                 // === STRATEGY 3: Specialized Chapter Feed Filter ===
                 // Jika tidak ada di cache, tarik feed khusus label 'Chapter'
                 if (!this.meta || (window.app?.posts || []).length === 0) {
                     console.log('[ComicView] Fetching specialized Chapter feed...');
                     await this.fetchChapterFeed();
-                    
+
                     const lateFound = findInPosts();
                     if (lateFound) {
                         this.meta = this.normalizeMeta(lateFound);
@@ -223,7 +224,7 @@
                             const html = entry.content?.$t || '';
                             let meta = null;
                             if (window.app?.parseMetaFromHTML) meta = window.app.parseMetaFromHTML(html, entry);
-                            
+
                             return {
                                 id: entry.id?.$t?.split('post-').pop(),
                                 title: entry.title?.$t,
@@ -264,7 +265,7 @@
 
             renderComic() {
                 console.log('[ComicView] Menjalankan renderComic...');
-                
+
                 if (!this.meta?.description) {
                     console.error('[ComicView] Gagal: deskripsi konten kosong.');
                     this.isLoading = false;
@@ -277,10 +278,11 @@
                 // 1. Ekstrak Bubble (PENTING: Harus di luar blok gambar agar selalu jalan)
                 const bubbleNodes = Array.from(doc.querySelectorAll('.speech-bubble'));
                 this.bubbles = bubbleNodes.map(bubble => {
-                    // Fix: Pastikan isi bubble terbungkus class bahasa jika belum ada
-                    if (!bubble.querySelector('.lang-id, .lang-en, .lang-in')) {
-                        const originalContent = bubble.innerHTML;
-                        bubble.innerHTML = `<div class="lang-id">${originalContent}</div>`;
+                    // Fix: Pastikan isi bubble terbungkus class bahasa di dalam content-box jika belum ada
+                    const contentBox = bubble.querySelector('.bubble-content') || bubble.querySelector('.comic-text-box');
+                    if (contentBox && !contentBox.querySelector('.lang-id, .lang-en, .lang-in')) {
+                        const originalContent = contentBox.innerHTML;
+                        contentBox.innerHTML = `<div class="lang-id">${originalContent}</div>`;
                     }
                     return bubble.outerHTML;
                 });
