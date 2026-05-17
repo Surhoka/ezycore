@@ -298,8 +298,9 @@
                         const langEn = contentBox.querySelector('.lang-en');
                         const langId = contentBox.querySelector('.lang-id') || contentBox.querySelector('.lang-in');
                         if (langEn && langId) {
-                            const txtEn = langEn.textContent.trim();
-                            if (!txtEn || txtEn === 'Type English text...' || txtEn === 'Type English text') {
+                            // Bersihkan whitespace dan non-breaking spaces (\u00a0) bawaan browser
+                            const txtEnClean = langEn.textContent.trim().toLowerCase().replace(/[\s\u00a0]+/g, ' ');
+                            if (!txtEnClean || txtEnClean.includes('type english text') || txtEnClean === 'type english text...') {
                                 langEn.innerHTML = langId.innerHTML;
                             }
                         }
