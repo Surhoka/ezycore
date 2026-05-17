@@ -282,6 +282,10 @@
                     bubble.querySelectorAll('.drag-handle').forEach(el => el.remove());
                     bubble.querySelectorAll('button').forEach(el => el.remove());
                     bubble.setAttribute('contenteditable', 'false');
+                    bubble.querySelectorAll('[contenteditable]').forEach(el => {
+                        el.removeAttribute('contenteditable');
+                        el.style.cursor = 'default';
+                    });
 
                     const contentBox = bubble.querySelector('.bubble-content') || bubble.querySelector('.comic-text-box');
                     if (contentBox) {
