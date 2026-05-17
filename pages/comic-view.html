@@ -60,12 +60,12 @@
             </template>
 
             <template x-for="(src, index) in pages" :key="index">
-                <div class="relative w-full group">
+                <div class="relative w-full group my-4">
                     <!-- Lapisan Pelindung Transparan -->
                     <div class="absolute inset-0 z-10 pointer-events-auto" @contextmenu.prevent="" @mousedown.prevent=""
                         @touchstart.prevent=""></div>
 
-                    <img :src="src" class="w-full h-auto block select-none bg-gray-200 dark:bg-gray-900"
+                    <img :src="src" class="w-full h-auto block select-none bg-gray-200 dark:bg-gray-900 rounded-lg"
                         @contextmenu.prevent="" loading="lazy" :alt="'Page ' + (index + 1)">
 
                     <!-- Floating Page Count (Z-index dinaikkan agar di atas shield) -->
@@ -278,11 +278,20 @@
                 // 1. Ekstrak Bubble (PENTING: Harus di luar blok gambar agar selalu jalan)
                 const bubbleNodes = Array.from(doc.querySelectorAll('.speech-bubble'));
                 this.bubbles = bubbleNodes.map(bubble => {
-                    // Fix: Pastikan isi bubble terbungkus class bahasa di dalam content-box jika belum ada
+                    // Clean editor controls and prevent editability in storefront
+                    bubble.querySelectorAll('.drag-handle').forEach(el => el.remove());
+                    bubble.querySelectorAll('button').forEach(el => el.remove());
+                    bubble.setAttribute('contenteditable', 'false');
+
                     const contentBox = bubble.querySelector('.bubble-content') || bubble.querySelector('.comic-text-box');
-                    if (contentBox && !contentBox.querySelector('.lang-id, .lang-en, .lang-in')) {
-                        const originalContent = contentBox.innerHTML;
-                        contentBox.innerHTML = `<div class="lang-id">${originalContent}</div>`;
+                    if (contentBox) {
+                        contentBox.setAttribute('contenteditable', 'false');
+                        contentBox.style.cursor = 'default';
+                        contentBox.style.resize = 'none'; // Prevent resize handle
+                        if (!contentBox.querySelector('.lang-id, .lang-en, .lang-in')) {
+                            const originalContent = contentBox.innerHTML;
+                            contentBox.innerHTML = `<div class="lang-id">${originalContent}</div>`;
+                        }
                     }
                     return bubble.outerHTML;
                 });
