@@ -320,9 +320,9 @@
                     });
                 }
 
-                // Strategi C: Tambahkan Cover jika belum ada dalam list
-                if (this.meta.image && !foundPages.includes(this.meta.image)) {
-                    foundPages.unshift(this.meta.image);
+                // Strategi C: Tambahkan Cover jika tidak ada halaman sama sekali dalam list
+                if (foundPages.length === 0 && this.meta.image) {
+                    foundPages.push(this.meta.image);
                 }
 
                 // Bersihkan URL dan simpan ke state
