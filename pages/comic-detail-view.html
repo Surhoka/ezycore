@@ -9,13 +9,15 @@
         },
 
         async loadComic() {
+            this.comic = null;
+            this.chapters = [];
+            this.isLoading = true;
+
             const identifier = params.id || params.slug;
             if (!identifier) {
                 this.isLoading = false;
                 return;
             }
-
-            this.isLoading = true;
             const searchKey = identifier.toLowerCase();
 
             // === STRATEGY 1: Metadata Hand-off (Sangat penting saat reload) ===
