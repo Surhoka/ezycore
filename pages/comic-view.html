@@ -292,6 +292,17 @@
                             const originalContent = contentBox.innerHTML;
                             contentBox.innerHTML = `<div class="lang-id">${originalContent}</div>`;
                         }
+
+                        // Smart Language Fallback: Jika teks Inggris kosong atau masih berupa placeholder bawaan editor,
+                        // salin konten teks bahasa Indonesia/Melayu ke bahasa Inggris agar pembaca tidak melihat teks default.
+                        const langEn = contentBox.querySelector('.lang-en');
+                        const langId = contentBox.querySelector('.lang-id') || contentBox.querySelector('.lang-in');
+                        if (langEn && langId) {
+                            const txtEn = langEn.textContent.trim();
+                            if (!txtEn || txtEn === 'Type English text...' || txtEn === 'Type English text') {
+                                langEn.innerHTML = langId.innerHTML;
+                            }
+                        }
                     }
                     return bubble.outerHTML;
                 });
