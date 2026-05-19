@@ -41,8 +41,7 @@
     </div>
 
     <!-- Reader Container -->
-    <div
-        class="max-w-4xl mx-auto min-h-screen bg-[#f4f4f4] dark:bg-black pt-[76px] md:pt-[85px] pb-2 md:pb-4 flex flex-col items-center">
+    <div class="max-w-4xl mx-auto min-h-screen bg-[#f4f4f4] dark:bg-black pb-2 md:pb-4 flex flex-col items-center">
         <!-- Loading State -->
         <template x-if="isLoading">
             <div class="w-full space-y-4 px-4">
@@ -61,7 +60,7 @@
             </template>
 
             <template x-for="(src, index) in pages" :key="index">
-                <div class="relative w-full group my-4">
+                <div class="relative w-full group mb-4">
                     <!-- Lapisan Pelindung Transparan -->
                     <div class="absolute inset-0 z-10 pointer-events-auto" @contextmenu.prevent="" @mousedown.prevent=""
                         @touchstart.prevent=""></div>
