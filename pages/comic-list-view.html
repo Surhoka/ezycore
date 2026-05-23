@@ -46,27 +46,19 @@
         });
     }
 }">
-    <!-- Page Header & Search -->
-    <div class='relative py-12 mb-8 bg-gray-900 rounded-3xl overflow-hidden shadow-2xl shadow-black/20'>
-        <div class='absolute inset-0 opacity-20'>
-            <div class='absolute inset-0 bg-gradient-to-r from-brand-600 to-blue-600 mix-blend-multiply'></div>
-            <img src='https://images.unsplash.com/photo-1578632738908-4521c626ef48?auto=format&fit=crop&q=80'
-                class='w-full h-full object-cover' />
-        </div>
-
-        <div class='relative z-10 max-w-4xl mx-auto px-6 text-center'>
-            <h1 class='text-3xl md:text-5xl font-black text-white mb-4 tracking-tighter uppercase'>Comic Collection</h1>
-            <p class='text-gray-300 text-sm md:text-base font-medium mb-8 max-w-2xl mx-auto'>Temukan ribuan koleksi
-                komik favorit Anda dari berbagai genre dan author terbaik.</p>
-
-            <!-- Search Bar -->
-            <div class='relative max-w-xl mx-auto'>
-                <input type='text' x-model='searchQuery' placeholder='Cari judul komik...'
-                    class='w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl py-4 pl-12 pr-6 text-white placeholder-white/50 focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all' />
-                <div class='absolute left-4 top-1/2 -translate-y-1/2 text-white/50'>
-                    <svg class='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                        <path d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' stroke-linecap='round'
-                            stroke-linejoin='round' stroke-width='2.5' />
+    <!-- Minimalist Page Header -->
+    <div class="py-10 border-b border-gray-100 dark:border-gray-800/50 mb-10">
+        <div class="text-center max-w-3xl mx-auto px-4">
+            <h1 class="text-2xl md:text-4xl font-black text-gray-900 dark:text-white mb-3 tracking-tight uppercase">Comic Collection</h1>
+            <p class="text-gray-500 dark:text-gray-400 text-sm font-medium mb-8">Temukan ribuan koleksi komik favorit Anda dari berbagai genre terbaik.</p>
+            
+            <!-- Minimalist Search Bar -->
+            <div class="relative max-w-lg mx-auto">
+                <input type="text" x-model="searchQuery" placeholder="Cari judul komik..." 
+                    class="w-full bg-gray-50 dark:bg-gray-800/40 border border-gray-200 dark:border-gray-700 rounded-xl py-3 pl-11 pr-4 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all" />
+                <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" />
                     </svg>
                 </div>
             </div>
@@ -160,7 +152,7 @@
                     <div class="group cursor-pointer"
                         @click="window.navigate('comic-detail', { id: item.id || item.slug, path: item.path })">
                         <div
-                            class='relative aspect-[3/4] rounded-2xl overflow-hidden mb-4 shadow-lg border border-gray-100 dark:border-gray-800'>
+                            class='relative aspect-3/4 rounded-2xl overflow-hidden mb-4 shadow-lg border border-gray-100 dark:border-gray-800'>
                             <img :src='item.image || "https://dummyimage.com/300x400/374151/9ca3af&text=."'
                                 class='w-full h-full object-cover transition-transform duration-500 group-hover:scale-110' />
 
@@ -182,7 +174,7 @@
 
                             <!-- Hover Details -->
                             <div
-                                class='absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 p-4 flex flex-col justify-end'>
+                                class='absolute inset-0 bg-linear-to-t from-gray-950 via-gray-950/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 p-4 flex flex-col justify-end'>
                                 <p class='text-white text-xs font-bold line-clamp-2 mb-2' x-text='item.title'></p>
                                 <div class='flex flex-wrap gap-1'>
                                     <template x-for='tag in (item.tags || "").split(",").slice(0, 2)'>
