@@ -9,7 +9,8 @@
                     <h1 class="text-sm md:text-lg font-black text-gray-900 dark:text-white truncate"
                         x-text="meta?.title || 'Loading Chapter...'"></h1>
                     <div class="flex items-center gap-1.5 md:gap-2 mt-0.5 md:mt-1">
-                        <span class="text-[10px] md:text-xs font-black text-brand-600 uppercase tracking-widest truncate max-w-[80px] md:max-w-none"
+                        <span
+                            class="text-[10px] md:text-xs font-black text-brand-600 uppercase tracking-widest truncate max-w-[80px] md:max-w-none"
                             x-text="meta?.category || 'Comic'"></span>
                         <span class="text-gray-300 dark:text-gray-700">•</span>
                         <span class="text-[10px] md:text-xs font-bold text-gray-500 dark:text-gray-400 truncate"
@@ -19,10 +20,17 @@
 
                 <!-- Navigation Buttons -->
                 <div class="flex items-center gap-1.5 md:gap-2 flex-none">
+                    <!-- Language Toggle -->
+                    <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 mr-1 md:mr-2">
+                        <button @click="currentLang = 'id'" :class="currentLang === 'id' ? 'bg-white dark:bg-gray-700 shadow-sm text-brand-600' : 'text-gray-500'" class="px-2 py-1 text-[10px] font-bold rounded-md transition-all cursor-pointer">ID</button>
+                        <button @click="currentLang = 'en'" :class="currentLang === 'en' ? 'bg-white dark:bg-gray-700 shadow-sm text-brand-600' : 'text-gray-500'" class="px-2 py-1 text-[10px] font-bold rounded-md transition-all cursor-pointer">EN</button>
+                    </div>
+
                     <button @click="navigateChapter('prev')"
                         class="flex-none inline-flex items-center justify-center p-2 md:px-4 md:py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs font-bold rounded-lg transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
                         :disabled="!hasPrev" title="Previous">
-                        <svg class="w-4 h-4 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" stroke-width="3"
+                            viewBox="0 0 24 24">
                             <path d="M15 19l-7-7 7-7" />
                         </svg>
                         <span class="hidden md:inline md:ml-2">Prev</span>
@@ -31,7 +39,8 @@
                         class="flex-none inline-flex items-center justify-center p-2 md:px-6 md:py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg transition-all shadow-lg shadow-brand-500/20 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
                         :disabled="!hasNext" title="Next">
                         <span class="hidden md:inline md:mr-2">Next</span>
-                        <svg class="w-4 h-4 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" stroke-width="3"
+                            viewBox="0 0 24 24">
                             <path d="M9 5l7 7-7 7" />
                         </svg>
                     </button>
@@ -52,6 +61,7 @@
 
         <!-- Images List -->
         <div class="w-full flex flex-col items-center" id="comic-pages-list"
+            :class="'lang-mode-' + currentLang"
             style="container-type: inline-size; position: relative;">
 
             <!-- Render Text Bubbles as Overlay -->
@@ -125,6 +135,7 @@
             pages: [],
             bubbles: [], // Menyimpan elemen speech-bubble
             isLoading: true,
+            currentLang: (window.app?.language || 'id').startsWith('en') ? 'en' : 'id',
             hasNext: false,
             hasPrev: false,
 
@@ -446,4 +457,11 @@
         transition-property: background-color, border-color, color;
         transition-duration: 300ms;
     }
+
+    /* Language Toggle Visibility Rules */
+    .lang-mode-id .lang-en { display: none !important; }
+    .lang-mode-id .lang-id, .lang-mode-id .lang-in { display: block !important; }
+    
+    .lang-mode-en .lang-id, .lang-mode-en .lang-in { display: none !important; }
+    .lang-mode-en .lang-en { display: block !important; }
 </style>
