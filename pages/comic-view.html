@@ -22,8 +22,12 @@
                 <div class="flex items-center gap-1.5 md:gap-2 flex-none">
                     <!-- Language Toggle -->
                     <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 mr-1 md:mr-2">
-                        <button @click="currentLang = 'id'" :class="currentLang === 'id' ? 'bg-white dark:bg-gray-700 shadow-sm text-brand-600' : 'text-gray-500'" class="px-2 py-1 text-[10px] font-bold rounded-md transition-all cursor-pointer">ID</button>
-                        <button @click="currentLang = 'en'" :class="currentLang === 'en' ? 'bg-white dark:bg-gray-700 shadow-sm text-brand-600' : 'text-gray-500'" class="px-2 py-1 text-[10px] font-bold rounded-md transition-all cursor-pointer">EN</button>
+                        <button @click="currentLang = 'id'"
+                            :class="currentLang === 'id' ? 'bg-white dark:bg-gray-700 shadow-sm text-brand-600' : 'text-gray-500'"
+                            class="px-2 py-1 text-[10px] font-bold rounded-md transition-all cursor-pointer">ID</button>
+                        <button @click="currentLang = 'en'"
+                            :class="currentLang === 'en' ? 'bg-white dark:bg-gray-700 shadow-sm text-brand-600' : 'text-gray-500'"
+                            class="px-2 py-1 text-[10px] font-bold rounded-md transition-all cursor-pointer">EN</button>
                     </div>
 
                     <button @click="navigateChapter('prev')"
@@ -60,8 +64,7 @@
         </template>
 
         <!-- Images List -->
-        <div class="w-full flex flex-col items-center" id="comic-pages-list"
-            :class="'lang-mode-' + currentLang"
+        <div class="w-full flex flex-col items-center" id="comic-pages-list" :class="'lang-mode-' + currentLang"
             style="container-type: inline-size; position: relative;">
 
             <!-- Render Text Bubbles as Overlay -->
@@ -298,6 +301,13 @@
                         el.style.cursor = 'default';
                     });
 
+                    // Bersihkan inline display style hasil sisa preview dari editor
+                    // agar tidak menimpa aturan CSS Global (lang-mode)
+                    bubble.querySelectorAll('.lang-id, .lang-en, .lang-in').forEach(el => {
+                        el.style.removeProperty('display');
+                        el.style.cursor = 'default';
+                    });
+
                     const contentBox = bubble.querySelector('.bubble-content') || bubble.querySelector('.comic-text-box');
                     if (contentBox) {
                         contentBox.setAttribute('contenteditable', 'false');
@@ -312,6 +322,16 @@
                         // salin konten teks bahasa Indonesia/Melayu ke bahasa Inggris agar pembaca tidak melihat teks default.
                         const langEn = contentBox.querySelector('.lang-en');
                         const langId = contentBox.querySelector('.lang-id') || contentBox.querySelector('.lang-in');
+
+                        // === SINKRONISASI TYPOGRAPHY (BOLD/ITALIC) ===
+                        // Mengambil style dari ID (sumber utama) dan mengangkatnya ke parent agar EN konsisten
+                        if (langId) {
+                            const stylesToSync = ['fontWeight', 'fontStyle', 'textDecoration', 'lineHeight'];
+                            stylesToSync.forEach(prop => {
+                                if (langId.style[prop]) contentBox.style[prop] = langId.style[prop];
+                            });
+                        }
+
                         if (langEn && langId) {
                             // Bersihkan whitespace dan non-breaking spaces (\u00a0) bawaan browser
                             const txtEnClean = langEn.textContent.trim().toLowerCase().replace(/[\s\u00a0]+/g, ' ');
