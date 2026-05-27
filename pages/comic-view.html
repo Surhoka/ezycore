@@ -328,7 +328,10 @@
                         if (langId) {
                             const stylesToSync = ['fontWeight', 'fontStyle', 'textDecoration', 'lineHeight'];
                             stylesToSync.forEach(prop => {
-                                if (langId.style[prop]) contentBox.style[prop] = langId.style[prop];
+                                if (langId.style[prop]) {
+                                    contentBox.style[prop] = langId.style[prop];
+                                    langId.style[prop] = ''; // Bersihkan child agar mewarisi dari parent
+                                }
                             });
                         }
 
