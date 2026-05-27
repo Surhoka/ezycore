@@ -326,7 +326,7 @@
                         // === SINKRONISASI TYPOGRAPHY (BOLD/ITALIC) ===
                         // Mengambil style dari ID (sumber utama) dan mengangkatnya ke parent agar EN konsisten
                         if (langId) {
-                            const stylesToSync = ['fontWeight', 'fontStyle', 'textDecoration', 'lineHeight'];
+                            const stylesToSync = ['fontWeight', 'fontStyle', 'textDecoration', 'lineHeight', 'textAlign', 'color'];
                             stylesToSync.forEach(prop => {
                                 if (langId.style[prop]) {
                                     contentBox.style[prop] = langId.style[prop];
