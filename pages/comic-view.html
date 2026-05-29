@@ -303,6 +303,7 @@
 
                     // Bersihkan inline display style hasil sisa preview dari editor
                     // agar tidak menimpa aturan CSS Global (lang-mode)
+                    bubble.style.removeProperty('display');
                     bubble.querySelectorAll('.lang-id, .lang-en, .lang-in').forEach(el => {
                         el.style.removeProperty('display');
                         el.style.removeProperty('font-size');
