@@ -305,6 +305,7 @@
                     // agar tidak menimpa aturan CSS Global (lang-mode)
                     bubble.querySelectorAll('.lang-id, .lang-en, .lang-in').forEach(el => {
                         el.style.removeProperty('display');
+                        el.style.removeProperty('font-size');
                         el.style.cursor = 'default';
                     });
 
