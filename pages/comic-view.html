@@ -6,32 +6,32 @@
         <div class="w-full px-4 md:px-6 h-[60px] md:h-[85px] flex items-center">
             <div class="flex flex-row items-center justify-between gap-3 md:gap-4 w-full">
                 <div class="min-w-0 flex-1">
-                    <h1 class="text-xs md:text-lg font-black text-gray-900 dark:text-white truncate"
+                    <h1 class="text-[11px] md:text-lg font-black text-gray-900 dark:text-white truncate"
                         x-text="meta?.title || 'Loading Chapter...'"></h1>
                     <div class="flex items-center gap-1 md:gap-2 mt-0.5 md:mt-1">
                         <span
-                            class="text-[9px] md:text-xs font-black text-brand-600 uppercase tracking-widest truncate max-w-[60px] md:max-w-none"
+                            class="text-[8px] md:text-xs font-black text-brand-600 uppercase tracking-widest truncate max-w-[50px] md:max-w-none"
                             x-text="meta?.category || 'Comic'"></span>
                         <span class="text-gray-300 dark:text-gray-700 text-[10px]">•</span>
-                        <span class="text-[9px] md:text-xs font-bold text-gray-500 dark:text-gray-400 truncate"
+                        <span class="text-[8px] md:text-xs font-bold text-gray-500 dark:text-gray-400 truncate"
                             x-text="formatDate(meta?.publishdate)"></span>
                     </div>
                 </div>
 
                 <!-- Navigation Buttons -->
-                <div class="flex items-center gap-1 md:gap-3 flex-none">
+                <div class="flex items-center gap-1 md:gap-2 flex-none">
                     <!-- Language Toggle -->
-                    <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 shrink-0">
+                    <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 md:p-1 shrink-0">
                         <button @click="currentLang = 'id'"
                             :class="currentLang === 'id' ? 'bg-white dark:bg-gray-700 shadow-sm text-brand-600' : 'text-gray-500'"
-                            class="px-1.5 md:px-2 py-1 text-[9px] md:text-[10px] font-bold rounded-md transition-all cursor-pointer whitespace-nowrap">ID</button>
+                            class="px-1.5 md:px-2 py-1 text-[8px] md:text-[10px] font-bold rounded-md transition-all cursor-pointer whitespace-nowrap">ID</button>
                         <button @click="currentLang = 'en'"
                             :class="currentLang === 'en' ? 'bg-white dark:bg-gray-700 shadow-sm text-brand-600' : 'text-gray-500'"
-                            class="px-1.5 md:px-2 py-1 text-[9px] md:text-[10px] font-bold rounded-md transition-all cursor-pointer whitespace-nowrap">EN</button>
+                            class="px-1.5 md:px-2 py-1 text-[8px] md:text-[10px] font-bold rounded-md transition-all cursor-pointer whitespace-nowrap">EN</button>
                     </div>
 
                     <button @click="navigateChapter('prev')"
-                        class="flex-none inline-flex items-center justify-center p-2 md:px-4 md:py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs font-bold rounded-lg transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
+                        class="flex-none inline-flex items-center justify-center w-8 h-8 md:w-auto md:px-4 md:py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs font-bold rounded-lg transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
                         :disabled="!hasPrev" title="Previous">
                         <svg class="w-4 h-4 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" stroke-width="3"
                             viewBox="0 0 24 24">
@@ -40,7 +40,7 @@
                         <span class="hidden md:inline md:ml-2">Prev</span>
                     </button>
                     <button @click="navigateChapter('next')"
-                        class="flex-none inline-flex items-center justify-center p-2 md:px-6 md:py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg transition-all shadow-lg shadow-brand-500/20 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
+                        class="flex-none inline-flex items-center justify-center w-8 h-8 md:w-auto md:px-6 md:py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg transition-all shadow-lg shadow-brand-500/20 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
                         :disabled="!hasNext" title="Next">
                         <span class="hidden md:inline md:mr-2">Next</span>
                         <svg class="w-4 h-4 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" stroke-width="3"
@@ -297,13 +297,17 @@
                     bubble.querySelectorAll('button').forEach(el => el.remove());
                     bubble.setAttribute('contenteditable', 'false');
                     bubble.querySelectorAll('[contenteditable]').forEach(el => {
-                        el.removeAttribute('contenteditable');
-                        el.style.cursor = 'default';
+                        el.setAttribute('contenteditable', 'false');
                     });
 
-                    // Bersihkan inline display style hasil sisa preview dari editor
-                    // agar tidak menimpa aturan CSS Global (lang-mode)
-                    bubble.style.removeProperty('display');
+                    // Bersihkan gaya inline agar aturan CSS Global (lang-mode & cqi) bisa bekerja
+                    const cleanStyles = (el) => {
+                        el.style.removeProperty('display');
+                        el.style.removeProperty('font-size');
+                        el.style.removeProperty('line-height');
+                        el.style.cursor = 'default';
+                    };
+
                     bubble.querySelectorAll('.lang-id, .lang-en, .lang-in').forEach(el => {
                         el.style.removeProperty('display');
                         // font-size dan line-height jangan dihapus agar hasil 'fit' editor tetap aktif
@@ -314,35 +318,45 @@
                     if (contentBox) {
                         contentBox.setAttribute('contenteditable', 'false');
                         contentBox.style.cursor = 'default';
-                        contentBox.style.resize = 'none'; // Prevent resize handle
-                        if (!contentBox.querySelector('.lang-id, .lang-en, .lang-in')) {
+                        contentBox.style.resize = 'none';
+
+                        const langElems = contentBox.querySelectorAll('.lang-id, .lang-en, .lang-in');
+                        if (langElems.length === 0) {
                             const originalContent = contentBox.innerHTML;
                             contentBox.innerHTML = `<div class="lang-id">${originalContent}</div>`;
+                        } else {
+                            langElems.forEach(el => cleanStyles(el));
                         }
 
-                        // Smart Language Fallback: Jika teks Inggris kosong atau masih berupa placeholder bawaan editor,
-                        // salin konten teks bahasa Indonesia/Melayu ke bahasa Inggris agar pembaca tidak melihat teks default.
                         const langEn = contentBox.querySelector('.lang-en');
                         const langId = contentBox.querySelector('.lang-id') || contentBox.querySelector('.lang-in');
 
                         // === SINKRONISASI TYPOGRAPHY (BOLD/ITALIC) ===
-                        // Mengambil style dari ID (sumber utama) dan mengangkatnya ke parent agar EN konsisten
                         if (langId) {
-                            const stylesToSync = ['fontSize', 'fontWeight', 'fontStyle', 'textDecoration', 'lineHeight', 'textAlign', 'color'];
+                            const stylesToSync = ['fontWeight', 'fontStyle', 'textDecoration', 'textAlign', 'color'];
                             stylesToSync.forEach(prop => {
                                 if (langId.style[prop]) {
                                     contentBox.style[prop] = langId.style[prop];
-                                    langId.style[prop] = ''; // Bersihkan child agar mewarisi dari parent
                                 }
+                            });
+
+                            // Bersihkan sisa gaya sinkronisasi di semua child agar mewarisi dari contentBox
+                            contentBox.querySelectorAll('.lang-id, .lang-en, .lang-in').forEach(el => {
+                                stylesToSync.forEach(p => el.style.removeProperty(p.replace(/[A-Z]/g, m => "-" + m.toLowerCase())));
                             });
                         }
 
                         if (langEn && langId) {
-                            // Bersihkan whitespace dan non-breaking spaces (\u00a0) bawaan browser
                             const txtEnClean = langEn.textContent.trim().toLowerCase().replace(/[\s\u00a0]+/g, ' ');
                             if (!txtEnClean || txtEnClean.includes('type english text') || txtEnClean === 'type english text...') {
                                 langEn.innerHTML = langId.innerHTML;
                             }
+                        } else if (!langEn && langId) {
+                            // Fallback jika naskah EN tidak ada sama sekali di bubble
+                            const newEn = document.createElement('div');
+                            newEn.className = 'lang-en';
+                            newEn.innerHTML = langId.innerHTML;
+                            contentBox.appendChild(newEn);
                         }
                     }
                     return bubble.outerHTML;
