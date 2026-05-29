@@ -322,13 +322,9 @@
                         const fs = el.style.fontSize;
                         el.style.removeProperty('display');
 
+                        // Bersihkan font-size inline (px) agar tidak bentrok dengan kalkulasi terpusat
                         if (fs && fs.includes('px')) {
-                            const px = parseFloat(fs);
-                            // Menggunakan multiplier 0.94 sebagai safety margin (6%) 
-                            // agar teks tidak menabrak dinding kontainer saat render mobile.
-                            const cqiVal = ((px / 8) * 0.94).toFixed(2);
-                            const responsiveSize = `calc(${cqiVal}cqi + 1px)`;
-                            el.style.setProperty('font-size', responsiveSize, 'important');
+                            el.style.removeProperty('font-size');
                         } else if (!fs || !fs.includes('cqi')) {
                             el.style.removeProperty('font-size');
                         }
@@ -350,16 +346,32 @@
                         // Ensure inner content box dimensions are responsive
                         makeResponsive(contentBox, ['width', 'height', 'maxWidth', 'maxHeight']);
 
-                        const langElems = contentBox.querySelectorAll('.lang-id, .lang-en, .lang-in');
-                        if (langElems.length === 0) {
+                        let langId = contentBox.querySelector('.lang-id') || contentBox.querySelector('.lang-in');
+                        let langEn = contentBox.querySelector('.lang-en');
+
+                        // 1. Inisialisasi jika elemen bahasa belum ada
+                        if (!langId && !langEn) {
                             const originalContent = contentBox.innerHTML;
                             contentBox.innerHTML = `<div class="lang-id">${originalContent}</div>`;
-                        } else {
-                            langElems.forEach(el => cleanStyles(el));
+                            langId = contentBox.querySelector('.lang-id');
                         }
 
-                        const langEn = contentBox.querySelector('.lang-en');
-                        const langId = contentBox.querySelector('.lang-id') || contentBox.querySelector('.lang-in');
+                        // 2. [ACUAN ID] Hitung ukuran font responsif berdasarkan teks Indonesia (Baseline)
+                        let unifiedFontSize = '';
+                        if (langId && langId.style.fontSize && langId.style.fontSize.includes('px')) {
+                            const px = parseFloat(langId.style.fontSize);
+                            // Menggunakan multiplier 0.94 sebagai safety margin agar teks tidak menabrak kontainer
+                            const cqiVal = ((px / 8) * 0.94).toFixed(2);
+                            unifiedFontSize = `calc(${cqiVal}cqi + 1px)`;
+                        }
+
+                        // 3. Terapkan pembersihan dan ukuran font seragam ke semua varian bahasa
+                        contentBox.querySelectorAll('.lang-id, .lang-en, .lang-in').forEach(el => {
+                            cleanStyles(el);
+                            if (unifiedFontSize) {
+                                el.style.setProperty('font-size', unifiedFontSize, 'important');
+                            }
+                        });
 
                         // === SINKRONISASI TYPOGRAPHY (BOLD/ITALIC) ===
                         if (langId) {
