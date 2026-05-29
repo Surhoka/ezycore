@@ -306,7 +306,14 @@
                     bubble.style.removeProperty('display');
                     bubble.querySelectorAll('.lang-id, .lang-en, .lang-in').forEach(el => {
                         el.style.removeProperty('display');
-                        // font-size dan line-height jangan dihapus agar hasil 'fit' editor tetap aktif
+
+                        // Ekstrak dan simpan font-size editor ke CSS variable, lalu hapus properti inline
+                        const currentFontSize = el.style.getPropertyValue('font-size');
+                        if (currentFontSize) {
+                            el.style.setProperty('--editor-font-size', currentFontSize);
+                            el.style.removeProperty('font-size'); // Hapus agar CSS eksternal/variabel dapat mengambil alih
+                        }
+                        el.style.removeProperty('line-height'); // Selalu hapus line-height agar CSS responsif dapat bekerja
                         el.style.cursor = 'default';
                     });
 
