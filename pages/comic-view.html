@@ -306,10 +306,7 @@
                     bubble.style.removeProperty('display');
                     bubble.querySelectorAll('.lang-id, .lang-en, .lang-in').forEach(el => {
                         el.style.removeProperty('display');
-                        el.style.removeProperty('font-size');
-                        el.style.removeProperty('line-height');
-                        el.style.removeProperty('width');
-                        el.style.removeProperty('height');
+                        // font-size dan line-height jangan dihapus agar hasil 'fit' editor tetap aktif
                         el.style.cursor = 'default';
                     });
 
