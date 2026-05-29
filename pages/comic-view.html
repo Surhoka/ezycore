@@ -306,8 +306,23 @@
                     bubble.style.removeProperty('display');
                     bubble.querySelectorAll('.lang-id, .lang-en, .lang-in').forEach(el => {
                         el.style.removeProperty('display');
-                        // font-size dan line-height jangan dihapus agar hasil 'fit' editor tetap aktif
                         el.style.cursor = 'default';
+
+                        // Ubah font-size dari px statis ke unit responsif (cqi) tanpa menghapus propertinya.
+                        // Kita hilangkan priority '!important' agar CSS @container di XML bisa bekerja di mobile.
+                        const inlineFS = el.style.fontSize;
+                        if (inlineFS && inlineFS.includes('px')) {
+                            const val = parseFloat(inlineFS);
+                            // 1cqi ≈ 8px (asumsi lebar container 800px). 
+                            // Clamp memastikan teks tidak pernah lebih kecil dari 12px di HP.
+                            el.style.setProperty('font-size', `clamp(12px, ${(val / 8).toFixed(2)}cqi, ${val}px)`, null);
+                        }
+
+                        // Pastikan line-height tidak memiliki !important agar fleksibel di mobile
+                        const inlineLH = el.style.lineHeight;
+                        if (inlineLH) {
+                            el.style.setProperty('line-height', inlineLH, null);
+                        }
                     });
 
                     const contentBox = bubble.querySelector('.bubble-content') || bubble.querySelector('.comic-text-box');
@@ -328,7 +343,7 @@
                         // === SINKRONISASI TYPOGRAPHY (BOLD/ITALIC) ===
                         // Mengambil style dari ID (sumber utama) dan mengangkatnya ke parent agar EN konsisten
                         if (langId) {
-                            const stylesToSync = ['fontWeight', 'fontStyle', 'textDecoration', 'lineHeight', 'textAlign', 'color'];
+                            const stylesToSync = ['fontWeight', 'fontStyle', 'textDecoration', 'textAlign', 'color'];
                             stylesToSync.forEach(prop => {
                                 if (langId.style[prop]) {
                                     contentBox.style[prop] = langId.style[prop];
