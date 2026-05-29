@@ -300,19 +300,26 @@
                         el.setAttribute('contenteditable', 'false');
                     });
 
-                    // Bersihkan gaya inline agar aturan CSS Global (lang-mode & cqi) bisa bekerja
+                    // Bersihkan gaya inline namun konversi font-size px ke cqi (responsive)
+                    // Ini memastikan teks yang diatur kecil di editor tetap kecil (bisikan) 
+                    // dan teks besar tetap besar, namun semuanya mengecil di mobile secara proporsional.
                     const cleanStyles = (el) => {
+                        const fs = el.style.fontSize;
                         el.style.removeProperty('display');
-                        el.style.removeProperty('font-size');
+
+                        if (fs && fs.includes('px')) {
+                            const px = parseFloat(fs);
+                            // Anggap 22px adalah ukuran standar editor yang setara dengan 2.8cqi standar di template
+                            const scale = px / 22;
+                            const responsiveSize = `calc(${(2.8 * scale).toFixed(2)}cqi + 3px)`;
+                            el.style.setProperty('font-size', responsiveSize, 'important');
+                        } else {
+                            el.style.removeProperty('font-size');
+                        }
+
                         el.style.removeProperty('line-height');
                         el.style.cursor = 'default';
                     };
-
-                    bubble.querySelectorAll('.lang-id, .lang-en, .lang-in').forEach(el => {
-                        el.style.removeProperty('display');
-                        // font-size dan line-height jangan dihapus agar hasil 'fit' editor tetap aktif
-                        el.style.cursor = 'default';
-                    });
 
                     const contentBox = bubble.querySelector('.bubble-content') || bubble.querySelector('.comic-text-box');
                     if (contentBox) {
