@@ -64,443 +64,422 @@
         </template>
 
         <!-- Images List -->
-        <div class="w-full flex flex-col items-center ezy-comic-rendered-container" id="comic-pages-list"
-            :class="'lang-mode-' + currentLang" style="position: relative;">
-            <div class="w-full flex flex-col items-center ezy-comic-rendered-container" id="comic-pages-list"
-                :class="'lang-mode-' + currentLang" style="position: relative;">
+        <div class="w-full flex flex-col items-center" id="comic-pages-list" :class="'lang-mode-' + currentLang"
+            style="container-type: inline-size; position: relative;">
 
-                <!-- Render Text Bubbles as Overlay -->
-                <template x-for="(bubble, index) in bubbles" :key="'bubble-'+index">
-                    <div x-html="bubble" class="comic-bubble-overlay"></div>
-                </template>
-                <!-- Single Overlay for all bubbles to maintain proper Container Query context -->
-                <div class="comic-bubble-overlay">
-                    <template x-for="(bubble, index) in bubbles" :key="'bubble-'+index">
-                        <div x-html="bubble" class="contents"></div>
-                    </template>
+            <!-- Render Text Bubbles as Overlay -->
+            <template x-for="(bubble, index) in bubbles" :key="'bubble-'+index">
+                <div x-html="bubble" class="comic-bubble-overlay"></div>
+            </template>
+
+            <template x-for="(src, index) in pages" :key="index">
+                <div class="relative w-full group">
+                    <!-- Lapisan Pelindung Transparan -->
+                    <div class="absolute inset-0 z-10 pointer-events-auto" @contextmenu.prevent="" @mousedown.prevent=""
+                        @touchstart.prevent=""></div>
+
+                    <img :src="src" class="w-full h-auto block select-none bg-gray-200 dark:bg-gray-900"
+                        @contextmenu.prevent="" loading="lazy" :alt="'Page ' + (index + 1)">
+
+                    <!-- Floating Page Count (Z-index dinaikkan agar di atas shield) -->
+                    <div class="absolute bottom-4 right-4 z-20 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                        x-text="(index + 1) + ' / ' + pages.length"></div>
                 </div>
+            </template>
+        </div>
 
-                <template x-for="(src, index) in pages" :key="index">
-                    <div class="relative w-full group">
-                        <!-- Lapisan Pelindung Transparan -->
-                        <div class="absolute inset-0 z-10 pointer-events-auto" @contextmenu.prevent=""
-                            @mousedown.prevent="" @touchstart.prevent=""></div>
-
-                        <img :src="src" class="w-full h-auto block select-none bg-gray-200 dark:bg-gray-900"
-                            @contextmenu.prevent="" loading="lazy" :alt="'Page ' + (index + 1)">
-
-                        <!-- Floating Page Count (Z-index dinaikkan agar di atas shield) -->
-                        <div class="absolute bottom-4 right-4 z-20 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                            x-text="(index + 1) + ' / ' + pages.length"></div>
-                    </div>
-                </template>
+        <!-- Footer Navigation -->
+        <div x-show="!isLoading && pages.length > 0"
+            class="w-full py-16 px-4 text-center bg-white dark:bg-gray-950 border-t border-gray-100 dark:border-gray-900 mt-0 shadow-inner">
+            <div class="mb-8">
+                <h3 class="text-sm font-black text-gray-400 dark:text-gray-600 uppercase tracking-[0.3em]">End of
+                    Chapter</h3>
             </div>
 
-            <!-- Footer Navigation -->
-            <div x-show="!isLoading && pages.length > 0"
-                class="w-full py-16 px-4 text-center bg-white dark:bg-gray-950 border-t border-gray-100 dark:border-gray-900 mt-0 shadow-inner">
-                <div class="mb-8">
-                    <h3 class="text-sm font-black text-gray-400 dark:text-gray-600 uppercase tracking-[0.3em]">End of
-                        Chapter</h3>
-                </div>
-
-                <div class="flex flex-col items-center gap-4">
-                    <button @click="navigateChapter('next')" x-show="hasNext"
-                        class="inline-flex items-center gap-3 px-12 py-4 bg-brand-600 hover:bg-brand-700 text-white font-black rounded-2xl shadow-xl shadow-brand-500/30 transition-all active:scale-95 uppercase tracking-widest text-sm">
-                        Next Chapter
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
-                            <path d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-                        </svg>
-                    </button>
-
-                    <div class="flex items-center gap-6 mt-4">
-                        <a x-on:click.prevent="window.navigate('home')" href="/"
-                            class="text-xs font-bold text-gray-400 hover:text-brand-600 transition-colors uppercase tracking-widest">Home</a>
-                        <span class="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-800"></span>
-                        <a href="#header"
-                            class="text-xs font-bold text-gray-400 hover:text-brand-600 transition-colors uppercase tracking-widest">Top</a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Error/Empty State -->
-            <div x-show="!isLoading && pages.length === 0" class="py-32 text-center px-6">
-                <div
-                    class="w-20 h-20 bg-gray-100 dark:bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-300">
-                    <svg class="w-10 h-10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path
-                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            <div class="flex flex-col items-center gap-4">
+                <button @click="navigateChapter('next')" x-show="hasNext"
+                    class="inline-flex items-center gap-3 px-12 py-4 bg-brand-600 hover:bg-brand-700 text-white font-black rounded-2xl shadow-xl shadow-brand-500/30 transition-all active:scale-95 uppercase tracking-widest text-sm">
+                    Next Chapter
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                        <path d="M13 5l7 7-7 7M5 5l7 7-7 7" />
                     </svg>
+                </button>
+
+                <div class="flex items-center gap-6 mt-4">
+                    <a x-on:click.prevent="window.navigate('home')" href="/"
+                        class="text-xs font-bold text-gray-400 hover:text-brand-600 transition-colors uppercase tracking-widest">Home</a>
+                    <span class="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-800"></span>
+                    <a href="#header"
+                        class="text-xs font-bold text-gray-400 hover:text-brand-600 transition-colors uppercase tracking-widest">Top</a>
                 </div>
-                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">No Pages Found</h2>
-                <p class="text-gray-500 dark:text-gray-400 text-sm max-w-xs mx-auto">This chapter might be empty or
-                    still
-                    being processed. Please check back later.</p>
             </div>
         </div>
+
+        <!-- Error/Empty State -->
+        <div x-show="!isLoading && pages.length === 0" class="py-32 text-center px-6">
+            <div
+                class="w-20 h-20 bg-gray-100 dark:bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-300">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+            </div>
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">No Pages Found</h2>
+            <p class="text-gray-500 dark:text-gray-400 text-sm max-w-xs mx-auto">This chapter might be empty or still
+                being processed. Please check back later.</p>
+        </div>
     </div>
+</div>
 
-    <script>
-        window.comicView = function () {
-            return {
-                meta: null,
-                pages: [],
-                bubbles: [], // Menyimpan elemen speech-bubble
-                isLoading: true,
-                currentLang: (window.app?.language || 'id').startsWith('en') ? 'en' : 'id',
-                hasNext: false,
-                hasPrev: false,
+<script>
+    window.comicView = function () {
+        return {
+            meta: null,
+            pages: [],
+            bubbles: [], // Menyimpan elemen speech-bubble
+            isLoading: true,
+            currentLang: (window.app?.language || 'id').startsWith('en') ? 'en' : 'id',
+            hasNext: false,
+            hasPrev: false,
 
-                async init() {
-                    this.loadChapter();
-                    this.$watch('params.slug', () => this.loadChapter());
-                },
+            async init() {
+                this.loadChapter();
+                this.$watch('params.slug', () => this.loadChapter());
+            },
 
-                async loadChapter() {
-                    const slug = window.app?.params?.slug;
-                    if (!slug) {
-                        this.isLoading = false;
-                        return;
-                    }
-
-                    this.isLoading = true;
-                    const searchKey = slug.toLowerCase();
-
-                    // === STRATEGY 1: Metadata Hand-off (Fast Path) ===
-                    if (window._lastResolvedMeta && (
-                        String(window._lastResolvedMeta.slug || '').toLowerCase() === searchKey ||
-                        String(window._lastResolvedMeta.id || '').toLowerCase() === searchKey
-                    )) {
-                        console.log('[ComicView] Using Hand-off Meta');
-                        this.meta = this.normalizeMeta(window._lastResolvedMeta);
-                        this.renderComic();
-                        this.isLoading = false;
-                    }
-
-                    // === STRATEGY 2: Search in Global Posts ===
-                    const findInPosts = () => {
-                        const allPosts = window.app?.posts || window.posts || [];
-                        if (allPosts.length === 0) return null;
-                        return allPosts.find(p =>
-                            String(p.slug || '').toLowerCase() === searchKey ||
-                            String(p.id || '').toLowerCase() === searchKey ||
-                            String(p.path || '').toLowerCase().includes(searchKey)
-                        );
-                    };
-
-                    const found = findInPosts();
-                    if (found) {
-                        console.log('[ComicView] Found in Global Posts');
-                        this.meta = this.normalizeMeta(found);
-                        this.renderComic();
-                        this.isLoading = false;
-                    }
-
-                    // === STRATEGY 3: Specialized Chapter Feed Filter ===
-                    // Jika tidak ada di cache, tarik feed khusus label 'Chapter'
-                    if (!this.meta || (window.app?.posts || []).length === 0) {
-                        console.log('[ComicView] Fetching specialized Chapter feed...');
-                        await this.fetchChapterFeed();
-
-                        const lateFound = findInPosts();
-                        if (lateFound) {
-                            this.meta = this.normalizeMeta(lateFound);
-                            this.renderComic();
-                            this.isLoading = false;
-                        }
-                    }
-
-                    if (!this.meta) {
-                        // === STRATEGY 4: Deep Fetch (Direct from URL) ===
-                        try {
-                            const path = window.app?.params?.path || window.location.pathname;
-                            if (path && path.includes('/20')) {
-                                console.log('[ComicView] Performing Deep Fetch from:', path);
-                                const res = await fetch(path);
-                                if (res.ok) {
-                                    const html = await res.text();
-                                    if (window.app?.parseMetaFromHTML) {
-                                        const deepMeta = window.app.parseMetaFromHTML(html);
-                                        if (deepMeta) {
-                                            this.meta = this.normalizeMeta(deepMeta);
-                                            this.renderComic();
-                                        }
-                                    }
-                                }
-                            }
-                        } catch (e) { console.error('[ComicView] Deep fetch failed', e); }
-                    }
-
-                    this.checkNavigation();
-                    setTimeout(() => { this.isLoading = false; }, 500);
-                },
-
-                async fetchChapterFeed() {
-                    try {
-                        // Filter feed khusus untuk label 'Chapter'
-                        const res = await fetch('/feeds/posts/default/-/Chapter?alt=json&max-results=500');
-                        if (res.ok) {
-                            const json = await res.json();
-                            const entries = json.feed?.entry || [];
-                            const chapterPosts = entries.map(entry => {
-                                const altLink = (entry.link || []).find(l => l.rel === 'alternate');
-                                const html = entry.content?.$t || '';
-                                let meta = null;
-                                if (window.app?.parseMetaFromHTML) meta = window.app.parseMetaFromHTML(html, entry);
-
-                                return {
-                                    id: entry.id?.$t?.split('post-').pop(),
-                                    title: entry.title?.$t,
-                                    slug: altLink?.href.split('/').pop().replace('.html', ''),
-                                    path: altLink?.href ? new URL(altLink.href).pathname : '#',
-                                    publishdate: entry.published?.$t,
-                                    category: 'Chapter',
-                                    description: html,
-                                    ...meta
-                                };
-                            });
-
-                            if (window.app) {
-                                // Gabungkan dengan posts yang sudah ada tanpa duplikasi
-                                const existingIds = new Set(window.app.posts.map(p => p.id));
-                                chapterPosts.forEach(p => {
-                                    if (!existingIds.has(p.id)) window.app.posts.push(p);
-                                });
-                                // Urutkan berdasarkan tanggal rilis terbaru
-                                window.app.posts.sort((a, b) => new Date(b.publishdate) - new Date(a.publishdate));
-                            }
-                        }
-                    } catch (e) { console.warn('[ComicView] Chapter feed fetch failed', e); }
-                },
-
-                normalizeMeta(raw) {
-                    return {
-                        title: raw.title || '',
-                        description: raw.body || raw.description || raw.content || '',
-                        pages: raw.pages || raw.images || raw.comicImages || [],
-                        image: raw.image || raw.imageurl || raw.imageUrl || '',
-                        publishdate: raw.publishdate || '',
-                        category: Array.isArray(raw.category) ? raw.category[0] : (raw.category || 'Comic'),
-                        slug: raw.slug || '',
-                        path: raw.path || '#'
-                    };
-                },
-
-                renderComic() {
-                    console.log('[ComicView] Menjalankan renderComic...');
-
-                    if (!this.meta?.description) {
-                        console.error('[ComicView] Gagal: deskripsi konten kosong.');
-                        this.isLoading = false;
-                        return;
-                    }
-
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(this.meta.description, 'text/html');
-
-                    // 1. Ekstrak Bubble (PENTING: Harus di luar blok gambar agar selalu jalan)
-                    const bubbleNodes = Array.from(doc.querySelectorAll('.speech-bubble'));
-                    this.bubbles = bubbleNodes.map(bubble => {
-                        // Clean editor controls and prevent editability in storefront
-                        bubble.querySelectorAll('.drag-handle').forEach(el => el.remove());
-                        bubble.querySelectorAll('button').forEach(el => el.remove());
-                        bubble.setAttribute('contenteditable', 'false');
-                        bubble.querySelectorAll('[contenteditable]').forEach(el => {
-                            el.removeAttribute('contenteditable');
-                            el.style.cursor = 'default';
-                        });
-
-                        // Bersihkan inline display style hasil sisa preview dari editor
-                        // agar tidak menimpa aturan CSS Global (lang-mode)
-                        bubble.style.removeProperty('display');
-                        bubble.querySelectorAll('.lang-id, .lang-en, .lang-in').forEach(el => {
-                            el.style.removeProperty('display');
-                            el.style.cursor = 'default';
-                        });
-
-                        const contentBox = bubble.querySelector('.bubble-content') || bubble.querySelector('.comic-text-box');
-                        if (contentBox) {
-                            contentBox.setAttribute('contenteditable', 'false');
-                            contentBox.style.cursor = 'default';
-                            contentBox.style.resize = 'none'; // Prevent resize handle
-                            if (!contentBox.querySelector('.lang-id, .lang-en, .lang-in')) {
-                                const originalContent = contentBox.innerHTML;
-                                contentBox.innerHTML = `<div class="lang-id">${originalContent}</div>`;
-                            }
-
-                            // Smart Language Fallback: Jika teks Inggris kosong atau masih berupa placeholder bawaan editor,
-                            // salin konten teks bahasa Indonesia/Melayu ke bahasa Inggris agar pembaca tidak melihat teks default.
-                            const langEn = contentBox.querySelector('.lang-en');
-                            const langId = contentBox.querySelector('.lang-id') || contentBox.querySelector('.lang-in');
-
-                            // === SINKRONISASI TYPOGRAPHY (BOLD/ITALIC) ===
-                            // Mengambil style dari ID (sumber utama) dan mengangkatnya ke parent (contentBox)
-                            if (langId) {
-                                const stylesToSync = ['fontSize', 'fontWeight', 'fontStyle', 'textDecoration', 'lineHeight', 'textAlign', 'color'];
-                                stylesToSync.forEach(prop => {
-                                    // Gunakan getPropertyValue untuk menangani format kebab-case CSS (font-size)
-                                    const cssProp = prop.replace(/[A-Z]/g, m => "-" + m.toLowerCase());
-                                    const val = langId.style.getPropertyValue(cssProp);
-
-                                    if (val) {
-                                        if (prop === 'fontSize') {
-                                            // Masukkan ke variabel agar CSS XML bisa menimpanya di Mobile via Container Query
-                                            contentBox.style.setProperty('--editor-font-size', val);
-                                        } else {
-                                            contentBox.style[prop] = val;
-                                        }
-
-                                        // Bersihkan semua elemen bahasa agar mewarisi style yang sama dari parent
-                                        bubble.querySelectorAll('.lang-id, .lang-en, .lang-in').forEach(child => {
-                                            child.style.removeProperty(cssProp);
-                                        });
-                                    }
-                                });
-                            }
-
-                            if (langEn && langId) {
-                                // Bersihkan whitespace dan non-breaking spaces (\u00a0) bawaan browser
-                                const txtEnClean = langEn.textContent.trim().toLowerCase().replace(/[\s\u00a0]+/g, ' ');
-                                if (!txtEnClean || txtEnClean.includes('type english text') || txtEnClean === 'type english text...') {
-                                    langEn.innerHTML = langId.innerHTML;
-                                }
-                            }
-                        }
-                        return bubble.outerHTML;
-                    });
-                    console.log(`[ComicView] Ditemukan ${this.bubbles.length} teks dialog komik.`);
-
-                    // 2. Ekstrak Halaman Gambar
-                    let foundPages = [];
-
-                    // Strategi A: Dari data 'pages' JSON (Prioritas)
-                    if (this.meta.pages && (Array.isArray(this.meta.pages) && this.meta.pages.length > 0)) {
-                        foundPages = this.meta.pages;
-                    } else if (typeof this.meta.pages === 'string' && this.meta.pages.includes('http')) {
-                        foundPages = this.meta.pages.split(',').map(s => s.trim());
-                    }
-
-                    // Strategi B: Jika JSON kosong, ambil dari tag <img> di HTML
-                    if (foundPages.length === 0) {
-                        console.log('[ComicView] JSON Pages kosong, mengekstrak dari HTML...');
-                        const imgNodes = Array.from(doc.querySelectorAll('img')).filter(img => !img.closest('.ezy-meta'));
-                        foundPages = imgNodes.map(img => {
-                            const parentLink = img.closest('a');
-                            if (parentLink && parentLink.href.match(/\.(jpg|jpeg|png|gif|webp)/i)) {
-                                return parentLink.href;
-                            }
-                            return img.src;
-                        });
-                    }
-
-                    // Strategi C: Tambahkan Cover jika tidak ada halaman sama sekali dalam list
-                    if (foundPages.length === 0 && this.meta.image) {
-                        foundPages.push(this.meta.image);
-                    }
-
-                    // Bersihkan URL dan simpan ke state
-                    this.pages = foundPages.filter(src => src && !src.includes('clear.gif') && !src.includes('pixel.gif'));
-                    console.log(`[ComicView] Berhasil memuat ${this.pages.length} halaman komik.`);
-
+            async loadChapter() {
+                const slug = window.app?.params?.slug;
+                if (!slug) {
                     this.isLoading = false;
-                },
+                    return;
+                }
 
-                checkNavigation() {
-                    const currentSlug = window.app?.params?.slug;
-                    const seriesPosts = this.getSeriesPosts();
+                this.isLoading = true;
+                const searchKey = slug.toLowerCase();
 
-                    if (seriesPosts.length > 0 && currentSlug) {
-                        const idx = seriesPosts.findIndex(p => p.slug === currentSlug);
-                        if (idx !== -1) {
-                            // Dalam urutan ASC (Ch 1, Ch 2, Ch 3):
-                            // Next adalah index + 1
-                            // Prev adalah index - 1
-                            this.hasNext = idx < seriesPosts.length - 1;
-                            this.hasPrev = idx > 0;
+                // === STRATEGY 1: Metadata Hand-off (Fast Path) ===
+                if (window._lastResolvedMeta && (
+                    String(window._lastResolvedMeta.slug || '').toLowerCase() === searchKey ||
+                    String(window._lastResolvedMeta.id || '').toLowerCase() === searchKey
+                )) {
+                    console.log('[ComicView] Using Hand-off Meta');
+                    this.meta = this.normalizeMeta(window._lastResolvedMeta);
+                    this.renderComic();
+                    this.isLoading = false;
+                }
+
+                // === STRATEGY 2: Search in Global Posts ===
+                const findInPosts = () => {
+                    const allPosts = window.app?.posts || window.posts || [];
+                    if (allPosts.length === 0) return null;
+                    return allPosts.find(p =>
+                        String(p.slug || '').toLowerCase() === searchKey ||
+                        String(p.id || '').toLowerCase() === searchKey ||
+                        String(p.path || '').toLowerCase().includes(searchKey)
+                    );
+                };
+
+                const found = findInPosts();
+                if (found) {
+                    console.log('[ComicView] Found in Global Posts');
+                    this.meta = this.normalizeMeta(found);
+                    this.renderComic();
+                    this.isLoading = false;
+                }
+
+                // === STRATEGY 3: Specialized Chapter Feed Filter ===
+                // Jika tidak ada di cache, tarik feed khusus label 'Chapter'
+                if (!this.meta || (window.app?.posts || []).length === 0) {
+                    console.log('[ComicView] Fetching specialized Chapter feed...');
+                    await this.fetchChapterFeed();
+
+                    const lateFound = findInPosts();
+                    if (lateFound) {
+                        this.meta = this.normalizeMeta(lateFound);
+                        this.renderComic();
+                        this.isLoading = false;
+                    }
+                }
+
+                if (!this.meta) {
+                    // === STRATEGY 4: Deep Fetch (Direct from URL) ===
+                    try {
+                        const path = window.app?.params?.path || window.location.pathname;
+                        if (path && path.includes('/20')) {
+                            console.log('[ComicView] Performing Deep Fetch from:', path);
+                            const res = await fetch(path);
+                            if (res.ok) {
+                                const html = await res.text();
+                                if (window.app?.parseMetaFromHTML) {
+                                    const deepMeta = window.app.parseMetaFromHTML(html);
+                                    if (deepMeta) {
+                                        this.meta = this.normalizeMeta(deepMeta);
+                                        this.renderComic();
+                                    }
+                                }
+                            }
+                        }
+                    } catch (e) { console.error('[ComicView] Deep fetch failed', e); }
+                }
+
+                this.checkNavigation();
+                setTimeout(() => { this.isLoading = false; }, 500);
+            },
+
+            async fetchChapterFeed() {
+                try {
+                    // Filter feed khusus untuk label 'Chapter'
+                    const res = await fetch('/feeds/posts/default/-/Chapter?alt=json&max-results=500');
+                    if (res.ok) {
+                        const json = await res.json();
+                        const entries = json.feed?.entry || [];
+                        const chapterPosts = entries.map(entry => {
+                            const altLink = (entry.link || []).find(l => l.rel === 'alternate');
+                            const html = entry.content?.$t || '';
+                            let meta = null;
+                            if (window.app?.parseMetaFromHTML) meta = window.app.parseMetaFromHTML(html, entry);
+
+                            return {
+                                id: entry.id?.$t?.split('post-').pop(),
+                                title: entry.title?.$t,
+                                slug: altLink?.href.split('/').pop().replace('.html', ''),
+                                path: altLink?.href ? new URL(altLink.href).pathname : '#',
+                                publishdate: entry.published?.$t,
+                                category: 'Chapter',
+                                description: html,
+                                ...meta
+                            };
+                        });
+
+                        if (window.app) {
+                            // Gabungkan dengan posts yang sudah ada tanpa duplikasi
+                            const existingIds = new Set(window.app.posts.map(p => p.id));
+                            chapterPosts.forEach(p => {
+                                if (!existingIds.has(p.id)) window.app.posts.push(p);
+                            });
+                            // Urutkan berdasarkan tanggal rilis terbaru
+                            window.app.posts.sort((a, b) => new Date(b.publishdate) - new Date(a.publishdate));
                         }
                     }
-                },
+                } catch (e) { console.warn('[ComicView] Chapter feed fetch failed', e); }
+            },
 
-                navigateChapter(dir) {
-                    const seriesPosts = this.getSeriesPosts();
-                    const currentSlug = window.app?.params?.slug;
-                    const idx = seriesPosts.findIndex(p => p.slug === currentSlug);
+            normalizeMeta(raw) {
+                return {
+                    title: raw.title || '',
+                    description: raw.body || raw.description || raw.content || '',
+                    pages: raw.pages || raw.images || raw.comicImages || [],
+                    image: raw.image || raw.imageurl || raw.imageUrl || '',
+                    publishdate: raw.publishdate || '',
+                    category: Array.isArray(raw.category) ? raw.category[0] : (raw.category || 'Comic'),
+                    slug: raw.slug || '',
+                    path: raw.path || '#'
+                };
+            },
 
-                    if (idx !== -1) {
-                        const targetIdx = dir === 'next' ? idx + 1 : idx - 1;
-                        const target = seriesPosts[targetIdx];
-                        if (target) {
-                            window.navigate('comic', { slug: target.slug, path: target.path });
-                        }
-                    }
-                },
+            renderComic() {
+                console.log('[ComicView] Menjalankan renderComic...');
 
-                getSeriesPosts() {
-                    if (!this.meta?.title) return [];
+                if (!this.meta?.description) {
+                    console.error('[ComicView] Gagal: deskripsi konten kosong.');
+                    this.isLoading = false;
+                    return;
+                }
 
-                    // 1. Ekstrak Judul Seri (Induk)
-                    let seriesTitle = this.meta.title.split(' - ')[0];
-                    if (seriesTitle.includes('-Chapter')) seriesTitle = seriesTitle.split('-Chapter')[0];
-                    else if (seriesTitle.includes(' Chapter')) seriesTitle = seriesTitle.split(' Chapter')[0];
-                    seriesTitle = seriesTitle.trim();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(this.meta.description, 'text/html');
 
-                    // 2. Filter posts yang satu grup
-                    const allPosts = window.app?.posts || [];
-                    return allPosts.filter(p => {
-                        let pSeries = (p.title || '').split(' - ')[0];
-                        if (pSeries.includes('-Chapter')) pSeries = pSeries.split('-Chapter')[0];
-                        else if (pSeries.includes(' Chapter')) pSeries = pSeries.split(' Chapter')[0];
-                        return pSeries.trim() === seriesTitle;
-                    }).sort((a, b) => {
-                        // Sorting Numerik Chapter (ASC: 1, 2, 3...)
-                        const getNum = (t) => {
-                            const m = t.match(/Chapter\s*(\d+)/i) || t.match(/-(\d+)$/);
-                            return m ? parseInt(m[1]) : 0;
-                        };
-                        return getNum(a.title) - getNum(b.title);
+                // 1. Ekstrak Bubble (PENTING: Harus di luar blok gambar agar selalu jalan)
+                const bubbleNodes = Array.from(doc.querySelectorAll('.speech-bubble'));
+                this.bubbles = bubbleNodes.map(bubble => {
+                    // Clean editor controls and prevent editability in storefront
+                    bubble.querySelectorAll('.drag-handle').forEach(el => el.remove());
+                    bubble.querySelectorAll('button').forEach(el => el.remove());
+                    bubble.setAttribute('contenteditable', 'false');
+                    bubble.querySelectorAll('[contenteditable]').forEach(el => {
+                        el.removeAttribute('contenteditable');
+                        el.style.cursor = 'default';
                     });
-                },
 
-                formatDate(d) {
-                    if (!d) return '';
-                    return new Date(d).toLocaleDateString('id-ID', {
-                        day: 'numeric', month: 'long', year: 'numeric'
+                    // Bersihkan inline display style hasil sisa preview dari editor
+                    // agar tidak menimpa aturan CSS Global (lang-mode)
+                    bubble.style.removeProperty('display');
+                    bubble.querySelectorAll('.lang-id, .lang-en, .lang-in').forEach(el => {
+                        el.style.removeProperty('display');
+                        // font-size dan line-height jangan dihapus agar hasil 'fit' editor tetap aktif
+                        el.style.cursor = 'default';
+                    });
+
+                    const contentBox = bubble.querySelector('.bubble-content') || bubble.querySelector('.comic-text-box');
+                    if (contentBox) {
+                        contentBox.setAttribute('contenteditable', 'false');
+                        contentBox.style.cursor = 'default';
+                        contentBox.style.resize = 'none'; // Prevent resize handle
+                        if (!contentBox.querySelector('.lang-id, .lang-en, .lang-in')) {
+                            const originalContent = contentBox.innerHTML;
+                            contentBox.innerHTML = `<div class="lang-id">${originalContent}</div>`;
+                        }
+
+                        // Smart Language Fallback: Jika teks Inggris kosong atau masih berupa placeholder bawaan editor,
+                        // salin konten teks bahasa Indonesia/Melayu ke bahasa Inggris agar pembaca tidak melihat teks default.
+                        const langEn = contentBox.querySelector('.lang-en');
+                        const langId = contentBox.querySelector('.lang-id') || contentBox.querySelector('.lang-in');
+
+                        // === SINKRONISASI TYPOGRAPHY (BOLD/ITALIC) ===
+                        // Mengambil style dari ID (sumber utama) dan mengangkatnya ke parent agar EN konsisten
+                        if (langId) {
+                            const stylesToSync = ['fontSize', 'fontWeight', 'fontStyle', 'textDecoration', 'lineHeight', 'textAlign', 'color'];
+                            stylesToSync.forEach(prop => {
+                                if (langId.style[prop]) {
+                                    contentBox.style[prop] = langId.style[prop];
+                                    langId.style[prop] = ''; // Bersihkan child agar mewarisi dari parent
+                                }
+                            });
+                        }
+
+                        if (langEn && langId) {
+                            // Bersihkan whitespace dan non-breaking spaces (\u00a0) bawaan browser
+                            const txtEnClean = langEn.textContent.trim().toLowerCase().replace(/[\s\u00a0]+/g, ' ');
+                            if (!txtEnClean || txtEnClean.includes('type english text') || txtEnClean === 'type english text...') {
+                                langEn.innerHTML = langId.innerHTML;
+                            }
+                        }
+                    }
+                    return bubble.outerHTML;
+                });
+                console.log(`[ComicView] Ditemukan ${this.bubbles.length} teks dialog komik.`);
+
+                // 2. Ekstrak Halaman Gambar
+                let foundPages = [];
+
+                // Strategi A: Dari data 'pages' JSON (Prioritas)
+                if (this.meta.pages && (Array.isArray(this.meta.pages) && this.meta.pages.length > 0)) {
+                    foundPages = this.meta.pages;
+                } else if (typeof this.meta.pages === 'string' && this.meta.pages.includes('http')) {
+                    foundPages = this.meta.pages.split(',').map(s => s.trim());
+                }
+
+                // Strategi B: Jika JSON kosong, ambil dari tag <img> di HTML
+                if (foundPages.length === 0) {
+                    console.log('[ComicView] JSON Pages kosong, mengekstrak dari HTML...');
+                    const imgNodes = Array.from(doc.querySelectorAll('img')).filter(img => !img.closest('.ezy-meta'));
+                    foundPages = imgNodes.map(img => {
+                        const parentLink = img.closest('a');
+                        if (parentLink && parentLink.href.match(/\.(jpg|jpeg|png|gif|webp)/i)) {
+                            return parentLink.href;
+                        }
+                        return img.src;
                     });
                 }
+
+                // Strategi C: Tambahkan Cover jika tidak ada halaman sama sekali dalam list
+                if (foundPages.length === 0 && this.meta.image) {
+                    foundPages.push(this.meta.image);
+                }
+
+                // Bersihkan URL dan simpan ke state
+                this.pages = foundPages.filter(src => src && !src.includes('clear.gif') && !src.includes('pixel.gif'));
+                console.log(`[ComicView] Berhasil memuat ${this.pages.length} halaman komik.`);
+
+                this.isLoading = false;
+            },
+
+            checkNavigation() {
+                const currentSlug = window.app?.params?.slug;
+                const seriesPosts = this.getSeriesPosts();
+
+                if (seriesPosts.length > 0 && currentSlug) {
+                    const idx = seriesPosts.findIndex(p => p.slug === currentSlug);
+                    if (idx !== -1) {
+                        // Dalam urutan ASC (Ch 1, Ch 2, Ch 3):
+                        // Next adalah index + 1
+                        // Prev adalah index - 1
+                        this.hasNext = idx < seriesPosts.length - 1;
+                        this.hasPrev = idx > 0;
+                    }
+                }
+            },
+
+            navigateChapter(dir) {
+                const seriesPosts = this.getSeriesPosts();
+                const currentSlug = window.app?.params?.slug;
+                const idx = seriesPosts.findIndex(p => p.slug === currentSlug);
+
+                if (idx !== -1) {
+                    const targetIdx = dir === 'next' ? idx + 1 : idx - 1;
+                    const target = seriesPosts[targetIdx];
+                    if (target) {
+                        window.navigate('comic', { slug: target.slug, path: target.path });
+                    }
+                }
+            },
+
+            getSeriesPosts() {
+                if (!this.meta?.title) return [];
+
+                // 1. Ekstrak Judul Seri (Induk)
+                let seriesTitle = this.meta.title.split(' - ')[0];
+                if (seriesTitle.includes('-Chapter')) seriesTitle = seriesTitle.split('-Chapter')[0];
+                else if (seriesTitle.includes(' Chapter')) seriesTitle = seriesTitle.split(' Chapter')[0];
+                seriesTitle = seriesTitle.trim();
+
+                // 2. Filter posts yang satu grup
+                const allPosts = window.app?.posts || [];
+                return allPosts.filter(p => {
+                    let pSeries = (p.title || '').split(' - ')[0];
+                    if (pSeries.includes('-Chapter')) pSeries = pSeries.split('-Chapter')[0];
+                    else if (pSeries.includes(' Chapter')) pSeries = pSeries.split(' Chapter')[0];
+                    return pSeries.trim() === seriesTitle;
+                }).sort((a, b) => {
+                    // Sorting Numerik Chapter (ASC: 1, 2, 3...)
+                    const getNum = (t) => {
+                        const m = t.match(/Chapter\s*(\d+)/i) || t.match(/-(\d+)$/);
+                        return m ? parseInt(m[1]) : 0;
+                    };
+                    return getNum(a.title) - getNum(b.title);
+                });
+            },
+
+            formatDate(d) {
+                if (!d) return '';
+                return new Date(d).toLocaleDateString('id-ID', {
+                    day: 'numeric', month: 'long', year: 'numeric'
+                });
             }
-        };
+        }
+    };
 
-        // Hook for XML fetchPage mechanism
-        window.initComicPage = function () {
-            console.log('[ComicView] Hook Initialized');
-        };
-    </script>
+    // Hook for XML fetchPage mechanism
+    window.initComicPage = function () {
+        console.log('[ComicView] Hook Initialized');
+    };
+</script>
 
-    <style>
-        .comic-reader-container img {
-            -webkit-user-drag: none;
-            user-select: none;
+<style>
+    .comic-reader-container img {
+        -webkit-user-drag: none;
+        user-select: none;
+    }
+
+    .animate-fade-in {
+        animation: fadeIn 0.4s ease-out both;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(8px);
         }
 
-        .animate-fade-in {
-            animation: fadeIn 0.4s ease-out both;
+        to {
+            opacity: 1;
+            transform: translateY(0);
         }
+    }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(8px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Smooth transition for dark mode theme colors */
-        .comic-reader-container {
-            transition-property: background-color, border-color, color;
-            transition-duration: 300ms;
-        }
-    </style>
+    /* Smooth transition for dark mode theme colors */
+    .comic-reader-container {
+        transition-property: background-color, border-color, color;
+        transition-duration: 300ms;
+    }
+</style>
