@@ -324,15 +324,18 @@
 
                         if (fs && fs.includes('px')) {
                             const px = parseFloat(fs);
-                            // Menggunakan rasio 8px = 1cqi dengan floor 2px untuk keterbacaan
-                            const cqiVal = (px / 8).toFixed(2);
-                            const responsiveSize = `calc(${cqiVal}cqi + 2px)`;
+                            // Menggunakan multiplier 0.94 sebagai safety margin (6%) 
+                            // agar teks tidak menabrak dinding kontainer saat render mobile.
+                            const cqiVal = ((px / 8) * 0.94).toFixed(2);
+                            const responsiveSize = `calc(${cqiVal}cqi + 1px)`;
                             el.style.setProperty('font-size', responsiveSize, 'important');
                         } else if (!fs || !fs.includes('cqi')) {
                             el.style.removeProperty('font-size');
                         }
 
-                        el.style.removeProperty('line-height');
+                        el.style.setProperty('line-height', '1.2', 'important');
+                        el.style.setProperty('overflow', 'visible', 'important');
+                        el.style.setProperty('text-wrap', 'balance', 'important');
                         el.style.cursor = 'default';
                     };
 
@@ -341,6 +344,8 @@
                         contentBox.setAttribute('contenteditable', 'false');
                         contentBox.style.cursor = 'default';
                         contentBox.style.resize = 'none';
+                        contentBox.style.setProperty('overflow', 'visible', 'important');
+                        contentBox.style.setProperty('display', 'flex', 'important');
 
                         // Ensure inner content box dimensions are responsive
                         makeResponsive(contentBox, ['width', 'height', 'maxWidth', 'maxHeight']);
