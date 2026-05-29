@@ -308,21 +308,13 @@
                         el.style.removeProperty('display');
                         el.style.cursor = 'default';
 
-                        // Ubah font-size dari px statis ke unit responsif (cqi) tanpa menghapus propertinya.
-                        // Kita hilangkan priority '!important' agar CSS @container di XML bisa bekerja di mobile.
-                        const inlineFS = el.style.fontSize;
-                        if (inlineFS && inlineFS.includes('px')) {
-                            const val = parseFloat(inlineFS);
-                            // 1cqi ≈ 8px (asumsi lebar container 800px). 
-                            // Clamp memastikan teks tidak pernah lebih kecil dari 12px di HP.
-                            el.style.setProperty('font-size', `clamp(12px, ${(val / 8).toFixed(2)}cqi, ${val}px)`, null);
-                        }
-
-                        // Pastikan line-height tidak memiliki !important agar fleksibel di mobile
-                        const inlineLH = el.style.lineHeight;
-                        if (inlineLH) {
-                            el.style.setProperty('line-height', inlineLH, null);
-                        }
+                        // Turunkan prioritas inline style agar @container di XML bisa bekerja di mobile.
+                        // Kita tidak menghapus propertinya, hanya menghilangkan '!important'.
+                        const fs = el.style.fontSize;
+                        if (fs) el.style.setProperty('font-size', fs, null);
+                        
+                        const lh = el.style.lineHeight;
+                        if (lh) el.style.setProperty('line-height', lh, null);
                     });
 
                     const contentBox = bubble.querySelector('.bubble-content') || bubble.querySelector('.comic-text-box');
