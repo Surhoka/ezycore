@@ -300,20 +300,35 @@
                         el.setAttribute('contenteditable', 'false');
                     });
 
-                    // Bersihkan gaya inline namun konversi font-size px ke cqi (responsive)
-                    // Ini memastikan teks yang diatur kecil di editor tetap kecil (bisikan) 
-                    // dan teks besar tetap besar, namun semuanya mengecil di mobile secara proporsional.
+                    /**
+                     * Helper to convert fixed px values to responsive CQI units.
+                     * This ensures bubbles saved in static pixels remain proportional on mobile.
+                     */
+                    const makeResponsive = (el, properties) => {
+                        properties.forEach(prop => {
+                            const val = el.style[prop];
+                            if (val && val.includes('px') && !val.includes('calc')) {
+                                const px = parseFloat(val);
+                                // Assume editor width ~800px (1cqi = 8px)
+                                el.style[prop] = (px / 8).toFixed(2) + 'cqi';
+                            }
+                        });
+                    };
+
+                    // Ensure bubble position and dimensions are responsive
+                    makeResponsive(bubble, ['top', 'left', 'width', 'height']);
+
                     const cleanStyles = (el) => {
                         const fs = el.style.fontSize;
                         el.style.removeProperty('display');
 
                         if (fs && fs.includes('px')) {
                             const px = parseFloat(fs);
-                            // Anggap 22px adalah ukuran standar editor yang setara dengan 2.8cqi standar di template
-                            const scale = px / 22;
-                            const responsiveSize = `calc(${(2.8 * scale).toFixed(2)}cqi + 3px)`;
+                            // Menggunakan rasio 8px = 1cqi dengan floor 2px untuk keterbacaan
+                            const cqiVal = (px / 8).toFixed(2);
+                            const responsiveSize = `calc(${cqiVal}cqi + 2px)`;
                             el.style.setProperty('font-size', responsiveSize, 'important');
-                        } else {
+                        } else if (!fs || !fs.includes('cqi')) {
                             el.style.removeProperty('font-size');
                         }
 
@@ -326,6 +341,9 @@
                         contentBox.setAttribute('contenteditable', 'false');
                         contentBox.style.cursor = 'default';
                         contentBox.style.resize = 'none';
+
+                        // Ensure inner content box dimensions are responsive
+                        makeResponsive(contentBox, ['width', 'height', 'maxWidth', 'maxHeight']);
 
                         const langElems = contentBox.querySelectorAll('.lang-id, .lang-en, .lang-in');
                         if (langElems.length === 0) {
