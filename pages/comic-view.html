@@ -6,28 +6,28 @@
         <div class="w-full px-4 md:px-6 h-[60px] md:h-[85px] flex items-center">
             <div class="flex flex-row items-center justify-between gap-3 md:gap-4 w-full">
                 <div class="min-w-0 flex-1">
-                    <h1 class="text-sm md:text-lg font-black text-gray-900 dark:text-white truncate"
+                    <h1 class="text-xs md:text-lg font-black text-gray-900 dark:text-white truncate"
                         x-text="meta?.title || 'Loading Chapter...'"></h1>
-                    <div class="flex items-center gap-1.5 md:gap-2 mt-0.5 md:mt-1">
+                    <div class="flex items-center gap-1 md:gap-2 mt-0.5 md:mt-1">
                         <span
-                            class="text-[10px] md:text-xs font-black text-brand-600 uppercase tracking-widest truncate max-w-[80px] md:max-w-none"
+                            class="text-[9px] md:text-xs font-black text-brand-600 uppercase tracking-widest truncate max-w-[60px] md:max-w-none"
                             x-text="meta?.category || 'Comic'"></span>
-                        <span class="text-gray-300 dark:text-gray-700">•</span>
-                        <span class="text-[10px] md:text-xs font-bold text-gray-500 dark:text-gray-400 truncate"
+                        <span class="text-gray-300 dark:text-gray-700 text-[10px]">•</span>
+                        <span class="text-[9px] md:text-xs font-bold text-gray-500 dark:text-gray-400 truncate"
                             x-text="formatDate(meta?.publishdate)"></span>
                     </div>
                 </div>
 
                 <!-- Navigation Buttons -->
-                <div class="flex items-center gap-1.5 md:gap-2 flex-none">
+                <div class="flex items-center gap-1 md:gap-3 flex-none">
                     <!-- Language Toggle -->
-                    <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 mr-1 md:mr-2">
+                    <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 shrink-0">
                         <button @click="currentLang = 'id'"
                             :class="currentLang === 'id' ? 'bg-white dark:bg-gray-700 shadow-sm text-brand-600' : 'text-gray-500'"
-                            class="px-2 py-1 text-[10px] font-bold rounded-md transition-all cursor-pointer">ID</button>
+                            class="px-1.5 md:px-2 py-1 text-[9px] md:text-[10px] font-bold rounded-md transition-all cursor-pointer whitespace-nowrap">ID</button>
                         <button @click="currentLang = 'en'"
                             :class="currentLang === 'en' ? 'bg-white dark:bg-gray-700 shadow-sm text-brand-600' : 'text-gray-500'"
-                            class="px-2 py-1 text-[10px] font-bold rounded-md transition-all cursor-pointer">EN</button>
+                            class="px-1.5 md:px-2 py-1 text-[9px] md:text-[10px] font-bold rounded-md transition-all cursor-pointer whitespace-nowrap">EN</button>
                     </div>
 
                     <button @click="navigateChapter('prev')"
@@ -481,5 +481,24 @@
     .comic-reader-container {
         transition-property: background-color, border-color, color;
         transition-duration: 300ms;
+    }
+
+    /* Language Display Logic for Comic Bubbles */
+    .lang-mode-id .lang-en {
+        display: none !important;
+    }
+
+    .lang-mode-id .lang-id,
+    .lang-mode-id .lang-in {
+        display: block !important;
+    }
+
+    .lang-mode-en .lang-id,
+    .lang-mode-en .lang-in {
+        display: none !important;
+    }
+
+    .lang-mode-en .lang-en {
+        display: block !important;
     }
 </style>
