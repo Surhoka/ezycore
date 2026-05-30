@@ -333,7 +333,9 @@
                         el.style.setProperty('overflow', 'visible', 'important');
                         el.style.setProperty('text-wrap', 'balance', 'important');
                         el.style.setProperty('word-break', 'break-word', 'important');
+                        el.style.setProperty('overflow-wrap', 'anywhere', 'important');
                         el.style.setProperty('hyphens', 'auto', 'important');
+                        el.style.setProperty('transform', 'translateZ(0)', 'important'); // Cegah blur/shifting sub-pixel
                         el.style.cursor = 'default';
                     };
 
@@ -362,9 +364,9 @@
                         let unifiedFontSize = '';
                         if (langId && langId.style.fontSize && langId.style.fontSize.includes('px')) {
                             const px = parseFloat(langId.style.fontSize);
-                            // Menggunakan multiplier 0.75 dan base 4px agar teks tidak terlalu kecil di mobile
-                            const cqiVal = ((px / 8) * 0.75).toFixed(2);
-                            unifiedFontSize = `calc(${cqiVal}cqi + 4px)`;
+                             // Gunakan multiplier 0.80 dan base 4px dengan batasan minimum 9px
+                            const cqiBase = ((px / 8) * 0.80).toFixed(2);
+                            unifiedFontSize = `clamp(9px, calc(${cqiBase}cqi + 4px), ${px}px)`;
                         }
 
                         // 3. Terapkan pembersihan dan ukuran font seragam ke semua varian bahasa
