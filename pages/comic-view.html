@@ -329,9 +329,11 @@
                             el.style.removeProperty('font-size');
                         }
 
-                        el.style.setProperty('line-height', '1.2', 'important');
+                        el.style.setProperty('line-height', '1.1', 'important');
                         el.style.setProperty('overflow', 'visible', 'important');
                         el.style.setProperty('text-wrap', 'balance', 'important');
+                        el.style.setProperty('word-break', 'break-word', 'important');
+                        el.style.setProperty('hyphens', 'auto', 'important');
                         el.style.cursor = 'default';
                     };
 
@@ -360,8 +362,8 @@
                         let unifiedFontSize = '';
                         if (langId && langId.style.fontSize && langId.style.fontSize.includes('px')) {
                             const px = parseFloat(langId.style.fontSize);
-                            // Menggunakan multiplier 0.94 sebagai safety margin agar teks tidak menabrak kontainer
-                            const cqiVal = ((px / 8) * 0.94).toFixed(2);
+                            // Menggunakan multiplier 0.85 (sebelumnya 0.94) untuk memberi ruang lebih bagi teks ID
+                            const cqiVal = ((px / 8) * 0.85).toFixed(2);
                             unifiedFontSize = `calc(${cqiVal}cqi + 1px)`;
                         }
 
