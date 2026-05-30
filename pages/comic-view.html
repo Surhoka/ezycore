@@ -294,6 +294,7 @@
                 this.bubbles = bubbleNodes.map(bubble => {
                     // Clean editor controls and prevent editability in storefront
                     bubble.querySelectorAll('.drag-handle').forEach(el => el.remove());
+                    bubble.querySelectorAll('.rotate-handle').forEach(el => el.remove());
                     bubble.querySelectorAll('button').forEach(el => el.remove());
                     bubble.setAttribute('contenteditable', 'false');
                     bubble.querySelectorAll('[contenteditable]').forEach(el => {
