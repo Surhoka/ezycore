@@ -64,13 +64,15 @@
         </template>
 
         <!-- Images List -->
-        <div class="w-full flex flex-col items-center" id="comic-pages-list" :class="'lang-mode-' + currentLang"
+        <div class="w-full flex flex-col items-center transition-opacity duration-700" id="comic-pages-list" :class="[isFullyLoaded ? 'opacity-100' : 'opacity-0', 'lang-mode-' + currentLang]"
             style="container-type: inline-size; position: relative;">
 
             <!-- Render Text Bubbles as Overlay -->
-            <template x-for="(bubble, index) in bubbles" :key="'bubble-'+index">
-                <div x-html="bubble" class="comic-bubble-overlay"></div>
-            </template>
+            <div class="absolute inset-0 z-30 pointer-events-none transition-opacity duration-700" :class="isFullyLoaded ? 'opacity-100' : 'opacity-0'">
+                <template x-for="(bubble, index) in bubbles" :key="'bubble-'+index">
+                    <div x-html="bubble" class="comic-bubble-overlay pointer-events-auto"></div>
+                </template>
+            </div>
 
             <template x-for="(src, index) in pages" :key="index">
                 <div class="relative w-full group">
@@ -138,6 +140,7 @@
             pages: [],
             bubbles: [], // Menyimpan elemen speech-bubble
             isLoading: true,
+            isFullyLoaded: false, // State for preventing text/image race condition
             currentLang: (window.app?.language || 'id').startsWith('en') ? 'en' : 'id',
             hasNext: false,
             hasPrev: false,
@@ -223,7 +226,6 @@
                 }
 
                 this.checkNavigation();
-                setTimeout(() => { this.isLoading = false; }, 500);
             },
 
             async fetchChapterFeed() {
@@ -440,7 +442,23 @@
                 this.pages = foundPages.filter(src => src && !src.includes('clear.gif') && !src.includes('pixel.gif'));
                 console.log(`[ComicView] Berhasil memuat ${this.pages.length} halaman komik.`);
 
-                this.isLoading = false;
+                // Preload image pertama untuk mencegah "balapan" antara text bubble dan gambar
+                if (this.pages.length > 0) {
+                    const img = new Image();
+                    img.onload = () => {
+                        this.isLoading = false;
+                        // Beri sedikit jeda setelah loader hilang agar DOM gambar ter-render stabil
+                        setTimeout(() => { this.isFullyLoaded = true; }, 100);
+                    };
+                    img.onerror = () => {
+                        this.isLoading = false;
+                        setTimeout(() => { this.isFullyLoaded = true; }, 100);
+                    };
+                    img.src = this.pages[0];
+                } else {
+                    this.isLoading = false;
+                    this.isFullyLoaded = true;
+                }
             },
 
             checkNavigation() {
