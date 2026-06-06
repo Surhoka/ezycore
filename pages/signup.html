@@ -1,0 +1,117 @@
+<div x-data="{
+    formData: {
+        firstName: '',
+        lastName: '',
+        email: '',
+        password: '',
+        confirmPassword: ''
+    },
+    isSubmitting: false,
+
+    async register() {
+        // Basic Validation
+        if (!this.formData.firstName || !this.formData.email || !this.formData.password) {
+            window.showToast('Mohon lengkapi data wajib!', 'error');
+            return;
+        }
+        if (this.formData.password !== this.formData.confirmPassword) {
+            window.showToast('Konfirmasi password tidak cocok!', 'error');
+            return;
+        }
+
+        this.isSubmitting = true;
+
+        window.sendDataToGoogle('signup', this.formData, (response) => {
+            if (response.status === 'success') {
+                window.showToast('Registrasi berhasil! Silakan login.', 'success');
+                setTimeout(() => {
+                    window.location.hash = '#signin';
+                }, 1500);
+            } else {
+                window.showToast(response.message || 'Gagal mendaftar.', 'error');
+                this.isSubmitting = false;
+            }
+        }, (err) => {
+            window.showToast('Kesalahan jaringan saat mendaftar.', 'error');
+            this.isSubmitting = false;
+        });
+    }
+}" class="w-full flex items-center justify-center p-4">
+    <div class="w-full max-w-lg bg-theme-secondary border border-theme-primary rounded-2xl shadow-xl overflow-hidden">
+        <!-- Header -->
+        <div class="p-8 text-center border-b border-theme-primary bg-brand-500/5">
+            <div class="inline-flex p-3 bg-brand-500 rounded-xl text-white mb-4">
+                <span class="w-8 h-8 block" x-icon="'user-plus'"></span>
+            </div>
+            <h2 class="text-2xl font-bold text-theme-primary">Create Account</h2>
+            <p class="text-theme-secondary text-sm">Daftar untuk mulai menggunakan EzyCore Ai</p>
+        </div>
+
+        <!-- Form Content -->
+        <div class="p-8 space-y-4">
+            <!-- Name Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-2 text-theme-primary">First Name</label>
+                    <input type="text" x-model="formData.firstName" placeholder="John"
+                        class="w-full px-4 py-3 rounded-xl border border-theme-primary bg-theme-primary text-theme-primary focus:ring-2 focus:ring-brand-500 outline-none transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2 text-theme-primary">Last Name</label>
+                    <input type="text" x-model="formData.lastName" placeholder="Doe"
+                        class="w-full px-4 py-3 rounded-xl border border-theme-primary bg-theme-primary text-theme-primary focus:ring-2 focus:ring-brand-500 outline-none transition-all">
+                </div>
+            </div>
+
+            <!-- Email -->
+            <div>
+                <label class="block text-sm font-semibold mb-2 text-theme-primary">Email Address</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" x-icon="'mail'"></span>
+                    <input type="email" x-model="formData.email" placeholder="nama@email.com"
+                        class="w-full pl-12 pr-4 py-3 rounded-xl border border-theme-primary bg-theme-primary text-theme-primary focus:ring-2 focus:ring-brand-500 outline-none transition-all">
+                </div>
+            </div>
+
+            <!-- Password Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-2 text-theme-primary">Password</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+                            x-icon="'lock'"></span>
+                        <input type="password" x-model="formData.password" placeholder="••••••••"
+                            class="w-full pl-12 pr-4 py-3 rounded-xl border border-theme-primary bg-theme-primary text-theme-primary focus:ring-2 focus:ring-brand-500 outline-none transition-all">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2 text-theme-primary">Confirm</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+                            x-icon="'shield-check'"></span>
+                        <input type="password" x-model="formData.confirmPassword" placeholder="••••••••"
+                            class="w-full pl-12 pr-4 py-3 rounded-xl border border-theme-primary bg-theme-primary text-theme-primary focus:ring-2 focus:ring-brand-500 outline-none transition-all">
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-2">
+                <button @click="register()" :disabled="isSubmitting"
+                    class="w-full bg-brand-500 hover:bg-brand-600 disabled:bg-brand-300 text-white font-bold py-4 rounded-xl shadow-lg shadow-brand-500/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                    <template x-if="!isSubmitting">
+                        <span>Daftar Sekarang</span>
+                    </template>
+                    <template x-if="isSubmitting">
+                        <div class="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    </template>
+                </button>
+            </div>
+
+            <!-- Footer Link -->
+            <p class="text-center text-sm text-theme-secondary">
+                Sudah punya akun?
+                <a href="#signin" class="text-brand-500 font-bold hover:underline">Masuk di sini</a>
+            </p>
+        </div>
+    </div>
+</div>

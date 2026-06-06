@@ -1,0 +1,120 @@
+<div x-data="{
+    formData: {
+        webappUrl: localStorage.getItem('EzycoreConfig') ? JSON.parse(localStorage.getItem('EzycoreConfig')).webappUrl : '',
+        blogId: localStorage.getItem('EzycoreConfig') ? JSON.parse(localStorage.getItem('EzycoreConfig')).blogId : '',
+        email: localStorage.getItem('signedInUser') ? JSON.parse(localStorage.getItem('signedInUser')).email : ''
+    },
+    isSubmitting: false,
+    message: '',
+
+    async saveSetup() {
+        if (!this.formData.webappUrl || !this.formData.blogId || !this.formData.email) {
+            window.showToast('Semua field harus diisi!', 'error');
+            return;
+        }
+
+        this.isSubmitting = true;
+        
+        try {
+            // Simpan ke LocalStorage untuk EzyCoreAi
+            const config = {
+                webappUrl: this.formData.webappUrl,
+                blogId: this.formData.blogId,
+                role: 'Admin',
+                setupDate: new Date().toISOString()
+            };
+            
+            localStorage.setItem('EzycoreConfig', JSON.stringify(config));
+            window.appsScriptUrl = this.formData.webappUrl;
+
+            // Simulasi pengecekan koneksi ke Apps Script
+            window.sendDataToGoogle('check_connection', { blogId: this.formData.blogId, email: this.formData.email }, 
+            async (response) => {
+                if (response.status === 'success') {
+                    window.showToast('Konfigurasi berhasil disimpan dan terhubung!', 'success');
+                    
+                    // Trigger re-check di appData
+                    if (window.app && typeof window.app.checkInitialSetup === 'function') {
+                        await window.app.checkInitialSetup();
+                    }
+                    
+                    setTimeout(() => {
+                        window.location.hash = '#dashboard';
+                    }, 1500);
+                } else {
+                    window.showToast('Koneksi gagal: ' + (response.message || 'Cek URL WebApp Anda'), 'error');
+                }
+                this.isSubmitting = false;
+            }, (err) => {
+                window.showToast('Terjadi kesalahan jaringan atau URL tidak valid.', 'error');
+                this.isSubmitting = false;
+            }, this.formData.webappUrl);
+
+        } catch (e) {
+            console.error(e);
+            window.showToast('Gagal menyimpan konfigurasi.', 'error');
+            this.isSubmitting = false;
+        }
+    }
+}" class="w-full flex items-center justify-center p-4">
+    <div
+        class="w-full max-w-lg bg-theme-secondary border border-theme-primary rounded-2xl shadow-xl overflow-hidden transition-all duration-300">
+        <!-- Header -->
+        <div class="p-8 border-b border-theme-primary bg-brand-500/5">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="p-3 bg-brand-500 rounded-xl text-white">
+                    <span class="w-8 h-8 block" x-icon="'settings'"></span>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-theme-primary">System Setup</h2>
+                    <p class="text-theme-secondary text-sm">Konfigurasi awal EzyCore Ai Framework</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Content -->
+        <div class="p-8 space-y-6">
+            <!-- WebApp URL -->
+            <div>
+                <label class="block text-sm font-semibold mb-2 text-theme-primary">Google Web App URL</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" x-icon="'link'"></span>
+                    <input type="url" x-model="formData.webappUrl"
+                        placeholder="https://script.google.com/macros/s/.../exec"
+                        class="w-full pl-12 pr-4 py-3 rounded-xl border border-theme-primary bg-theme-primary text-theme-primary focus:ring-2 focus:ring-brand-500 outline-none transition-all">
+                </div>
+                <p class="mt-1 text-xs text-gray-500">URL dari Deployment Google Apps Script Anda.</p>
+            </div>
+
+            <!-- Blog ID -->
+            <div>
+                <label class="block text-sm font-semibold mb-2 text-theme-primary">Blogger Blog ID</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+                        x-icon="'database'"></span>
+                    <input type="text" x-model="formData.blogId" placeholder="Masukkan ID Blog Anda"
+                        class="w-full pl-12 pr-4 py-3 rounded-xl border border-theme-primary bg-theme-primary text-theme-primary focus:ring-2 focus:ring-brand-500 outline-none transition-all">
+                </div>
+            </div>
+
+            <!-- Admin Email -->
+            <div>
+                <label class="block text-sm font-semibold mb-2 text-theme-primary">Admin Email</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" x-icon="'user'"></span>
+                    <input type="email" x-model="formData.email" placeholder="email@contoh.com"
+                        class="w-full pl-12 pr-4 py-3 rounded-xl border border-theme-primary bg-theme-primary text-theme-primary focus:ring-2 focus:ring-brand-500 outline-none transition-all">
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button @click="saveSetup()" :disabled="isSubmitting"
+                class="w-full bg-brand-500 hover:bg-brand-600 disabled:bg-brand-300 text-white font-bold py-4 rounded-xl shadow-lg shadow-brand-500/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                <template x-if="!isSubmitting"><span>Simpan & Hubungkan</span></template>
+                <template x-if="isSubmitting">
+                    <div class="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                </template>
+            </button>
+        </div>
+    </div>
+</div>
