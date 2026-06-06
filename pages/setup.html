@@ -27,16 +27,16 @@
             localStorage.setItem('EzycoreConfig', JSON.stringify(config));
             window.appsScriptUrl = this.formData.webappUrl;
 
-            // Simulasi pengecekan koneksi ke Apps Script
-            window.sendDataToGoogle('check_connection', { 
+            // Menjalankan inisialisasi database di Apps Script
+            window.sendDataToGoogle('setup', { 
                 blogId: this.formData.blogId, 
                 email: this.formData.email,
-                url: this.formData.webappUrl,
-                action: 'check_connection'
+                dbSetup: 'force_new', // Membuat tabel baru jika belum ada
+                role: 'Admin'
             }, 
             async (response) => {
                 if (response.status === 'success') {
-                    window.showToast('Konfigurasi berhasil disimpan dan terhubung!', 'success');
+                    window.showToast('Setup dimulai! Database sedang dibangun di server.', 'success');
                     
                     // Trigger re-check di appData
                     if (window.app && typeof window.app.checkInitialSetup === 'function') {
