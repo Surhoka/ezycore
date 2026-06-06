@@ -28,7 +28,12 @@
             window.appsScriptUrl = this.formData.webappUrl;
 
             // Simulasi pengecekan koneksi ke Apps Script
-            window.sendDataToGoogle('check_connection', { blogId: this.formData.blogId, email: this.formData.email }, 
+            window.sendDataToGoogle('check_connection', { 
+                blogId: this.formData.blogId, 
+                email: this.formData.email,
+                url: this.formData.webappUrl,
+                action: 'check_connection'
+            }, 
             async (response) => {
                 if (response.status === 'success') {
                     window.showToast('Konfigurasi berhasil disimpan dan terhubung!', 'success');
@@ -66,7 +71,7 @@
                 </div>
                 <div class="min-w-0">
                     <h2 class="text-2xl font-bold text-theme-text">System Setup</h2>
-                    <p class="text-theme-text-sub text-sm">Konfigurasi awal EzyCore Ai Framework</p>
+                    <p class="text-theme-text-sub text-sm">Konfigurasi EzyCore Ai Framework</p>
                 </div>
             </div>
         </div>
