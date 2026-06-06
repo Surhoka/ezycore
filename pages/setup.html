@@ -2,7 +2,9 @@
     formData: {
         webappUrl: localStorage.getItem('EzycoreConfig') ? JSON.parse(localStorage.getItem('EzycoreConfig')).webappUrl : '',
         blogId: localStorage.getItem('EzycoreConfig') ? JSON.parse(localStorage.getItem('EzycoreConfig')).blogId : '',
-        email: localStorage.getItem('signedInUser') ? JSON.parse(localStorage.getItem('signedInUser')).email : ''
+        email: localStorage.getItem('signedInUser') ? JSON.parse(localStorage.getItem('signedInUser')).email : '',
+        dbName: 'DB_EzyCore',
+        dbSetup: 'use_existing' // Default: Gunakan data yang sudah ada
     },
     isSubmitting: false,
     message: '',
@@ -31,7 +33,8 @@
             window.sendDataToGoogle('setup', { 
                 blogId: this.formData.blogId, 
                 email: this.formData.email,
-                dbSetup: 'force_new', // Membuat tabel baru jika belum ada
+                dbName: this.formData.dbName,
+                dbSetup: this.formData.dbSetup, 
                 role: 'Admin'
             }, 
             async (response) => {
@@ -87,6 +90,28 @@
                         placeholder="https://script.google.com/macros/s/.../exec" class="auth-input">
                 </div>
                 <p class="mt-1 text-xs text-gray-500">URL dari Deployment Google Apps Script Anda.</p>
+            </div>
+
+            <!-- Database Name -->
+            <div>
+                <label class="block text-sm font-semibold mb-2 text-theme-text">Database Name</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+                        x-icon="'file-text'"></span>
+                    <input type="text" x-model="formData.dbName" placeholder="Contoh: DB_Admin" class="auth-input">
+                </div>
+            </div>
+
+            <!-- Setup Mode -->
+            <div class="p-4 rounded-xl bg-theme-primary border border-theme-border">
+                <label class="flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" x-model="formData.dbSetup" x-bind:true-value="'force_new'"
+                        x-bind:false-value="'use_existing'"
+                        class="w-5 h-5 rounded border-theme-border text-brand-500 focus:ring-brand-500">
+                    <span class="text-sm font-medium text-theme-text">Reset / Buat Database Baru</span>
+                </label>
+                <p class="mt-2 text-xs text-theme-text-sub">Biarkan tidak tercentang jika Anda ingin menghubungkan
+                    kembali ke data yang sudah ada di Google Drive.</p>
             </div>
 
             <!-- Blog ID -->
