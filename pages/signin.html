@@ -41,34 +41,32 @@
 }" class="w-full flex items-center justify-center p-4">
     <div class="auth-card max-w-md">
         <!-- Header -->
-        <div class="p-8 text-center border-b border-theme-primary bg-brand-500/5">
+        <div class="p-8 text-center border-b border-theme-border bg-brand-500/5">
             <div class="inline-flex p-3 bg-brand-500 rounded-xl text-white mb-4">
                 <span class="w-8 h-8 block" x-icon="'log-in'"></span>
             </div>
-            <h2 class="text-2xl font-bold text-theme-primary">Welcome Back</h2>
-            <p class="text-theme-secondary text-sm">Masuk untuk mengelola dashboard Anda</p>
+            <h2 class="text-2xl font-bold text-theme-text">Welcome Back</h2>
+            <p class="text-theme-text-sub text-sm">Masuk untuk mengelola dashboard Anda</p>
         </div>
 
         <!-- Form Content -->
         <div class="p-8 space-y-5">
             <div>
-                <label class="block text-sm font-semibold mb-2 text-theme-primary">Email Address</label>
+                <label class="block text-sm font-semibold mb-2 text-theme-text">Email Address</label>
                 <div class="relative">
                     <span class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" x-icon="'mail'"></span>
-                    <input type="email" x-model="formData.email" placeholder="nama@email.com"
-                        class="w-full pl-12 pr-4 py-3 rounded-xl border border-theme-primary bg-theme-primary text-theme-primary focus:ring-2 focus:ring-brand-500 outline-none transition-all">
+                    <input type="email" x-model="formData.email" placeholder="nama@email.com" class="auth-input">
                 </div>
             </div>
 
             <div>
                 <div class="flex justify-between mb-2">
-                    <label class="text-sm font-semibold text-theme-primary">Password</label>
+                    <label class="text-sm font-semibold text-theme-text">Password</label>
                     <a href="#" class="text-xs text-brand-500 hover:underline">Lupa Password?</a>
                 </div>
                 <div class="relative">
                     <span class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" x-icon="'lock'"></span>
-                    <input type="password" x-model="formData.password" placeholder="••••••••"
-                        class="w-full pl-12 pr-4 py-3 rounded-xl border border-theme-primary bg-theme-primary text-theme-primary focus:ring-2 focus:ring-brand-500 outline-none transition-all">
+                    <input type="password" x-model="formData.password" placeholder="••••••••" class="auth-input">
                 </div>
             </div>
 
