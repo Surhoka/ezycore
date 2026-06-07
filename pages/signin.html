@@ -1,3 +1,60 @@
+<style>
+    [x-icon] svg {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+
+    @keyframes float-up {
+        0% {
+            transform: translateY(0) translateX(0);
+        }
+
+        100% {
+            transform: translateY(-120vh) translateX(20px);
+        }
+    }
+
+    .animate-float {
+        will-change: transform;
+        pointer-events: none;
+    }
+
+    @keyframes fade-in-up {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fade-in-up {
+        animation: fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes pulse-slow {
+
+        0%,
+        100% {
+            transform: scale(1);
+            opacity: 0.9;
+        }
+
+        50% {
+            transform: scale(1.05);
+            opacity: 1;
+        }
+    }
+
+    .animate-pulse-slow {
+        animation: pulse-slow 4s ease-in-out infinite;
+    }
+</style>
+
 <div x-data="{
     formData: {
         email: '',
@@ -11,7 +68,6 @@
             return;
         }
 
-        // Pastikan appsScriptUrl tersedia sebelum memanggil server
         if (!window.appsScriptUrl) {
             const blogId = window.EZY_BLOG_ID || '';
             const config = JSON.parse(localStorage.getItem('EzycoreConfig_' + blogId) || '{}');
@@ -19,14 +75,10 @@
         }
 
         this.isSubmitting = true;
-        console.log('[EzyCore Debug] Attempting Signin via:', window.appsScriptUrl);
         
         window.sendDataToGoogle('SignInUser', this.formData, (response) => {
-            console.log('[EzyCore Debug] Signin response:', response);
             if (response.status === 'success') {
                 window.showToast('Login berhasil! Selamat datang kembali.', 'success');
-                
-                // Simpan data user ke localStorage dengan suffix Blog ID agar konsisten
                 const blogId = window.EZY_BLOG_ID || '';
                 const userData = {
                     ...response.user,
@@ -34,11 +86,7 @@
                     loginDate: new Date().toISOString()
                 };
                 localStorage.setItem('signedInUser_' + blogId, JSON.stringify(userData));
-                
-                // Redirect ke dashboard
-                setTimeout(() => {
-                    window.location.hash = '#dashboard';
-                }, 1000);
+                setTimeout(() => { window.location.hash = '#dashboard'; }, 1000);
             } else {
                 window.showToast(response.message || 'Login gagal, periksa kredensial Anda.', 'error');
                 this.isSubmitting = false;
@@ -48,54 +96,159 @@
             this.isSubmitting = false;
         });
     }
-}" class="w-full flex items-center justify-center p-4">
-    <div class="auth-card max-w-md animate-slide-up">
-        <!-- Header -->
-        <div class="p-8 text-center border-b border-theme-border bg-brand-500/5">
-            <div class="inline-flex p-3 bg-brand-500 rounded-xl text-white mb-4">
-                <span class="w-8 h-8 block" x-icon="'log-in'"></span>
-            </div>
-            <h2 class="text-2xl font-bold text-theme-text">Welcome Back</h2>
-            <p class="text-theme-text-sub text-sm">Masuk untuk mengelola dashboard Anda</p>
+}"
+    class="w-full max-w-[1000px] overflow-hidden bg-white rounded-2xl shadow-2xl dark:bg-gray-800 flex flex-col lg:flex-row">
+    <!-- Form Section -->
+    <div class="w-full lg:w-1/2 p-6 sm:p-8 2xl:p-12 flex flex-col justify-center">
+        <div class="mb-4 2xl:mb-8">
+            <a href="/"
+                class="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
+                <span class="w-5 h-5 mr-2" x-icon="'arrow-left'"></span>
+                <span x-text="$store.i18n ? $store.i18n.t('back_to_dashboard') : 'Back to dashboard'">Back to
+                    dashboard</span>
+            </a>
         </div>
 
-        <!-- Form Content -->
-        <div class="p-8 space-y-5">
-            <div>
-                <label class="block text-sm font-semibold mb-2 text-theme-text">Email Address</label>
-                <div class="relative">
-                    <span class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" x-icon="'mail'"></span>
-                    <input type="email" x-model="formData.email" placeholder="nama@email.com" class="auth-input">
+        <div class="mb-4 2xl:mb-6">
+            <h1 class="mb-2 text-2xl font-bold text-gray-800 dark:text-white"
+                x-text="$store.i18n ? $store.i18n.t('login_title') : 'Sign In'">
+                Sign In
+            </h1>
+            <p class="text-gray-500 dark:text-gray-400"
+                x-text="$store.i18n ? $store.i18n.t('login_subtitle') : 'Enter your email and password to sign in!'">
+                Enter your email and password to sign in!
+            </p>
+        </div>
+
+        <form @submit.prevent="login()">
+            <div class="space-y-4 2xl:space-y-5">
+                <!-- Email -->
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        <span x-text="$store.i18n ? $store.i18n.t('email_label') : 'Email'">Email</span><span
+                            class="text-error-500">*</span>
+                    </label>
+                    <input type="email" x-model="formData.email"
+                        :placeholder="$store.i18n ? $store.i18n.t('email_placeholder') : 'Enter your email'" required
+                        class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-sm placeholder:text-gray-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white dark:placeholder:text-white/30 dark:focus:border-brand-500" />
+                </div>
+                <!-- Password -->
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        <span x-text="$store.i18n ? $store.i18n.t('password_label') : 'Password'">Password</span><span
+                            class="text-error-500">*</span>
+                    </label>
+                    <div x-data="{ showPassword: false }" class="relative">
+                        <input x-model="formData.password" :type="showPassword ? 'text' : 'password'"
+                            :placeholder="$store.i18n ? $store.i18n.t('password_placeholder') : 'Enter your password'"
+                            required
+                            class="w-full h-11 rounded-lg border border-gray-300 bg-transparent py-2.5 pl-4 pr-11 text-sm text-gray-800 shadow-sm placeholder:text-gray-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white dark:placeholder:text-white/30 dark:focus:border-brand-500" />
+                        <span @click="showPassword = !showPassword"
+                            class="absolute z-30 text-gray-500 -translate-y-1/2 cursor-pointer right-4 top-1/2 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
+                            <span x-show="!showPassword" class="block w-5 h-5" x-icon="'eye-off'"></span>
+                            <span x-show="showPassword" class="block w-5 h-5" x-icon="'eye'"></span>
+                        </span>
+                    </div>
+                </div>
+                <!-- Checkbox -->
+                <div class="flex items-center justify-between">
+                    <div x-data="{ checkboxToggle: false }">
+                        <label for="checkboxLabelOne"
+                            class="flex items-center text-sm font-normal text-gray-700 cursor-pointer select-none dark:text-gray-400">
+                            <div class="relative">
+                                <input type="checkbox" id="checkboxLabelOne" class="sr-only"
+                                    @change="checkboxToggle = !checkboxToggle" />
+                                <div :class="checkboxToggle ? 'border-brand-500 bg-brand-500' : 'bg-transparent border-gray-300 dark:border-gray-700'"
+                                    class="mr-3 flex h-5 w-5 items-center justify-center rounded-md border-[1.25px]">
+                                    <span :class="checkboxToggle ? '' : 'opacity-0'">
+                                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M11.6666 3.5L5.24992 9.91667L2.33325 7" stroke="white"
+                                                stroke-width="1.94437" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                    </span>
+                                </div>
+                            </div>
+                            <span x-text="$store.i18n ? $store.i18n.t('keep_logged_in') : 'Keep me logged in'">Keep me
+                                logged in</span>
+                        </label>
+                    </div>
+                    <a href="#reset-password" class="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
+                        x-text="$store.i18n ? $store.i18n.t('forgot_password') : 'Forgot password?'">Forgot
+                        password?</a>
+                </div>
+                <!-- Button -->
+                <div>
+                    <button type="submit" :disabled="isSubmitting"
+                        class="flex items-center justify-center w-full px-4 py-3 text-sm font-bold text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+                        <template x-if="!isSubmitting">
+                            <span x-text="$store.i18n ? $store.i18n.t('sign_in') : 'Sign In'">Sign In</span>
+                        </template>
+                        <template x-if="isSubmitting">
+                            <div class="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin">
+                            </div>
+                        </template>
+                    </button>
                 </div>
             </div>
-
-            <div>
-                <div class="flex justify-between mb-2">
-                    <label class="text-sm font-semibold text-theme-text">Password</label>
-                    <a href="#" class="text-xs text-brand-500 hover:underline">Lupa Password?</a>
-                </div>
-                <div class="relative">
-                    <span class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" x-icon="'lock'"></span>
-                    <input type="password" x-model="formData.password" placeholder="••••••••" class="auth-input">
-                </div>
-            </div>
-
-            <!-- Submit Button -->
-            <button @click="login()" :disabled="isSubmitting"
-                class="w-full bg-brand-500 hover:bg-brand-600 disabled:bg-brand-300 text-white font-bold py-4 rounded-xl shadow-lg shadow-brand-500/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
-                <template x-if="!isSubmitting">
-                    <span>Sign In</span>
-                </template>
-                <template x-if="isSubmitting">
-                    <div class="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                </template>
-            </button>
-
-            <!-- Footer Link -->
-            <p class="text-center text-sm text-theme-text-sub">
-                Belum punya akun?
-                <a href="#signup" class="text-brand-500 font-bold hover:underline">Daftar Sekarang</a>
+        </form>
+        <div class="mt-4 2xl:mt-5">
+            <p class="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
+                <span x-text="$store.i18n ? $store.i18n.t('dont_have_account') : 'Don\'t have an account?'">Don't have
+                    an account?</span>
+                <a href="#signup" class="text-brand-500 hover:text-brand-600 dark:text-brand-400 font-medium"
+                    x-text="$store.i18n ? $store.i18n.t('sign_up') : 'Sign Up'">Sign Up</a>
             </p>
         </div>
     </div>
+
+    <!-- Image Section -->
+    <div x-data="{
+      particles: Array.from({ length: 25 }, (_, i) => ({
+          id: i,
+          left: Math.random() * 100 + '%',
+          top: Math.random() * 100 + '%',
+          size: Math.random() * 3 + 1 + 'px',
+          duration: Math.random() * 15 + 10 + 's',
+          delay: Math.random() * -20 + 's',
+          opacity: Math.random() * 0.5 + 0.1
+      }))
+  }"
+        class="flex max-lg:hidden w-full lg:w-1/2 items-center justify-center p-8 bg-brand-950 dark:bg-black relative overflow-hidden">
+        <template x-for="particle in particles" :key="particle.id">
+            <div class="absolute rounded-full bg-white animate-float"
+                :style="`left: ${particle.left}; top: ${particle.top}; width: ${particle.size}; height: ${particle.size}; opacity: ${particle.opacity}; animation: float-up ${particle.duration} linear infinite; animation-delay: ${particle.delay};`" />
+        </template>
+        <div class="absolute right-0 top-0 -z-1 w-full max-w-[250px] xl:max-w-[450px] opacity-50 transition-transform duration-[20s] ease-in-out hover:scale-110"
+            x-icon="'grid-01'" />
+        <div class="absolute bottom-0 left-0 -z-1 w-full max-w-[250px] rotate-180 xl:max-w-[450px] opacity-50 transition-transform duration-[20s] ease-in-out hover:scale-110"
+            x-icon="'grid-01'" />
+
+        <div class="relative z-10 flex flex-col items-center animate-fade-in-up" style="animation-fill-mode: both;">
+            <a href="#dashboard" class="flex items-center gap-3 mb-6 transition-transform hover:scale-105 duration-300">
+                <img :src="blogFavicon" alt="Logo"
+                    class="h-10 w-10 rounded-lg shadow-sm object-contain animate-pulse-slow" />
+                <span class="text-2xl font-bold text-white tracking-tight" x-text="blogTitle"></span>
+            </a>
+            <p class="text-blue-100/80 text-center max-w-sm text-sm font-light leading-relaxed animate-fade-in-up"
+                style="animation-delay: 0.2s; animation-fill-mode: both;"
+                x-text="$store.i18n ? $store.i18n.t('welcome_desc') : 'Welcome back to your Admin Dashboard. Manage your content and analytics with ease.'">
+                Welcome back to your Admin Dashboard. Manage your content and analytics with ease.
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="fixed z-50 flex items-center gap-3 max-sm:hidden top-6 right-6">
+    <button x-show="$store.i18n"
+        class="inline-flex items-center justify-center size-10 text-xs font-bold text-white transition-colors rounded-full bg-brand-500 hover:bg-brand-600"
+        @click.prevent="$store.i18n.toggle()">
+        <span x-text="$store.i18n.locale.toUpperCase()"></span>
+    </button>
+    <button
+        class="inline-flex items-center justify-center text-white transition-colors rounded-full size-10 bg-brand-500 hover:bg-brand-600"
+        @click.prevent="darkMode = !darkMode">
+        <span class="w-5 h-5" x-icon="'moon'" x-show="darkMode"></span>
+        <span class="w-5 h-5" x-icon="'sun'" x-show="!darkMode"></span>
+    </button>
 </div>
