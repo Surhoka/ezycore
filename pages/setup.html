@@ -33,14 +33,16 @@
             blogId: this.formData.blogId,
             email: this.formData.email 
         }, (response) => {
-            if (response.status === 'success') {
-                if (response.dbName) {
+            if (response.status === 'success' && (response.dbId || response.dbName)) {
+                if (response.dbName) this.formData.dbName = response.dbName;
+                if (response.email) this.formData.email = response.email;
+                
+                if (response.dbId) {
                     this.formData.dbName = response.dbName;
-                    if (response.email) this.formData.email = response.email;
-                    window.showToast('Konfigurasi ditemukan: ' + response.dbName, 'success');
-                } else {
-                    window.showToast('Sistem siap. Silakan tentukan nama database baru.', 'info');
+                    window.showToast('Database ditemukan di Drive: ' + response.dbName, 'success');
                 }
+            } else if (response.status === 'success') {
+                window.showToast('Sistem siap. Silakan tentukan nama database baru.', 'info');
             } else {
                 window.showToast('Tidak ditemukan database lama. Masukkan nama manual atau biarkan sistem membuat baru.', 'info');
             }
