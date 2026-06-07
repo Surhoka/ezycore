@@ -10,7 +10,7 @@
     },
     isSubmitting: false,
     isSearching: false,
-    message: '',
+    message: 'Menunggu respon...',
 
     init() {
         // Otomatis mencari database saat URL WebApp ditempelkan
@@ -53,6 +53,42 @@
         }, this.formData.webappUrl);
     },
 
+    pollSetupStatus() {
+        const check = () => {
+            if (!this.isSubmitting) return;
+
+            window.sendDataToGoogle('get_setup_status', { 
+                blogId: this.formData.blogId 
+            }, (res) => {
+                if (res.setupStatus === 'COMPLETED') {
+                    this.message = 'Setup Selesai!';
+                    window.showToast('Sistem berhasil dikonfigurasi!', 'success');
+                    
+                    // Finalisasi status di global app
+                    if (window.app && typeof window.app.checkInitialSetup === 'function') {
+                        window.app.checkInitialSetup().then(() => {
+                            setTimeout(() => { window.location.hash = '#dashboard'; }, 1000);
+                        });
+                    } else {
+                        setTimeout(() => { window.location.hash = '#dashboard'; }, 1500);
+                    }
+                } else if (res.setupStatus === 'ERROR') {
+                    this.message = 'Gagal: ' + (res.errorMessage || 'Unknown Error');
+                    window.showToast(this.message, 'error');
+                    this.isSubmitting = false;
+                } else {
+                    // Masih IN_PROGRESS, update teks progress dari backend
+                    this.message = res.statusMessage || 'Sedang memproses di server...';
+                    setTimeout(check, 3000); // Cek lagi setelah 3 detik
+                }
+            }, (err) => {
+                console.warn('Polling error, retrying...', err);
+                setTimeout(check, 5000);
+            }, this.formData.webappUrl);
+        };
+        check();
+    },
+
     async saveSetup() {
         if (!this.formData.webappUrl || !this.formData.blogId || !this.formData.email) {
             window.showToast('Semua field harus diisi!', 'error');
@@ -60,6 +96,7 @@
         }
 
         this.isSubmitting = true;
+        this.message = 'Mengirim instruksi setup...';
         
         try {
             // Simpan ke LocalStorage untuk EzyCoreAi
@@ -83,20 +120,12 @@
             }, 
             async (response) => {
                 if (response.status === 'success') {
-                    window.showToast('Setup dimulai! Database sedang dibangun di server.', 'success');
-                    
-                    // Trigger re-check di appData
-                    if (window.app && typeof window.app.checkInitialSetup === 'function') {
-                        await window.app.checkInitialSetup();
-                    }
-                    
-                    setTimeout(() => {
-                        window.location.hash = '#dashboard';
-                    }, 1500);
+                    window.showToast('Setup backend dimulai...', 'info');
+                    this.pollSetupStatus(); // Mulai polling status
                 } else {
-                    window.showToast('Koneksi gagal: ' + (response.message || 'Cek URL WebApp Anda'), 'error');
+                    window.showToast('Backend Error: ' + (response.message || 'Cek WebApp URL'), 'error');
+                    this.isSubmitting = false;
                 }
-                this.isSubmitting = false;
             }, (err) => {
                 window.showToast('Terjadi kesalahan jaringan atau URL tidak valid.', 'error');
                 this.isSubmitting = false;
@@ -194,10 +223,13 @@
 
             <!-- Submit Button -->
             <button @click="saveSetup()" :disabled="isSubmitting"
-                class="w-full bg-brand-500 hover:bg-brand-600 disabled:bg-brand-300 text-white font-bold py-4 rounded-xl shadow-lg shadow-brand-500/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                class="w-full bg-brand-500 hover:bg-brand-600 disabled:bg-brand-300 text-white font-bold py-4 rounded-xl shadow-lg shadow-brand-500/20 transition-all active:scale-[0.98] flex flex-col items-center justify-center gap-1">
                 <template x-if="!isSubmitting"><span>Simpan & Hubungkan</span></template>
                 <template x-if="isSubmitting">
-                    <div class="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <div class="flex flex-col items-center gap-2">
+                        <div class="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        <span class="text-xs font-normal opacity-90 animate-pulse" x-text="message"></span>
+                    </div>
                 </template>
             </button>
         </div>
