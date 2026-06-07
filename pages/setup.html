@@ -1,8 +1,8 @@
 <div x-data="{
     formData: {
-        webappUrl: localStorage.getItem('EzycoreConfig') ? JSON.parse(localStorage.getItem('EzycoreConfig')).webappUrl : '',
-        blogId: localStorage.getItem('EzycoreConfig') ? JSON.parse(localStorage.getItem('EzycoreConfig')).blogId : '',
-        email: localStorage.getItem('signedInUser') ? JSON.parse(localStorage.getItem('signedInUser')).email : '',
+        webappUrl: localStorage.getItem('EzycoreConfig_' + (window.EZY_BLOG_ID || '')) ? JSON.parse(localStorage.getItem('EzycoreConfig_' + (window.EZY_BLOG_ID || ''))).webappUrl : '',
+        blogId: window.EZY_BLOG_ID || (localStorage.getItem('EzycoreConfig') ? JSON.parse(localStorage.getItem('EzycoreConfig')).blogId : ''),
+        email: localStorage.getItem('signedInUser_' + (window.EZY_BLOG_ID || '')) ? JSON.parse(localStorage.getItem('signedInUser_' + (window.EZY_BLOG_ID || ''))).email : '',
         dbName: 'DB_Admin',
         dbSetup: 'use_existing' // Default: Gunakan data yang sudah ada
     },
@@ -26,7 +26,7 @@
                 setupDate: new Date().toISOString()
             };
             
-            localStorage.setItem('EzycoreConfig', JSON.stringify(config));
+            localStorage.setItem('EzycoreConfig_' + this.formData.blogId, JSON.stringify(config));
             window.appsScriptUrl = this.formData.webappUrl;
 
             // Menjalankan inisialisasi database di Apps Script

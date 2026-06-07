@@ -11,19 +11,27 @@
             return;
         }
 
+        // Pastikan appsScriptUrl tersedia sebelum memanggil server
+        if (!window.appsScriptUrl) {
+            const blogId = window.EZY_BLOG_ID || '';
+            const config = JSON.parse(localStorage.getItem('EzycoreConfig_' + blogId) || '{}');
+            if (config.webappUrl) window.appsScriptUrl = config.webappUrl;
+        }
+
         this.isSubmitting = true;
         
         window.sendDataToGoogle('signin', this.formData, (response) => {
             if (response.status === 'success') {
                 window.showToast('Login berhasil! Selamat datang kembali.', 'success');
                 
-                // Simpan data user ke localStorage sesuai standar EzyCoreAi
+                // Simpan data user ke localStorage dengan suffix Blog ID agar konsisten
+                const blogId = window.EZY_BLOG_ID || '';
                 const userData = {
                     ...response.user,
                     isLoggedIn: true,
                     loginDate: new Date().toISOString()
                 };
-                localStorage.setItem('signedInUser', JSON.stringify(userData));
+                localStorage.setItem('signedInUser_' + blogId, JSON.stringify(userData));
                 
                 // Redirect ke dashboard
                 setTimeout(() => {
