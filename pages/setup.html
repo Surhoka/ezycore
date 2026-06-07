@@ -28,19 +28,19 @@
         }
 
         this.isSearching = true;
+        console.log('[EzyCore Debug] Discovering database for BlogID:', this.formData.blogId);
         
         window.sendDataToGoogle('get_config', { 
             blogId: this.formData.blogId,
             email: this.formData.email 
         }, (response) => {
+            console.log('[EzyCore Debug] Response received from server:', response);
+            
             if (response.status === 'success' && (response.dbId || response.dbName)) {
-                if (response.dbName) this.formData.dbName = response.dbName;
-                if (response.email) this.formData.email = response.email;
-                
-                if (response.dbId) {
-                    this.formData.dbName = response.dbName;
-                    window.showToast('Database ditemukan di Drive: ' + response.dbName, 'success');
-                }
+                // Database ditemukan secara fisik di Drive
+                this.formData.dbName = response.dbName || this.formData.dbName;
+                this.formData.email = response.email || this.formData.email;
+                window.showToast('Database ditemukan di Drive: ' + (response.dbName || 'DB Terdeteksi'), 'success');
             } else if (response.status === 'success') {
                 window.showToast('Sistem siap. Silakan tentukan nama database baru.', 'info');
             } else {
