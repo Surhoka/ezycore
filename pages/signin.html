@@ -19,8 +19,10 @@
         }
 
         this.isSubmitting = true;
+        console.log('[EzyCore Debug] Attempting Signin via:', window.appsScriptUrl);
         
-        window.sendDataToGoogle('signin', this.formData, (response) => {
+        window.sendDataToGoogle('SignInUser', this.formData, (response) => {
+            console.log('[EzyCore Debug] Signin response:', response);
             if (response.status === 'success') {
                 window.showToast('Login berhasil! Selamat datang kembali.', 'success');
                 
