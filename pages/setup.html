@@ -3,11 +3,53 @@
         webappUrl: localStorage.getItem('EzycoreConfig_' + (window.EZY_BLOG_ID || '')) ? JSON.parse(localStorage.getItem('EzycoreConfig_' + (window.EZY_BLOG_ID || ''))).webappUrl : '',
         blogId: window.EZY_BLOG_ID || (localStorage.getItem('EzycoreConfig') ? JSON.parse(localStorage.getItem('EzycoreConfig')).blogId : ''),
         email: localStorage.getItem('signedInUser_' + (window.EZY_BLOG_ID || '')) ? JSON.parse(localStorage.getItem('signedInUser_' + (window.EZY_BLOG_ID || ''))).email : '',
-        dbName: 'DB_Admin',
+        dbName: localStorage.getItem('EzycoreConfig_' + (window.EZY_BLOG_ID || '')) 
+                ? (JSON.parse(localStorage.getItem('EzycoreConfig_' + (window.EZY_BLOG_ID || ''))).dbName || '') 
+                : '',
         dbSetup: 'use_existing' // Default: Gunakan data yang sudah ada
     },
     isSubmitting: false,
+    isSearching: false,
     message: '',
+
+    init() {
+        // Otomatis mencari database saat URL WebApp ditempelkan
+        this.$watch('formData.webappUrl', value => {
+            if (value && value.startsWith('https://script.google.com/macros/s/') && value.endsWith('/exec')) {
+                this.discoverDatabase();
+            }
+        });
+    },
+
+    async discoverDatabase() {
+        if (!this.formData.webappUrl || !this.formData.webappUrl.startsWith('http')) {
+            window.showToast('Harap isi Google Web App URL terlebih dahulu.', 'warning');
+            return;
+        }
+
+        this.isSearching = true;
+        
+        window.sendDataToGoogle('get_config', { 
+            blogId: this.formData.blogId,
+            email: this.formData.email 
+        }, (response) => {
+            if (response.status === 'success') {
+                if (response.dbName) {
+                    this.formData.dbName = response.dbName;
+                    if (response.email) this.formData.email = response.email;
+                    window.showToast('Konfigurasi ditemukan: ' + response.dbName, 'success');
+                } else {
+                    window.showToast('Sistem siap. Silakan tentukan nama database baru.', 'info');
+                }
+            } else {
+                window.showToast('Tidak ditemukan database lama. Masukkan nama manual atau biarkan sistem membuat baru.', 'info');
+            }
+            this.isSearching = false;
+        }, (err) => {
+            window.showToast('Gagal terhubung ke Drive.', 'error');
+            this.isSearching = false;
+        }, this.formData.webappUrl);
+    },
 
     async saveSetup() {
         if (!this.formData.webappUrl || !this.formData.blogId || !this.formData.email) {
@@ -95,10 +137,25 @@
             <!-- Database Name -->
             <div>
                 <label class="block text-sm font-semibold mb-2 text-theme-text">Database Name</label>
-                <div class="relative">
-                    <span class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
-                        x-icon="'file-text'"></span>
-                    <input type="text" x-model="formData.dbName" placeholder="Contoh: DB_Admin" class="auth-input">
+                <div class="flex gap-2">
+                    <div class="relative flex-1">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+                            x-icon="'file-text'"></span>
+                        <input type="text" x-model="formData.dbName" placeholder="Contoh: My_Ezy_Database"
+                            class="auth-input">
+                    </div>
+                    <button @click="discoverDatabase()" :disabled="isSearching || !formData.webappUrl"
+                        class="px-4 bg-theme-secondary border border-theme-border rounded-xl text-theme-text hover:bg-theme-primary transition-all disabled:opacity-50 flex items-center gap-2"
+                        title="Cari database di Drive">
+                        <template x-if="!isSearching">
+                            <span class="w-5 h-5" x-icon="'search'"></span>
+                        </template>
+                        <template x-if="isSearching">
+                            <div
+                                class="w-4 h-4 border-2 border-brand-500/30 border-t-brand-500 rounded-full animate-spin">
+                            </div>
+                        </template>
+                    </button>
                 </div>
             </div>
 
