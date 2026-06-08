@@ -60,10 +60,14 @@
             window.sendDataToGoogle('get_setup_status', { 
                 blogId: this.formData.blogId 
             }, (res) => {
-                if (res.setupStatus === 'COMPLETED') {
+                // Jika sukses atau DB ID sudah muncul, anggap selesai
+                if (res.setupStatus === 'COMPLETED' || (res.dbId && res.dbId.length > 5)) {
                     this.message = 'Setup Selesai!';
                     window.showToast('Sistem berhasil dikonfigurasi!', 'success');
                     
+                    // Simpan DB ID terbaru ke form jika ada
+                    if (res.dbId) this.formData.dbName = res.dbName || this.formData.dbName;
+
                     // Finalisasi status di global app
                     if (window.app && typeof window.app.checkInitialSetup === 'function') {
                         window.app.checkInitialSetup().then(() => {
@@ -72,13 +76,18 @@
                     } else {
                         setTimeout(() => { window.location.hash = '#dashboard'; }, 1500);
                     }
-                } else if (res.setupStatus === 'ERROR') {
-                    this.message = 'Gagal: ' + (res.errorMessage || 'Unknown Error');
+                } else if (res.setupStatus === 'ERROR' || res.status === 'error') {
+                    this.message = 'Gagal: ' + (res.errorMessage || res.message || 'Unknown Error');
                     window.showToast(this.message, 'error');
                     this.isSubmitting = false;
                 } else {
-                    // Masih IN_PROGRESS, update teks progress dari backend
-                    this.message = res.statusMessage || 'Sedang memproses di server...';
+                    // Masih IN_PROGRESS atau status lainnya (IDLE dsb)
+                    this.message = res.statusMessage || 'Server sedang menyiapkan database...';
+                    
+                    // Tambahkan status teknis untuk debug jika statusMessage kosong
+                    if (!res.statusMessage && res.setupStatus) {
+                        this.message = `Status: ${res.setupStatus}...`;
+                    }
                     setTimeout(check, 3000); // Cek lagi setelah 3 detik
                 }
             }, (err) => {
