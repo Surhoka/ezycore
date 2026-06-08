@@ -92,6 +92,7 @@
                 }
             }, (err) => {
                 console.warn('Polling error, retrying...', err);
+                this.message = 'Koneksi terganggu, mencoba kembali...';
                 setTimeout(check, 5000);
             }, this.formData.webappUrl);
         };
