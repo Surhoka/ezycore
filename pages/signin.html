@@ -38,6 +38,11 @@
                 };
                 localStorage.setItem('signedInUser_' + blogId, JSON.stringify(userData));
                 
+                // Sync currentUser state langsung agar chat display langsung pakai nama terbaru
+                if (window.app) {
+                    window.app.currentUser = userData;
+                }
+
                 // Reset state loading sebelum berpindah halaman agar saat kembali halaman sudah bersih
                 setTimeout(() => { 
                     this.isSubmitting = false;
