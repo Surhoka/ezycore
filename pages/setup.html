@@ -74,6 +74,12 @@
                     // Simpan DB ID terbaru ke form jika ada
                     if (res.dbId) this.formData.dbName = res.dbName || this.formData.dbName;
 
+                    // PENTING: Hapus config lokal sementara.
+                    // Ini memaksa appinit.min.js melakukan 'Remote Discovery' ke Blogger Page
+                    // untuk memastikan integrasi benar-benar tersinkronisasi.
+                    const storageKey = 'EzycoreConfig_' + this.formData.blogId;
+                    localStorage.removeItem(storageKey);
+
                     // Finalisasi status di global app
                     if (window.app && typeof window.app.checkInitialSetup === 'function') {
                         window.app.checkInitialSetup().then(() => {
