@@ -1,0 +1,401 @@
+<div x-data="profilePage" id="profile-page-container" class="w-full animate-fade-in">
+  <input type="file" x-ref="photoInput" @change="handlePhotoFileChange($event)" accept="image/*" class="hidden" />
+  <!-- ===== Main Content Start ===== -->
+
+  <!-- Loading Overlay -->
+  <div x-show="isLoading" class="text-center p-10">Loading profile...</div>
+
+  <!-- Tab Navigation -->
+  <div class="tab-nav-container tab-nav-borderless mb-6">
+    <button @click="activeTab = 'general'" :class="{ 'active': activeTab === 'general' }" class="tab-nav-btn">
+      <span class="w-4 h-4" x-icon="'user'"></span> General Profile
+    </button>
+  </div>
+
+  <div x-show="!isLoading && activeTab === 'general'" x-transition>
+    <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
+      <!-- Meta Card -->
+      <div class="p-5 mb-6 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
+        <div class="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+          <div class="flex flex-col items-center w-full gap-6 xl:flex-row">
+            <div class="relative group">
+              <div class="w-20 h-20 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800">
+                <img :src="profile.personalInfo.profilePhoto || 'https://dummyimage.com/100'" alt="user"
+                  class="w-full h-full object-cover" />
+              </div>
+              <!-- Edit Photo Overlay Button -->
+              <button @click="triggerPhotoUpload()" type="button"
+                class="btn btn-primary absolute bottom-0 right-0 flex h-7 w-7 !p-0 rounded-full shadow-lg opacity-0 group-hover:opacity-100">
+                <span class="w-4 h-4" x-icon="'pencil'"></span>
+              </button>
+            </div>
+            <div class="order-3 xl:order-2">
+              <h4 x-text="profile.personalInfo.fullName || 'User Name'"
+                class="mb-2 text-lg font-semibold text-center text-gray-800 dark:text-white/90 xl:text-left">
+              </h4>
+              <div class="flex flex-col items-center gap-1 text-center xl:flex-row xl:gap-3 xl:text-left">
+                <p x-text="profile.personalInfo.bio || '-'" class="text-sm text-gray-500 dark:text-gray-400">
+                </p>
+                <div class="hidden h-3.5 w-px bg-gray-300 dark:bg-gray-700 xl:block"></div>
+                <p x-text="profile.address.cityState || '-'" class="text-sm text-gray-500 dark:text-gray-400">
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center order-2 gap-2 grow xl:order-3 xl:justify-end">
+              <button class="btn btn-outline h-11 w-11 !p-0 rounded-full">
+                <span class="w-5 h-5" x-icon="'facebook'"></span>
+              </button>
+
+              <button class="btn btn-outline h-11 w-11 !p-0 rounded-full">
+                <span class="w-5 h-5" x-icon="'twitter'"></span>
+              </button>
+
+              <button class="btn btn-outline h-11 w-11 !p-0 rounded-full">
+                <span class="w-5 h-5" x-icon="'linkedin'"></span>
+              </button>
+
+              <button class="btn btn-outline h-11 w-11 !p-0 rounded-full">
+                <span class="w-5 h-5" x-icon="'instagram'"></span>
+              </button>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <!-- Personal Information Card -->
+      <div class="p-5 mb-6 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
+        <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <h4 class="h4 mb-6">
+              Personal Information
+            </h4>
+
+            <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
+              <div>
+                <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                  First Name
+                </p>
+                <p x-text="profile.personalInfo.firstName || '-'"
+                  class="text-sm font-medium text-gray-800 dark:text-white/90">
+                </p>
+              </div>
+
+              <div>
+                <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                  Last Name
+                </p>
+                <p x-text="profile.personalInfo.lastName || '-'"
+                  class="text-sm font-medium text-gray-800 dark:text-white/90">
+                </p>
+              </div>
+
+              <div>
+                <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                  Email address
+                </p>
+                <p x-text="profile.personalInfo.email || '-'"
+                  class="text-sm font-medium text-gray-800 dark:text-white/90">
+                </p>
+              </div>
+
+              <div>
+                <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                  Phone
+                </p>
+                <p x-text="profile.personalInfo.phone || '-'"
+                  class="text-sm font-medium text-gray-800 dark:text-white/90">
+                </p>
+              </div>
+
+              <div>
+                <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                  Bio
+                </p>
+                <p x-text="profile.personalInfo.bio || '-'"
+                  class="text-sm font-medium text-gray-800 dark:text-white/90">
+                </p>
+              </div>
+
+              <div>
+                <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                  Status
+                </p>
+                <p x-text="profile.personalInfo.status || 'Active'" class="text-sm font-medium"
+                  :class="profile.personalInfo.status === 'Active' || profile.personalInfo.status === 'Verified' ? 'text-success-600' : 'text-red-600'">
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <button @click="openInfoModal()" class="btn btn-outline w-full py-3 lg:w-auto">
+            <span class="w-4 h-4" x-icon="'pencil'"></span>
+            Edit
+          </button>
+        </div>
+      </div>
+      <!-- Address Card -->
+      <div class="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
+        <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <h4 class="h4 mb-6">
+              Address
+            </h4>
+
+            <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
+              <div>
+                <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                  Country
+                </p>
+                <p x-text="profile.address.country || '-'" class="text-sm font-medium text-gray-800 dark:text-white/90">
+                </p>
+              </div>
+
+              <div>
+                <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                  City/State
+                </p>
+                <p x-text="profile.address.cityState || '-'"
+                  class="text-sm font-medium text-gray-800 dark:text-white/90">
+                </p>
+              </div>
+
+              <div>
+                <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                  Postal Code
+                </p>
+                <p x-text="profile.address.postalCode || '-'"
+                  class="text-sm font-medium text-gray-800 dark:text-white/90">
+                </p>
+              </div>
+
+              <div>
+                <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                  TAX ID
+                </p>
+                <p x-text="profile.address.taxId || '-'" class="text-sm font-medium text-gray-800 dark:text-white/90">
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <button @click="openAddressModal()" class="btn btn-outline w-full py-3 lg:w-auto">
+            <span class="w-4 h-4" x-icon="'pencil'"></span>
+            Edit
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BEGIN MODAL PERSONAL INFO -->
+  <div :class="{ 'show': isProfileInfoModal }"
+    class="fixed inset-0 flex justify-center items-center p-4 md:p-5 overflow-hidden z-[99999] modal" x-cloak>
+    <div class="fixed inset-0 h-full w-full bg-gray-900/40 backdrop-blur-xl transition-opacity duration-300"
+      x-on:click="isProfileInfoModal = false"></div>
+    <div class="modal-dialog rounded-2xl">
+      <!-- close btn -->
+      <button x-on:click="isProfileInfoModal = false" class="modal-close-btn">
+        <span class="w-6 h-6 block" x-icon="'close'"></span>
+      </button>
+      <div class="modal-content custom-scrollbar">
+        <div class="modal-header-sticky">
+          <h3 class="h3">
+            Edit Profile Information
+          </h3>
+          <p class="mt-2 text-sm text-theme-secondary">
+            Update your profile details to stay connected.
+          </p>
+        </div>
+        <form class="flex flex-col">
+          <div class="modal-body-content">
+            <div>
+              <h5 class="h5 mb-4">
+                Social Links
+              </h5>
+
+              <div class="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
+                <div>
+                  <label class="form-label">
+                    Facebook
+                  </label>
+                  <input x-model="editableProfile.socialLinks.facebook" type="text" placeholder="https://facebook.com/"
+                    class="form-input" />
+                </div>
+
+                <div>
+                  <label class="form-label">
+                    Twitter
+                  </label>
+                  <input x-model="editableProfile.socialLinks.twitter" type="text" placeholder="https://twitter.com/"
+                    class="form-input" />
+                </div>
+
+                <div>
+                  <label class="form-label">
+                    Linkedin
+                  </label>
+                  <input x-model="editableProfile.socialLinks.linkedin" type="text" placeholder="https://linkedin.com/"
+                    class="form-input" />
+                </div>
+
+                <div>
+                  <label class="form-label">
+                    Instagram
+                  </label>
+                  <input x-model="editableProfile.socialLinks.instagram" type="text"
+                    placeholder="https://instagram.com/" class="form-input" />
+                </div>
+              </div>
+            </div>
+            <div>
+              <h5 class="h5 mb-4">
+                Personal Information
+              </h5>
+
+              <div class="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
+                <div class="col-span-2 lg:col-span-1">
+                  <label class="form-label">
+                    First Name
+                  </label>
+                  <input x-model="editableProfile.personalInfo.firstName" type="text" placeholder="First Name"
+                    class="form-input" />
+                </div>
+
+                <div class="col-span-2 lg:col-span-1">
+                  <label class="form-label">
+                    Last Name
+                  </label>
+                  <input x-model="editableProfile.personalInfo.lastName" type="text" placeholder="Last Name"
+                    class="form-input" />
+                </div>
+
+                <div class="col-span-2 lg:col-span-1">
+                  <label class="form-label">
+                    Email Address
+                  </label>
+                  <input x-model="editableProfile.personalInfo.email" type="text" placeholder="email@example.com"
+                    class="form-input" />
+                </div>
+
+                <div class="col-span-2 lg:col-span-1">
+                  <label class="form-label">
+                    Phone
+                  </label>
+                  <input x-model="editableProfile.personalInfo.phone" type="text" placeholder="+1234567890"
+                    class="form-input" />
+                </div>
+
+                <div class="col-span-2 lg:col-span-1">
+                  <label class="form-label">
+                    Bio
+                  </label>
+                  <input x-model="editableProfile.personalInfo.bio" type="text" placeholder="Your bio"
+                    class="form-input" />
+                </div>
+
+                <div class="col-span-2 lg:col-span-1">
+                  <label class="form-label">
+                    Status
+                  </label>
+                  <select x-model="editableProfile.personalInfo.status" class="form-input">
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                    <option value="Verified">Verified</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer-actions">
+            <button @click="deleteAccount($el)" type="button" class="btn btn-danger w-full sm:w-auto">
+              Delete Account
+            </button>
+            <div class="flex w-full sm:w-auto gap-3 ml-auto">
+              <button x-on:click="isProfileInfoModal = false" type="button" class="btn btn-outline w-full sm:w-auto">
+                Cancel
+              </button>
+              <button @click="savePersonalInfo($el)" type="button" class="btn btn-primary w-full sm:w-auto">
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- BEGIN MODAL ADDRESS -->
+  <div :class="{ 'show': isProfileAddressModal }"
+    class="fixed inset-0 flex justify-center items-center p-4 md:p-5 overflow-hidden z-[99999] modal" x-cloak>
+    <div class="fixed inset-0 h-full w-full bg-gray-900/40 backdrop-blur-xl transition-opacity duration-300"
+      x-on:click="isProfileAddressModal = false"></div>
+    <div class="modal-dialog rounded-2xl">
+      <!-- close btn -->
+      <button x-on:click="isProfileAddressModal = false" class="modal-close-btn">
+        <span class="w-6 h-6 block" x-icon="'close'"></span>
+      </button>
+
+      <div class="modal-content custom-scrollbar">
+        <div class="modal-header-sticky">
+          <h3 class="h3">
+            Edit Address
+          </h3>
+          <p class="mt-2 text-sm text-theme-secondary">
+            Keep your shipping details accurate for better service.
+          </p>
+        </div>
+        <form class="flex flex-col">
+          <div class="modal-body-content">
+            <div class="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
+              <div>
+                <label class="form-label">
+                  Country
+                </label>
+                <input x-model="editableProfile.address.country" type="text" placeholder="Country" class="form-input" />
+              </div>
+
+              <div>
+                <label class="form-label">
+                  City/State
+                </label>
+                <input x-model="editableProfile.address.cityState" type="text" placeholder="City, State"
+                  class="form-input" />
+              </div>
+
+              <div>
+                <label class="form-label">
+                  Postal Code
+                </label>
+                <input x-model="editableProfile.address.postalCode" type="text" placeholder="Postal Code"
+                  class="form-input" />
+              </div>
+
+              <div>
+                <label class="form-label">
+                  TAX ID
+                </label>
+                <input x-model="editableProfile.address.taxId" type="text" placeholder="TAX ID" class="form-input" />
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer-actions">
+            <button @click="clearAddress($el)" type="button" class="btn btn-danger w-full sm:w-auto">
+              Delete Address
+            </button>
+            <div class="flex w-full sm:w-auto gap-3 ml-auto">
+              <button x-on:click="isProfileAddressModal = false" type="button" class="btn btn-outline w-full sm:w-auto">
+                Cancel
+              </button>
+              <button @click="saveAddress($el)" type="button" class="btn btn-primary w-full sm:w-auto">
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <!-- END MODAL ADDRESS -->
+
+</div>

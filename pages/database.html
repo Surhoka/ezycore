@@ -1,0 +1,137 @@
+<div x-data="database()" x-init="init()" class="w-full">
+    <div class="mb-6 flex items-center justify-between">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Drive Explorer</h2>
+            <p class="text-gray-500 dark:text-gray-400">Visualisasi struktur folder dan basis data EzyStore Anda.</p>
+        </div>
+        <div class="flex gap-2">
+            <button @click="init()"
+                class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200">
+                <span class="block w-4 h-4" x-icon="'refresh'"></span>
+                Muat Ulang
+            </button>
+        </div>
+    </div>
+
+    <div x-show="isLoading" class="flex justify-center py-12">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    </div>
+
+    <!-- Virtual Drive Tree Explorer -->
+    <div x-show="!isLoading && !error"
+        class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+        <div class="p-4">
+            <template x-for="node in hierarchy" :key="node.id">
+                <div class="space-y-1">
+                    <!-- Root Folder -->
+                    <div @click="toggleNode(node.id)"
+                        class="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg cursor-pointer group">
+                        <div class="p-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg">
+                            <span class="block w-5 h-5" x-icon="'folder'"></span>
+                        </div>
+                        <span class="font-bold text-gray-800 dark:text-white" x-text="node.name"></span>
+                        <span class="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">System Folder</span>
+                        <span class="block w-5 h-5 text-gray-400 transition-transform duration-200"
+                            :class="expandedNodes[node.id] ? 'rotate-0' : '-rotate-90'" x-icon="'chevron-down'">
+                        </span>
+                        <div class="flex-grow"></div>
+                        <div>
+                            <button @click.stop="openInDrive(node.url)"
+                                class="opacity-0 group-hover:opacity-100 transition-opacity text-blue-600 text-xs font-bold px-2 py-1 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded">
+                                Buka
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Level 2: Spreadsheets & Images Folder -->
+                    <div x-show="expandedNodes[node.id]"
+                        class="ml-9 border-l-2 border-gray-100 dark:border-gray-700 pl-4 space-y-2 py-2">
+                        <template x-for="child in node.children" :key="child.id || child.name">
+                            <div class="space-y-2">
+                                <div @click="toggleNode(child.id || child.name)"
+                                    class="flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg cursor-pointer group">
+                                    <span class="block w-4 h-4 text-gray-300 transition-transform duration-200"
+                                        :class="expandedNodes[child.id || child.name] ? 'rotate-90' : ''"
+                                        x-icon="'chevron-right'"></span>
+
+                                    <!-- Icon Based on Type -->
+                                    <div :class="{
+                                        'text-green-600': child.type.includes('spreadsheet'),
+                                        'text-orange-500': child.type.includes('folder')
+                                    }">
+                                        <span class="w-5 h-5"
+                                            :x-icon="child.type.includes('spreadsheet') ? 'file-spreadsheet' : 'folder-gallery'"></span>
+                                    </div>
+
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-200"
+                                            x-text="child.name"></span>
+                                        <span class="text-[10px] text-gray-400 uppercase tracking-wider"
+                                            x-text="child.type.replace('-', ' ')"></span>
+                                    </div>
+
+                                    <div class="ml-auto">
+                                        <button @click.stop="openInDrive(child.url)"
+                                            class="opacity-0 group-hover:opacity-100 transition-opacity text-blue-600 text-xs font-bold px-2 py-1 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded">Buka</button>
+                                    </div>
+                                </div>
+
+                                <!-- Level 3: Tables or Subfolders -->
+                                <div x-show="expandedNodes[child.id || child.name]"
+                                    class="ml-8 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <template x-for="grandChild in child.children" :key="grandChild.name">
+                                        <div
+                                            class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900/40 border border-gray-100 dark:border-gray-700 rounded-lg group">
+                                            <div class="flex items-center gap-3">
+                                                <span class="w-4 h-4 text-gray-400"
+                                                    :x-icon="grandChild.type === 'table' ? 'table' : 'folder'"></span>
+                                                <span class="text-xs font-medium text-gray-600 dark:text-gray-300"
+                                                    x-text="grandChild.name"></span>
+                                            </div>
+                                            <span x-show="grandChild.rowCount !== undefined"
+                                                class="text-[10px] text-gray-400"
+                                                x-text="grandChild.rowCount + ' rows'"></span>
+
+                                            <button x-show="grandChild.url" @click.stop="openInDrive(grandChild.url)"
+                                                class="opacity-0 group-hover:opacity-100 transition-opacity text-blue-600 text-xs font-bold">Buka</button>
+                                        </div>
+                                    </template>
+
+                                    <!-- Empty State for sub-items -->
+                                    <div x-show="!child.children || child.children.length === 0"
+                                        class="col-span-full py-2 pl-4 text-xs text-gray-400 italic">
+                                        Folder atau file ini kosong.
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- Summary Footer -->
+        <div class="bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700 p-4">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-6">
+                    <div class="flex flex-col">
+                        <span class="text-[10px] text-gray-400 uppercase font-bold tracking-widest">Storage
+                            Status</span>
+                        <div class="flex items-center gap-2 text-green-500 text-sm font-bold">
+                            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                            Connected to Drive
+                        </div>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-[10px] text-gray-400 uppercase font-bold tracking-widest">Environment</span>
+                        <span class="text-gray-700 dark:text-gray-200 text-sm font-bold">Hybrid GAS-Blogger</span>
+                    </div>
+                </div>
+                <button @click="openRootInDrive()"
+                    class="text-xs bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-black transition-colors">
+                    Open Drive Console
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

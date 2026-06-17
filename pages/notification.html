@@ -1,0 +1,94 @@
+<div x-data="notificationPage" class="w-full animate-fade-in">
+
+  <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        Lihat riwayat notifikasi dan pembaruan sistem.
+      </p>
+    </div>
+  </div>
+
+  <!-- Card Container -->
+  <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+    <div class="p-6">
+
+      <!-- Loading State -->
+      <div x-show="isLoading" class="text-gray-500 text-center py-8">
+        <svg class="animate-spin h-8 w-8 mx-auto mb-2 text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none"
+          viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+          </path>
+        </svg>
+        <p>Memuat notifikasi...</p>
+      </div>
+
+      <!-- Error State -->
+      <div x-show="notificationError" class="text-red-500 text-center py-8" x-text="notificationError"></div>
+
+      <!-- Notification List -->
+      <div class="grid gap-4" x-show="!isLoading && !notificationError">
+        <template x-for="notif in notifications" :key="notif.id || notif.createdAt">
+          <div :id="'notif-' + (notif.id || notif.createdAt)"
+            class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-all duration-500 dark:border-gray-700 dark:bg-gray-900"
+            :class="{
+              'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900 bg-blue-50/30 dark:bg-blue-900/10': params?.highlight == (notif.id || notif.createdAt)
+            }" x-init="
+              if (params?.highlight == (notif.id || notif.createdAt)) {
+                setTimeout(() => {
+                  $el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 500);
+              }
+            ">
+            <div class="flex items-start gap-4">
+              <!-- Icon based on type -->
+              <div class="flex-shrink-0 mt-1">
+                <div class="relative h-10 w-10">
+                  <img
+                    :src="notif.avatar || (notif.TriggeredBy === 'System' ? (window.app?.blogFavicon || 'https://www.blogger.com/img/blogger_logo_round_35.png') : 'https://ui-avatars.com/api/?name=' + (notif.TriggeredBy || 'User') + '&background=random')"
+                    alt="Avatar"
+                    class="h-full w-full rounded-full object-cover border border-gray-200 dark:border-gray-700">
+                  <span
+                    class="absolute -bottom-0.5 -right-0.5 block h-3 w-3 rounded-full ring-2 ring-white dark:ring-gray-900"
+                    :class="{
+                      'bg-success-500': notif.type === 'success',
+                      'bg-error-500': notif.type === 'error',
+                      'bg-warning-500': notif.type === 'warning',
+                      'bg-brand-500': !['success', 'error', 'warning'].includes(notif.type)
+                    }"></span>
+                </div>
+              </div>
+
+              <div class="flex-1">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-medium text-gray-900 dark:text-white"
+                    x-text="notif.type ? notif.type.toUpperCase() : 'INFO'"></span>
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs text-gray-400 dark:text-gray-500"
+                      x-text="new Date(notif.createdAt).toLocaleString()"></span>
+                    <button @click.stop="deleteNotification(notif.id || notif.createdAt)"
+                      class="text-gray-400 hover:text-red-500 transition-colors duration-200 p-1 rounded-full -mr-2">
+                      <span class="w-4 h-4 block" x-icon="'trash'"></span>
+                    </button>
+                  </div>
+                </div>
+                <div class="mt-1 text-sm text-gray-600 dark:text-gray-300 prose prose-sm max-w-none dark:prose-invert"
+                  x-html="notif.message"></div>
+              </div>
+            </div>
+          </div>
+        </template>
+        <div x-show="notifications.length === 0" class="text-center text-gray-500 py-8">
+          <svg class="w-12 h-12 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+            </path>
+          </svg>
+          <p>Tidak ada notifikasi baru.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

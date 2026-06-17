@@ -1,0 +1,428 @@
+<div x-data="settingsPage" id="settings-page-container" class="w-full animate-fade-in">
+
+    <!-- Loading Overlay -->
+    <div x-show="isLoading" class="text-center p-10">Loading settings...</div>
+
+    <!-- Tab Navigation -->
+    <div class="flex items-center gap-4 mb-6 border-b border-gray-200 dark:border-gray-800">
+        <button @click="activeTab = 'general'"
+            :class="activeTab === 'general' ? 'border-brand-500 text-brand-500' : 'border-transparent text-gray-500 hover:text-gray-700'"
+            class="pb-3 text-sm font-semibold border-b-2 transition-all">
+            General
+        </button>
+        <button @click="activeTab = 'theme'"
+            :class="activeTab === 'theme' ? 'border-brand-500 text-brand-500' : 'border-transparent text-gray-500 hover:text-gray-700'"
+            class="pb-3 text-sm font-semibold border-b-2 transition-all">
+            Theme
+        </button>
+        <button @click="activeTab = 'notifications'"
+            :class="activeTab === 'notifications' ? 'border-brand-500 text-brand-500' : 'border-transparent text-gray-500 hover:text-gray-700'"
+            class="pb-3 text-sm font-semibold border-b-2 transition-all">
+            Notifications
+        </button>
+        <button @click="activeTab = 'security'"
+            :class="activeTab === 'security' ? 'border-brand-500 text-brand-500' : 'border-transparent text-gray-500 hover:text-gray-700'"
+            class="pb-3 text-sm font-semibold border-b-2 transition-all">
+            Security
+        </button>
+    </div>
+
+    <!-- Tab 1: General Settings -->
+    <div x-show="!isLoading && activeTab === 'general'" x-transition>
+        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
+            <h4 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-6">Application Preferences</h4>
+
+            <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <!-- Language -->
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Language</label>
+                    <select x-model="settings.language"
+                        class="w-full h-11 appearance-none rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800">
+                        <option value="en">English (US)</option>
+                        <option value="id">Bahasa Indonesia</option>
+                    </select>
+                    <p class="mt-1 text-xs text-gray-500">Choose the language for the admin dashboard.</p>
+                </div>
+            </div>
+
+            <!-- Connection & Identity Details -->
+            <div class="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800">
+                <h5 class="text-base font-bold text-gray-800 dark:text-white mb-4">Connection & Identity</h5>
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                    <!-- Site Key -->
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Site Key</label>
+                        <div class="relative">
+                            <input type="text" x-model="settings.siteKey" readonly
+                                class="w-full h-11 appearance-none rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-500 shadow-theme-xs dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+                            <button
+                                @click="window.showToast ? window.showToast('Copied Site Key', 'success') : null; navigator.clipboard.writeText(settings.siteKey)"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-500">
+                                <span class="block w-5 h-5" x-icon="'copy'"></span>
+                            </button>
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">ID unik yang digunakan untuk menghubungkan
+                            <code>public-1.html</code> via Gateway.
+                        </p>
+                    </div>
+
+                    <!-- Database Name -->
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Database
+                            Name</label>
+                        <input type="text" x-model="settings.dbName" readonly
+                            class="w-full h-11 appearance-none rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-500 shadow-theme-xs dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+                        <p class="mt-1 text-xs text-gray-500">Nama database yang digunakan untuk menyimpan data Anda.
+                        </p>
+                    </div>
+
+                    <!-- Admin WebApp URL -->
+                    <div class="lg:col-span-2">
+                        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Admin WebApp
+                            URL</label>
+                        <input type="text" x-model="settings.adminUrl" readonly
+                            class="w-full h-11 appearance-none rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-500 shadow-theme-xs dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+                        <p class="mt-1 text-xs text-gray-500">URL utama skrip ini yang terdaftar di sistem Gateway.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-end border-t border-gray-100 dark:border-gray-800 pt-6">
+                <button @click="saveSettings($el)"
+                    class="btn flex justify-center items-center rounded-xl bg-brand-500 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-brand-500/20 transition-all hover:bg-brand-600 hover:scale-105">
+                    Save General Settings
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 2: Theme Settings -->
+    <div x-show="!isLoading && activeTab === 'theme'" x-transition x-cloak>
+        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
+            <h4 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-6">Interface & Branding</h4>
+
+            <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-8">
+                <!-- Admin Dashboard Theme -->
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Admin Dashboard
+                        Theme</label>
+                    <select x-model="settings.theme"
+                        class="w-full h-11 appearance-none rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800">
+                        <option value="light">Light Mode</option>
+                        <option value="dark">Dark Mode</option>
+                        <option value="system">System Default</option>
+                    </select>
+                    <p class="mt-1 text-xs text-gray-500">Select how the admin dashboard looks to you.</p>
+                </div>
+            </div>
+
+            <!-- Public Storefront Customization -->
+            <div class="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800">
+                <h5 class="text-base font-bold text-gray-800 dark:text-white mb-4">Public Storefront Customization</h5>
+
+                <div class="mb-6">
+                    <label class="mb-3 block text-sm font-medium text-gray-700 dark:text-gray-400">Storefront Theme
+                        Color</label>
+                    <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                        <!-- Default Blue -->
+                        <div class="flex flex-col gap-2">
+                            <button @click="applyDefaultTheme()"
+                                :class="settings.publicTheme === 'blue' ? 'ring-2 ring-brand-500 border-brand-500' : 'border-gray-200 dark:border-gray-800'"
+                                class="flex flex-col items-center gap-2 p-3 rounded-xl border bg-white dark:bg-white/[0.03] transition-all hover:border-brand-300 h-full">
+                                <div
+                                    class="w-full h-12 rounded-lg bg-blue-500 shadow-sm flex items-center justify-center overflow-hidden">
+                                    <span x-show="settings.publicTheme === 'blue'"
+                                        class="block w-6 h-6 shrink-0 text-white" x-icon="'check'"></span>
+                                </div>
+                                <span class="text-xs font-semibold">Default Blue</span>
+                            </button>
+                        </div>
+
+                        <!-- Custom Color -->
+                        <div class="flex flex-col gap-2">
+                            <button @click="settings.publicTheme = 'custom'"
+                                :class="settings.publicTheme === 'custom' ? 'ring-2 ring-brand-500 border-brand-500' : 'border-gray-200 dark:border-gray-800'"
+                                class="flex flex-col items-center gap-2 p-3 rounded-xl border bg-white dark:bg-white/[0.03] transition-all hover:border-brand-300 h-full">
+                                <div class="w-full h-12 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center dark:border-gray-700 overflow-hidden"
+                                    :style="settings.publicTheme === 'custom' ? 'background: ' + settings.customColor : ''">
+                                    <span x-show="settings.publicTheme !== 'custom'"
+                                        class="block w-6 h-6 shrink-0 text-gray-400" x-icon="'plus'"></span>
+                                </div>
+                                <span class="text-xs font-semibold">Custom Color</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Custom Color Picker (Shown only if Custom selected) -->
+                <div x-show="settings.publicTheme === 'custom'" x-transition
+                    class="mb-6 p-4 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-gray-800">
+                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Pick your brand
+                        color</label>
+                    <div class="flex items-center gap-4">
+                        <input type="color" x-model="settings.customColor"
+                            class="w-12 h-12 rounded-lg cursor-pointer border-0 p-0 bg-transparent">
+                        <input type="text" x-model="settings.customColor"
+                            class="w-32 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none dark:border-gray-800 dark:bg-gray-800 dark:text-white">
+                        <p class="text-xs text-gray-500">This color will be used to generate your storefront palette.
+                        </p>
+                    </div>
+
+                    <!-- Section Colors -->
+                    <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <h6 class="text-xs font-bold uppercase text-gray-500 mb-3">Section Colors</h6>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Header</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" x-model="settings.headerColor"
+                                        class="h-8 w-8 rounded cursor-pointer border-0 p-0 bg-transparent">
+                                    <input type="text" x-model="settings.headerColor" placeholder="#ffffff"
+                                        class="w-full text-xs border-gray-200 rounded py-1.5 dark:bg-gray-800 dark:border-gray-700">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Sidebar / Nav</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" x-model="settings.sidebarColor"
+                                        class="h-8 w-8 rounded cursor-pointer border-0 p-0 bg-transparent">
+                                    <input type="text" x-model="settings.sidebarColor" placeholder="#ffffff"
+                                        class="w-full text-xs border-gray-200 rounded py-1.5 dark:bg-gray-800 dark:border-gray-700">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Footer</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" x-model="settings.footerColor"
+                                        class="h-8 w-8 rounded cursor-pointer border-0 p-0 bg-transparent">
+                                    <input type="text" x-model="settings.footerColor" placeholder="#1e3a8a"
+                                        class="w-full text-xs border-gray-200 rounded py-1.5 dark:bg-gray-800 dark:border-gray-700">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Template Layout Selection -->
+                <div class="mb-6">
+                    <label class="mb-3 block text-sm font-medium text-gray-700 dark:text-gray-400">Storefront
+                        Layout</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <label
+                            class="relative flex flex-col cursor-pointer rounded-xl border p-4 shadow-sm focus:outline-none transition-all"
+                            :class="settings.templateName === 'public-1' ? 'border-brand-500 ring-1 ring-brand-500 bg-brand-50/50 dark:bg-brand-900/20' : 'border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] hover:border-brand-300'">
+
+                            <!-- Thumbnail Layout 1 -->
+                            <div
+                                class="mb-3 aspect-video w-full overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+                                <svg class="w-full h-full text-gray-300 dark:text-gray-700" viewBox="0 0 100 60"
+                                    preserveAspectRatio="none">
+                                    <rect x="0" y="0" width="100" height="10" fill="currentColor" fill-opacity="0.8" />
+                                    <rect x="10" y="20" width="25" height="30" rx="2" fill="currentColor"
+                                        fill-opacity="0.4" />
+                                    <rect x="40" y="20" width="25" height="30" rx="2" fill="currentColor"
+                                        fill-opacity="0.4" />
+                                    <rect x="70" y="20" width="20" height="30" rx="2" fill="currentColor"
+                                        fill-opacity="0.4" />
+                                </svg>
+                            </div>
+
+                            <div class="flex items-start justify-between w-full">
+                                <span class="flex flex-col">
+                                    <span class="block text-sm font-bold text-gray-900 dark:text-white">Layout 1
+                                        (Standard)</span>
+                                    <span
+                                        class="mt-1 flex items-center text-xs text-gray-500 dark:text-gray-400">Classic
+                                        EzyParts design</span>
+                                </span>
+                                <input type="radio" name="template-choice" value="public-1" class="sr-only"
+                                    x-model="settings.templateName"
+                                    @change="if(settings.publicTheme === 'blue') settings.sidebarColor = '#1e3a8a'">
+                                <span class="block h-5 w-5 shrink-0 text-brand-600"
+                                    x-show="settings.templateName === 'public-1'" x-icon="'check-circle'"></span>
+                            </div>
+                        </label>
+
+                        <label
+                            class="relative flex flex-col cursor-pointer rounded-xl border p-4 shadow-sm focus:outline-none transition-all"
+                            :class="settings.templateName === 'public-2' ? 'border-brand-500 ring-1 ring-brand-500 bg-brand-50/50 dark:bg-brand-900/20' : 'border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] hover:border-brand-300'">
+
+                            <!-- Thumbnail Layout 2 -->
+                            <div
+                                class="mb-3 aspect-video w-full overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+                                <svg class="w-full h-full text-gray-300 dark:text-gray-700" viewBox="0 0 100 60"
+                                    preserveAspectRatio="none">
+                                    <rect x="0" y="0" width="25" height="60" fill="currentColor" fill-opacity="0.8" />
+                                    <rect x="25" y="0" width="75" height="10" fill="currentColor" fill-opacity="0.4" />
+                                    <rect x="30" y="15" width="65" height="40" rx="2" fill="currentColor"
+                                        fill-opacity="0.2" />
+                                </svg>
+                            </div>
+
+                            <div class="flex items-start justify-between w-full">
+                                <span class="flex flex-col">
+                                    <span class="block text-sm font-bold text-gray-900 dark:text-white">Layout 2
+                                        (Modern)</span>
+                                    <span
+                                        class="mt-1 flex items-center text-xs text-gray-500 dark:text-gray-400">Alternative
+                                        design style</span>
+                                </span>
+                                <input type="radio" name="template-choice" value="public-2" class="sr-only"
+                                    x-model="settings.templateName"
+                                    @change="if(settings.publicTheme === 'blue') settings.sidebarColor = '#ffffff'">
+                                <span class="block h-5 w-5 shrink-0 text-brand-600"
+                                    x-show="settings.templateName === 'public-2'" x-icon="'check-circle'"></span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Download Public Template -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h6 class="text-sm font-bold text-gray-800 dark:text-white">Download Public Template</h6>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 max-w-xl">
+                            Download the pre-configured <code>Public.xml</code> template with your selected theme.
+                        </p>
+                    </div>
+                    <div class="flex flex-col items-end gap-2">
+                        <button @click="downloadPublicTemplate()"
+                            class="btn shrink-0 flex justify-center items-center rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-bold text-gray-700 transition-all hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700">
+                            <span class="block w-5 h-5 shrink-0 mr-2" x-icon="'download'"></span>
+                            Download XML
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-end border-t border-gray-100 dark:border-gray-800 pt-6">
+                <button @click="saveSettings($el)"
+                    class="btn flex justify-center items-center rounded-xl bg-brand-500 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-brand-500/20 transition-all hover:bg-brand-600 hover:scale-105">
+                    Save Theme Settings
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 3: Notifications -->
+    <div x-show="!isLoading && activeTab === 'notifications'" x-transition x-cloak>
+        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
+            <h4 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-6">Email Notifications</h4>
+
+            <div class="space-y-6">
+                <!-- Toggle Item -->
+                <div class="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800">
+                    <div>
+                        <p class="text-sm font-medium text-gray-800 dark:text-white">Order Updates</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Receive emails when a new order is
+                            placed.
+                        </p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" x-model="settings.notifications.orders" class="sr-only peer">
+                        <div
+                            class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-300 dark:peer-focus:ring-brand-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-brand-500">
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Toggle Item -->
+                <div class="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800">
+                    <div>
+                        <p class="text-sm font-medium text-gray-800 dark:text-white">Low Stock Alerts</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Get notified when product stock is
+                            running
+                            low.</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" x-model="settings.notifications.stock" class="sr-only peer">
+                        <div
+                            class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-300 dark:peer-focus:ring-brand-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-brand-500">
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Toggle Item -->
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-800 dark:text-white">Marketing & Updates</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Receive news about Ezyparts features.
+                        </p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" x-model="settings.notifications.marketing" class="sr-only peer">
+                        <div
+                            class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-300 dark:peer-focus:ring-brand-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-brand-500">
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-end border-t border-gray-100 dark:border-gray-800 pt-6">
+                <button @click="saveSettings($el)"
+                    class="btn flex justify-center items-center rounded-xl bg-brand-500 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-brand-500/20 transition-all hover:bg-brand-600 hover:scale-105">
+                    Save Preferences
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 5: Security -->
+    <div x-show="!isLoading && activeTab === 'security'" x-transition x-cloak>
+        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
+            <h4 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-6">Security Settings</h4>
+
+            <div class="p-4 mb-6 text-sm text-blue-800 rounded-xl bg-blue-50 dark:bg-blue-900/20 dark:text-blue-300 border border-blue-100 dark:border-blue-800"
+                role="alert">
+                <div class="flex items-center gap-2">
+                    <span class="block w-5 h-5 shrink-0" x-icon="'info'"></span>
+                    <span class="font-bold">Authentication Info</span>
+                </div>
+                <div class="mt-2 pl-7">
+                    Your account authentication is managed via Google. To change your password or enable 2FA, please
+                    visit your <a href="https://myaccount.google.com/" target="_blank"
+                        class="underline font-semibold hover:text-blue-600">Google Account Settings</a>.
+                </div>
+            </div>
+
+            <!-- Gateway Security -->
+            <div class="space-y-4">
+                <h5 class="text-base font-bold text-gray-800 dark:text-white">Gateway Security</h5>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                    Set a security token to protect sensitive Gateway actions (setup, discovery, etc).
+                    This token must match the <code>GATEWAY_SECURITY_TOKEN</code> in your Gateway script.
+                </p>
+                <div class="max-w-md">
+                    <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Security
+                        Token</label>
+                    <div class="relative">
+                        <input :type="showToken ? 'text' : 'password'" x-model="settings.gatewayToken"
+                            placeholder="Enter security token..."
+                            class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm focus:border-brand-500 focus:bg-white focus:outline-none dark:border-gray-800 dark:bg-white/[0.03] dark:text-white dark:focus:border-brand-500">
+                        <button @click="showToken = !showToken" type="button"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-500 overflow-hidden w-5 h-5">
+                            <span class="block w-full h-full" x-icon="showToken ? 'eye-off' : 'eye'"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-end border-t border-gray-100 dark:border-gray-800 pt-6">
+                <button @click="saveSettings($el)"
+                    class="btn flex justify-center items-center rounded-xl bg-brand-500 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-brand-500/20 transition-all hover:bg-brand-600 hover:scale-105">
+                    Save Security Settings
+                </button>
+            </div>
+
+            <div class="border-t border-gray-100 dark:border-gray-800 pt-6 mt-8">
+                <h5 class="text-base font-bold text-red-600 mb-2">Danger Zone</h5>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Once you delete your account configuration,
+                    there is no going back. Please be certain.</p>
+                <button @click="window.showToast('Feature disabled in demo', 'error')"
+                    class="btn flex justify-center items-center rounded-xl border border-red-200 bg-red-50 px-6 py-3 text-sm font-bold text-red-600 transition-all hover:bg-red-100 dark:border-red-900/30 dark:bg-red-900/10 dark:text-red-500">
+                    Reset App Configuration
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

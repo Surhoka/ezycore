@@ -1,0 +1,383 @@
+<div x-data="pluginManager" id="plugin-manager-page-container" class="w-full">
+    <!-- Breadcrumb Start (Handled Globally) -->
+    <!-- Breadcrumb End -->
+
+    <div class="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
+
+        <!-- Stats Bar -->
+        <div
+            class="mb-8 rounded-2xl border border-gray-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+            <div class="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+
+                <!-- Total Plugins -->
+                <div class="flex items-center gap-4">
+                    <div
+                        class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
+                        <span class="w-6 h-6" x-icon="'library'"></span>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold uppercase text-gray-500 dark:text-slate-400 tracking-wider">Total
+                            Plugins</p>
+                        <div class="flex items-baseline gap-2">
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white" x-text="totalPlugins">0</p>
+                            <span class="text-xs text-gray-400">Registered</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Divider -->
+                <div class="hidden sm:block h-12 w-px bg-gray-200 dark:bg-slate-700"></div>
+
+                <!-- Active Engines -->
+                <div class="flex items-center gap-4">
+                    <div
+                        class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400">
+                        <span class="w-6 h-6" x-icon="'zap'"></span>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold uppercase text-gray-500 dark:text-slate-400 tracking-wider">Active
+                            Engines</p>
+                        <div class="flex items-baseline gap-2">
+                            <p class="text-2xl font-bold text-green-600 dark:text-green-400" x-text="activePlugins">0
+                            </p>
+                            <span class="text-xs text-gray-400">Ready</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Divider -->
+                <div class="hidden sm:block h-12 w-px bg-gray-200 dark:bg-slate-700"></div>
+
+                <!-- Registry Status -->
+                <div class="flex items-center gap-4">
+                    <div
+                        class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400">
+                        <span class="w-6 h-6" x-icon="'cloud'"></span>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold uppercase text-gray-500 dark:text-slate-400 tracking-wider">Registry
+                            Status</p>
+                        <div class="flex items-center gap-2">
+                            <span class="h-2 w-2 rounded-full"
+                                :class="registryHealthy ? 'bg-green-500' : 'bg-red-500'"></span>
+                            <p class="text-sm font-semibold text-gray-900 dark:text-white" x-text="registryStatus">Cloud
+                                Synced</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mobile Divider -->
+                <div class="sm:hidden border-t border-gray-200 dark:border-slate-700"></div>
+
+                <!-- Quick Actions -->
+                <div class="flex items-center gap-3 sm:ml-auto">
+                    <button @click="refreshStats()"
+                        class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 transition-colors">
+                        <span class="w-4 h-4" x-icon="'refresh'"></span>
+                        <span class="hidden sm:inline">Refresh</span>
+                    </button>
+                    <button @click="openAddModal()"
+                        class="flex items-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-orange-500/30 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-all active:scale-95">
+                        <span class="w-4 h-4" x-icon="'plus'"></span>
+                        <span class="hidden sm:inline">Add Plugin</span>
+                        <span class="sm:hidden">Add</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Plugin List Header -->
+        <div class="mb-6 flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Active Registry</h3>
+                <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">Drag <span x-icon="'dots-vertical'"
+                        class="inline-block w-3 h-3 text-gray-400"></span> to reorder. Manage plugins and their
+                    configurations.</p>
+            </div>
+        </div>
+
+        <!-- Plugin List -->
+        <div class="space-y-4" x-data="{ expandedPlugin: null }" @dragover.prevent
+            @drop.prevent="$dispatch('plugin-drop', $event)">
+            <template x-for="plugin in plugins" :key="plugin.id">
+                <div class="group relative rounded-2xl border border-gray-200 bg-white transition-all hover:shadow-lg dark:border-slate-800 dark:bg-slate-900"
+                    :class="{ 'opacity-40 scale-95 ring-2 ring-orange-400': draggingId === plugin.id, 'border-orange-400 bg-orange-50/30 dark:bg-orange-500/5': dragOverId === plugin.id && dragOverId !== draggingId }"
+                    draggable="true" @dragstart="startDrag($event, plugin.id)"
+                    @dragover.prevent="dragOverId = plugin.id" @dragleave="dragOverId = null"
+                    @drop.prevent="dropPlugin($event, plugin.id); dragOverId = null">
+
+                    <!-- Main Plugin Row -->
+                    <div class="flex items-start gap-3 p-4 sm:items-center sm:gap-4">
+                        <!-- Drag Handle -->
+                        <div class="flex-shrink-0 cursor-move text-gray-300 hover:text-gray-500 dark:text-slate-600 dark:hover:text-slate-400 transition-colors pt-1 sm:pt-0"
+                            title="Drag to reorder">
+                            <span class="w-5 h-5 block" x-icon="'dots-vertical'"></span>
+                        </div>
+
+                        <!-- Plugin Icon -->
+                        <div
+                            class="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl bg-gray-100 text-gray-600 dark:bg-slate-800 dark:text-slate-400">
+                            <span class="w-5 h-5 sm:w-6 sm:h-6" x-icon="'library'"></span>
+                        </div>
+
+                        <!-- Plugin Info -->
+                        <div class="flex-1 min-w-0">
+                            <div class="flex flex-wrap items-center gap-2 mb-1">
+                                <h3 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white truncate"
+                                    x-text="plugin.name">Plugin Name</h3>
+                                <span
+                                    class="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider shrink-0"
+                                    :class="plugin.active ? 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'bg-gray-100 text-gray-500 dark:bg-slate-800 dark:text-slate-500'"
+                                    x-text="plugin.active ? 'Active' : 'Disabled'"></span>
+                            </div>
+                            <p class="text-xs sm:text-sm text-gray-500 dark:text-slate-400 line-clamp-1"
+                                x-text="plugin.description || 'No description provided.'"></p>
+
+                            <!-- Database ID Display -->
+                            <div x-show="plugin.databaseId"
+                                class="mt-1.5 flex items-center gap-1.5 text-[10px] text-gray-400 font-mono">
+                                <span class="w-3 h-3" x-icon="'database'"></span>
+                                ID: <span class="truncate max-w-[200px]" x-text="plugin.databaseId"></span>
+                            </div>
+
+                            <!-- Actions Tags -->
+                            <div class="flex flex-wrap gap-1.5 mt-2">
+                                <template
+                                    x-for="action in (plugin.actions || '').split(',').filter(a => a.trim()).slice(0, 3)">
+                                    <span
+                                        class="rounded-lg bg-orange-50 px-2 py-0.5 text-[10px] font-semibold text-orange-600 dark:bg-orange-500/10 dark:text-orange-400"
+                                        x-text="action.trim()"></span>
+                                </template>
+                                <template x-if="(plugin.actions || '').split(',').filter(a => a.trim()).length > 3">
+                                    <span
+                                        class="rounded-lg bg-gray-50 px-2 py-0.5 text-[10px] font-semibold text-gray-500 dark:bg-slate-800 dark:text-slate-400">
+                                        +<span
+                                            x-text="(plugin.actions || '').split(',').filter(a => a.trim()).length - 3"></span>
+                                        more
+                                    </span>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- Status & Ping + Actions (stacked on mobile) -->
+                        <div class="flex flex-col items-end gap-2 shrink-0 sm:flex-row sm:items-center sm:gap-3">
+                            <!-- Ping Result -->
+                            <template x-if="plugin.pingResult">
+                                <div class="flex items-center gap-1.5 text-xs"
+                                    :class="plugin.pingResult.status === 'success' ? 'text-green-600' : 'text-red-500'">
+                                    <span class="h-2 w-2 rounded-full"
+                                        :class="plugin.pingResult.status === 'success' ? 'bg-green-500' : 'bg-red-500'"></span>
+                                    <span
+                                        x-text="plugin.pingResult.status === 'success' ? plugin.pingResult.latency : 'Timeout'"></span>
+                                </div>
+                            </template>
+
+                            <!-- Action Buttons -->
+                            <div class="flex items-center gap-1 sm:gap-2">
+                                <!-- Expand/Collapse -->
+                                <button @click="expandedPlugin = expandedPlugin === plugin.id ? null : plugin.id"
+                                    class="p-1.5 sm:p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-xl hover:bg-gray-100 dark:hover:bg-slate-800"
+                                    title="Show Details">
+                                    <span class="w-4 h-4 block transition-transform duration-200"
+                                        :class="expandedPlugin === plugin.id ? 'rotate-180' : ''"
+                                        x-icon="'chevron-down'"></span>
+                                </button>
+
+                                <button @click="pingPlugin(plugin)"
+                                    class="p-1.5 sm:p-2 text-gray-400 hover:text-orange-500 transition-colors rounded-xl hover:bg-gray-100 dark:hover:bg-slate-800"
+                                    title="Ping Test">
+                                    <span :class="plugin.pinging ? 'animate-spin' : ''" class="w-4 h-4 block"
+                                        x-icon="'zap'"></span>
+                                </button>
+
+                                <button @click="editPlugin(plugin)"
+                                    class="p-1.5 sm:p-2 text-gray-400 hover:text-blue-500 transition-colors rounded-xl hover:bg-gray-100 dark:hover:bg-slate-800"
+                                    title="Edit">
+                                    <span class="w-4 h-4 block" x-icon="'pencil'"></span>
+                                </button>
+
+                                <button @click="deletePlugin(plugin.id)"
+                                    class="p-1.5 sm:p-2 text-gray-400 hover:text-red-500 transition-colors rounded-xl hover:bg-gray-100 dark:hover:bg-slate-800"
+                                    title="Delete">
+                                    <span class="w-4 h-4 block" x-icon="'trash'"></span>
+                                </button>
+
+                                <!-- Toggle Switch -->
+                                <label class="relative inline-flex cursor-pointer items-center ml-1">
+                                    <input type="checkbox" x-model="plugin.active" @change="togglePlugin(plugin)"
+                                        class="sr-only peer">
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-orange-600 shadow-sm">
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Expandable Details -->
+                    <div x-show="expandedPlugin === plugin.id" x-collapse
+                        class="border-t border-gray-100 dark:border-slate-800">
+                        <div class="p-4 space-y-3">
+                            <!-- Endpoint -->
+                            <div class="rounded-2xl bg-gray-50 p-3 dark:bg-slate-800/50">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="w-4 h-4 text-gray-500" x-icon="'link'"></span>
+                                    <span
+                                        class="text-xs font-bold uppercase text-gray-500 dark:text-slate-400 tracking-wider">Endpoint</span>
+                                </div>
+                                <div class="font-mono text-sm text-gray-700 dark:text-slate-300 break-all bg-white dark:bg-slate-900 rounded-xl px-3 py-2 border border-gray-200 dark:border-slate-700"
+                                    x-text="plugin.url"></div>
+                            </div>
+
+                            <!-- Scripts (if available) -->
+                            <div x-show="plugin.scripts" class="rounded-2xl bg-gray-50 p-3 dark:bg-slate-800/50">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="w-4 h-4 text-gray-500" x-icon="'code'"></span>
+                                    <span
+                                        class="text-xs font-bold uppercase text-gray-500 dark:text-slate-400 tracking-wider">Scripts</span>
+                                </div>
+                                <div class="font-mono text-sm text-gray-700 dark:text-slate-300 break-all bg-white dark:bg-slate-900 rounded-xl px-3 py-2 border border-gray-200 dark:border-slate-700"
+                                    x-text="plugin.scripts"></div>
+                            </div>
+
+                            <!-- All Actions -->
+                            <div class="rounded-2xl bg-gray-50 p-3 dark:bg-slate-800/50">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="w-4 h-4 text-gray-500" x-icon="'zap'"></span>
+                                    <span
+                                        class="text-xs font-bold uppercase text-gray-500 dark:text-slate-400 tracking-wider">Available
+                                        Actions</span>
+                                </div>
+                                <div class="flex flex-wrap gap-1.5">
+                                    <template x-for="action in (plugin.actions || '').split(',').filter(a => a.trim())">
+                                        <span
+                                            class="rounded-lg bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-600 dark:bg-orange-500/10 dark:text-orange-400"
+                                            x-text="action.trim()"></span>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Empty State -->
+            <template x-if="plugins.length === 0">
+                <div
+                    class="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 py-16 sm:py-24 px-6 dark:border-slate-800">
+                    <div
+                        class="flex h-20 w-20 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 dark:bg-slate-900 dark:text-slate-700">
+                        <span class="w-10 h-10" x-icon="'library'"></span>
+                    </div>
+                    <h3 class="mt-6 text-xl font-bold text-gray-900 dark:text-white">No Plugins Registered</h3>
+                    <p class="mt-2 text-center text-sm text-gray-500 dark:text-slate-400 max-w-xs">Ready to expand?
+                        Add your first plugin to enable dynamic features.</p>
+                    <button @click="openAddModal()" :disabled="submitting"
+                        class="mt-8 flex items-center gap-2 rounded-2xl bg-orange-600 px-6 py-2.5 font-bold text-white shadow-lg shadow-orange-500/30 hover:bg-orange-700 active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100">
+                        <template x-if="!submitting">
+                            <span class="flex items-center gap-2">
+                                <span class="w-4 h-4" x-icon="'plus'"></span>
+                                Add First Plugin
+                            </span>
+                        </template>
+                        <template x-if="submitting">
+                            <span class="flex items-center gap-2">
+                                <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                        stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                    </path>
+                                </svg>
+                                Checking...
+                            </span>
+                        </template>
+                    </button>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal  -->
+    <template x-teleport="body">
+        <div :class="{ 'show': modalOpen }"
+            class="fixed inset-0 flex justify-center items-center p-4 md:p-5 overflow-hidden z-50 modal" x-cloak>
+            <div class="fixed inset-0 h-full w-full bg-gray-900/40 backdrop-blur-xl transition-opacity duration-300"
+                @click="closeModal()"></div>
+            <div class="modal-dialog rounded-2xl">
+
+                <!-- Close button  -->
+                <button @click="closeModal()" class="modal-close-btn">
+                    <span class="w-6 h-6 block" x-icon="'close'"></span>
+                </button>
+
+                <div class="flex flex-col modal-content custom-scrollbar overflow-y-auto pr-2 min-h-0">
+                    <div class="modal-header-sticky !py-6">
+                        <h3 class="h3" x-text="editMode ? 'Edit Plugin' : 'Setup Plugin'"></h3>
+                        <p class="mt-2 text-sm text-theme-secondary">
+                            Configure your plugins here.
+                        </p>
+                    </div>
+
+                    <form @submit.prevent="savePlugin()" class="flex flex-col">
+                        <div class="modal-body-content !py-6">
+                            <div x-show="!editMode">
+                                <label class="form-label">Select Plugin</label>
+                                <select x-model="formData.name" @change="onPluginSelect()" required
+                                    class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30">
+                                    <option value="">-- Choose a Plugin --</option>
+                                    <template x-for="p in availablePlugins" :key="p.id">
+                                        <option :value="p.name" x-text="p.name"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div x-show="editMode">
+                                <label class="form-label">Plugin Name</label>
+                                <input type="text" x-model="formData.name" readonly
+                                    class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-gray-100 px-4 py-2.5 text-sm text-gray-500 shadow-theme-xs dark:border-gray-700 dark:bg-gray-800 dark:text-white/50">
+                            </div>
+
+                            <div>
+                                <label class="form-label">Description</label>
+                                <textarea x-model="formData.description" rows="2" readonly
+                                    placeholder="Details about this plugin..."
+                                    class="dark:bg-dark-900 w-full appearance-none rounded-lg border border-gray-300 bg-gray-100 px-4 py-2.5 text-sm text-gray-500 shadow-theme-xs focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white/50"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Hidden but essential fields -->
+                        <div class="hidden">
+                            <input type="hidden" x-model="formData.url">
+                            <input type="hidden" x-model="formData.actions">
+                            <input type="hidden" x-model="formData.template">
+                            <input type="hidden" x-model="formData.menuLabel">
+                            <input type="hidden" x-model="formData.menuIcon">
+                            <input type="hidden" x-model="formData.menuGroup">
+                            <input type="hidden" x-model="formData.scripts">
+                            <input type="checkbox" x-model="formData.showInMenu">
+                        </div>
+
+                        <div class="modal-footer-actions w-full !py-6">
+                            <button @click="closeModal()" type="button" class="btn btn-outline w-full sm:w-auto">
+                                Cancel
+                            </button>
+                            <button type="submit" :disabled="submitting" class="btn btn-primary w-full sm:w-auto">
+                                <span x-show="!submitting" x-text="editMode ? 'Update Plugin' : 'Save Plugin'"></span>
+                                <span x-show="submitting" class="flex items-center justify-center gap-2">
+                                    <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                            stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                        </path>
+                                    </svg>
+                                    Saving...
+                                </span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </template>
+</div>
