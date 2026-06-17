@@ -16,6 +16,10 @@
         // Otomatis mencari database saat URL WebApp ditempelkan
         this.$watch('formData.webappUrl', value => {
             if (value && value.includes('https://script.google.com/macros/s/') && value.includes('/exec')) {
+                // Jika blogId kosong, coba ambil lagi dari window global
+                if (!this.formData.blogId) {
+                    this.formData.blogId = window.EZY_BLOG_ID;
+                }
                 this.discoverDatabase();
             }
         });
