@@ -38,18 +38,19 @@
             blogId: this.formData.blogId,
             email: this.formData.email 
         }, (response) => {
-            console.log('[EzyCore Debug] Response received from server:', response);
+            console.log('[EzyCore Discovery] Response:', response);
             
             if (response.status === 'success' && response.dbId) {
                 // Database ditemukan secara fisik di Drive
-                this.formData.dbName = response.dbName || this.formData.dbName;
-                this.formData.dbSetup = 'use_existing'; // Pastikan mode kembali ke existing
+                this.formData.dbName = response.dbName || 'DB_Admin';
                 this.formData.email = response.email || this.formData.email;
-                window.showToast('Database ditemukan di Drive: ' + (response.dbName || 'DB Terdeteksi'), 'success');
+                this.formData.dbSetup = 'use_existing'; // Pastikan mode kembali ke existing
+                window.showToast('Database terdeteksi: ' + (response.dbName || response.dbId.substring(0,8)), 'success');
             } else if (response.status === 'success') {
-                window.showToast('Sistem siap. Silakan tentukan nama database baru.', 'info');
+                window.showToast('Sistem siap (Belum ada DB). Silakan buat baru.', 'info');
             } else {
-                window.showToast('Tidak ditemukan database lama. Masukkan nama manual atau biarkan sistem membuat baru.', 'info');
+                console.error('[Discovery Error]', response);
+                window.showToast('Respon Server: ' + (response.message || 'Tidak dikenal'), 'warning');
             }
             this.isSearching = false;
         }, (err) => {
