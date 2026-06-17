@@ -15,7 +15,7 @@
     init() {
         // Otomatis mencari database saat URL WebApp ditempelkan
         this.$watch('formData.webappUrl', value => {
-            if (value && value.startsWith('https://script.google.com/macros/s/') && value.endsWith('/exec')) {
+            if (value && value.includes('https://script.google.com/macros/s/') && value.includes('/exec')) {
                 this.discoverDatabase();
             }
         });
@@ -36,9 +36,10 @@
         }, (response) => {
             console.log('[EzyCore Debug] Response received from server:', response);
             
-            if (response.status === 'success' && (response.dbId || response.dbName)) {
+            if (response.status === 'success' && response.dbId) {
                 // Database ditemukan secara fisik di Drive
                 this.formData.dbName = response.dbName || this.formData.dbName;
+                this.formData.dbSetup = 'use_existing'; // Pastikan mode kembali ke existing
                 this.formData.email = response.email || this.formData.email;
                 window.showToast('Database ditemukan di Drive: ' + (response.dbName || 'DB Terdeteksi'), 'success');
             } else if (response.status === 'success') {
