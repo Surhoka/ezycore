@@ -1,4 +1,4 @@
-<div x-data="profilePage" class="w-full animate-slide-up">
+<div x-data="profilePage" id="profile-page-container" class="w-full animate-fade-in">
   <input type="file" x-ref="photoInput" @change="handlePhotoFileChange($event)" accept="image/*" class="hidden" />
   <!-- ===== Main Content Start ===== -->
 
@@ -190,8 +190,7 @@
 
   <!-- BEGIN MODAL PERSONAL INFO -->
   <div :class="{ 'show': isProfileInfoModal }"
-    class="fixed inset-0 flex justify-center items-center p-4 md:p-5 overflow-hidden z-[99999] modal" x-cloak
-    x-show="isProfileInfoModal">
+    class="fixed inset-0 flex justify-center items-center p-4 md:p-5 overflow-hidden z-[99999] modal" x-cloak>
     <div class="fixed inset-0 h-full w-full bg-gray-900/40 backdrop-blur-xl transition-opacity duration-300"
       x-on:click="isProfileInfoModal = false"></div>
     <div class="modal-dialog rounded-2xl">
@@ -328,8 +327,7 @@
 
   <!-- BEGIN MODAL ADDRESS -->
   <div :class="{ 'show': isProfileAddressModal }"
-    class="fixed inset-0 flex justify-center items-center p-4 md:p-5 overflow-hidden z-[99999] modal" x-cloak
-    x-show="isProfileAddressModal">
+    class="fixed inset-0 flex justify-center items-center p-4 md:p-5 overflow-hidden z-[99999] modal" x-cloak>
     <div class="fixed inset-0 h-full w-full bg-gray-900/40 backdrop-blur-xl transition-opacity duration-300"
       x-on:click="isProfileAddressModal = false"></div>
     <div class="modal-dialog rounded-2xl">
