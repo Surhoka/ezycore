@@ -50,12 +50,18 @@
                     await this.fetchPlugins();
                 },
 
-                async fetchAvailablePlugins() {
-                    if (!this.gatewayUrl) {
-                        console.warn("Gateway URL not found - using empty available plugins list");
-                        this.availablePlugins = [];
-                        return;
-                    }
+async fetchAvailablePlugins() {
+                     // Wait for API to be ready
+                     if (!window.EzyApi || !window.EzyApi.isReady) {
+                         await new Promise(resolve => {
+                             window.addEventListener('ezy-api-ready', resolve, { once: true });
+                         });
+                     }
+                     if (!this.gatewayUrl) {
+                         console.warn("Gateway URL not found - using empty available plugins list");
+                         this.availablePlugins = [];
+                         return;
+                     }
                     try {
                         const res = await window.app.fetchJsonp(this.gatewayUrl, { action: 'get_available_plugins' });
                         if (res && res.status === 'success') {
@@ -94,15 +100,32 @@ get gatewayUrl() {
                     return this.apiUrl;
                 },
                 get apiUrl() {
-                    return window.appsScriptUrl || (window.EzyApi && window.EzyApi.url) || '';
+                    // Check multiple sources with priority
+                    if (window.appsScriptUrl && window.appsScriptUrl.includes('script.google.com')) {
+                        return window.appsScriptUrl;
+                    }
+                    if (window.EzyApi && window.EzyApi.url && window.EzyApi.url.includes('script.google.com')) {
+                        return window.EzyApi.url;
+                    }
+                    // Fallback to CONFIG
+                    if (typeof CONFIG !== 'undefined' && CONFIG.WEBAPP_URL_DEV) {
+                        return CONFIG.WEBAPP_URL_DEV;
+                    }
+                    return '';
                 },
 
-                async fetchPlugins() {
-                    if (!this.apiUrl) {
-                        console.warn("API URL not found - using empty plugin list");
-                        this.plugins = [];
-                        return;
-                    }
+async fetchPlugins() {
+                     // Wait for API to be ready
+                     if (!window.EzyApi || !window.EzyApi.isReady) {
+                         await new Promise(resolve => {
+                             window.addEventListener('ezy-api-ready', resolve, { once: true });
+                         });
+                     }
+                     if (!this.apiUrl) {
+                         console.warn("API URL not found - using empty plugin list");
+                         this.plugins = [];
+                         return;
+                     }
                     try {
                         const res = await window.app.fetchJsonp(this.apiUrl, { action: 'get_all_plugins' });
                         if (res && res.status === 'success') {
