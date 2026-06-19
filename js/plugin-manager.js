@@ -90,8 +90,8 @@
                     }
                 },
 
-                get gatewayUrl() {
-                    return (typeof CONFIG !== 'undefined') ? CONFIG.WEBAPP_URL_DEV : '';
+get gatewayUrl() {
+                    return this.apiUrl;
                 },
                 get apiUrl() {
                     return window.EzyApi ? window.EzyApi.url : '';
