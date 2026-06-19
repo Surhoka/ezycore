@@ -94,7 +94,7 @@ get gatewayUrl() {
                     return this.apiUrl;
                 },
                 get apiUrl() {
-                    return window.EzyApi ? window.EzyApi.url : '';
+                    return window.appsScriptUrl || (window.EzyApi && window.EzyApi.url) || '';
                 },
 
                 async fetchPlugins() {
