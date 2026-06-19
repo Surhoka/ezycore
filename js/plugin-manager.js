@@ -57,11 +57,11 @@ async fetchAvailablePlugins() {
                              window.addEventListener('ezy-api-ready', resolve, { once: true });
                          });
                      }
-                     if (!this.apiUrl) {
-                         console.warn("API URL not found - using empty available plugins list");
-                         this.availablePlugins = [];
-                         return;
-                     }
+                      if (!this.apiUrl) {
+                          console.warn("API URL not found - cannot load available plugins. Check Apps Script deployment URL.");
+                          this.availablePlugins = [];
+                          return;
+                      }
                     try {
                         const res = await window.app.fetchJsonp(this.apiUrl, { action: 'get_available_plugins' });
                         if (res && res.status === 'success') {
@@ -96,15 +96,14 @@ async fetchAvailablePlugins() {
                     }
                 },
 
-get apiUrl() {
-                    // Check multiple sources with priority
-                    if (window.appsScriptUrl && window.appsScriptUrl.includes('script.google.com')) {
-                        return window.appsScriptUrl;
-                    }
-                    if (window.EzyApi && window.EzyApi.url && window.EzyApi.url.includes('script.google.com')) {
-                        return window.EzyApi.url;
-                    }
-                    return '';
+ get apiUrl() {
+                    const candidates = [
+                      window.appsScriptUrl,
+                      window.EzyApi?.url,
+                      window.app?.appsScriptUrl,
+                      window.EzyApi?.gatewayUrl
+                    ];
+                    return candidates.find(u => u && typeof u === 'string' && u.length > 10) || '';
                 },
 
 async fetchPlugins() {
