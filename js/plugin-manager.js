@@ -101,9 +101,19 @@
                     const candidates = [
                       window.appsScriptUrl,
                       window.EzyApi?.url,
-                      window.app?.appsScriptUrl
+                      window.app?.appsScriptUrl,
+                      window.EzyApi?.gatewayUrl
                     ];
-                    return candidates.find(u => u && typeof u === 'string' && u.length > 10) || '';
+                    const found = candidates.find(u => u && typeof u === 'string' && u.length > 10) || '';
+                    if (!found) {
+                      console.warn('[PluginManager] apiUrl not found. Checked:', {
+                        appsScriptUrl: !!window.appsScriptUrl,
+                        EzyApiUrl: !!window.EzyApi?.url,
+                        appAppsScriptUrl: !!window.app?.appsScriptUrl,
+                        EzyApiGatewayUrl: !!window.EzyApi?.gatewayUrl
+                      });
+                    }
+                    return found;
                 },
 
                 async fetchPlugins() {
