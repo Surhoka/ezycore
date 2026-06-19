@@ -49,32 +49,34 @@
                     await this.fetchPlugins();
                 },
 
-async fetchAvailablePlugins() {
-                     // Wait for API to be ready
-                     if (!window.EzyApi || !window.EzyApi.isReady) {
-                         await new Promise(resolve => {
-                             window.addEventListener('ezy-api-ready', resolve, { once: true });
-                         });
-                     }
-                      if (!this.apiUrl) {
-                          console.warn("API URL not found - cannot load available plugins. Check Apps Script deployment URL.");
+ async fetchAvailablePlugins() {
+                      if (!window.EzyApi || !window.EzyApi.isReady) {
+                          await new Promise(resolve => {
+                              window.addEventListener('ezy-api-ready', resolve, { once: true });
+                          });
+                      }
+                      const url = this.apiUrl;
+                      if (!url) {
+                          console.warn("[PluginManager] apiUrl empty — cannot load available plugins.");
                           this.availablePlugins = [];
                           return;
                       }
-                    try {
-                        const res = await window.app.fetchJsonp(this.apiUrl, { action: 'get_available_plugins' });
-                        if (res && res.status === 'success') {
-                            this.availablePlugins = res.plugins || [];
-                            console.log(`Loaded ${this.availablePlugins.length} available plugins`);
-                        } else {
-                            console.warn("Failed to load available plugins:", res?.message);
-                            this.availablePlugins = [];
-                        }
-                    } catch (e) {
-                        console.error("Fetch available plugins error:", e);
-                        this.availablePlugins = [];
-                    }
-                },
+                      console.log("[PluginManager] Fetching available plugins from:", url);
+                     try {
+                         const res = await window.app.fetchJsonp(url, { action: 'get_available_plugins' });
+                         console.log("[PluginManager] get_available_plugins raw response:", res);
+                         if (res && res.status === 'success') {
+                             this.availablePlugins = res.plugins || [];
+                             console.log(`[PluginManager] Loaded ${this.availablePlugins.length} available plugins (templates)`);
+                         } else {
+                             console.warn("[PluginManager] get_available_plugins failed:", res);
+                             this.availablePlugins = [];
+                         }
+                     } catch (e) {
+                         console.error("[PluginManager] get_available_plugins error:", e);
+                         this.availablePlugins = [];
+                     }
+                 },
 
                 onPluginSelect() {
                     const template = this.availablePlugins.find(p => p.name === this.formData.name);
