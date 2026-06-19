@@ -57,8 +57,8 @@ async fetchAvailablePlugins() {
                              window.addEventListener('ezy-api-ready', resolve, { once: true });
                          });
                      }
-                     if (!this.gatewayUrl) {
-                         console.warn("Gateway URL not found - using empty available plugins list");
+                     if (!this.apiUrl) {
+                         console.warn("API URL not found - using empty available plugins list");
                          this.availablePlugins = [];
                          return;
                      }
@@ -96,20 +96,13 @@ async fetchAvailablePlugins() {
                     }
                 },
 
-get gatewayUrl() {
-                    return this.apiUrl;
-                },
-                get apiUrl() {
+get apiUrl() {
                     // Check multiple sources with priority
                     if (window.appsScriptUrl && window.appsScriptUrl.includes('script.google.com')) {
                         return window.appsScriptUrl;
                     }
                     if (window.EzyApi && window.EzyApi.url && window.EzyApi.url.includes('script.google.com')) {
                         return window.EzyApi.url;
-                    }
-                    // Fallback to CONFIG
-                    if (typeof CONFIG !== 'undefined' && CONFIG.WEBAPP_URL_DEV) {
-                        return CONFIG.WEBAPP_URL_DEV;
                     }
                     return '';
                 },
@@ -250,17 +243,17 @@ async fetchPlugins() {
                             this.closeModal();
                             await this.fetchPlugins();
 
-                            // [CERDAS] Cek apakah plugin ini sebenarnya sudah punya DB di cache sistem (Discovery)
-                            const config = JSON.parse(localStorage.getItem('EzypartsConfig') || '{}');
-                            const cachedDbId = config[`PLUGIN_DB_${savedPlugin.id}`];
+// [CERDAS] Cek apakah plugin ini sebenarnya sudah punya DB di cache sistem (Discovery)
+                             const config = JSON.parse(localStorage.getItem('EzycoreConfig') || '{}');
+                             const cachedDbId = config[`PLUGIN_DB_${savedPlugin.id}`];
 
-                            // Sinkronkan ID dari backend (mungkin sudah dihapus jika file fisik hilang)
-                            if (!savedPlugin.databaseId && (this.formData.databaseId || cachedDbId)) {
-                                console.log(`[PluginManager] Backend reports missing DB for ${savedPlugin.id}. Syncing UI...`);
-                                this.formData.databaseId = null;
-                                if (config[`PLUGIN_DB_${savedPlugin.id}`]) delete config[`PLUGIN_DB_${savedPlugin.id}`];
-                                localStorage.setItem('EzypartsConfig', JSON.stringify(config));
-                            }
+                             // Sinkronkan ID dari backend (mungkin sudah dihapus jika file fisik hilang)
+                             if (!savedPlugin.databaseId && (this.formData.databaseId || cachedDbId)) {
+                                 console.log(`[PluginManager] Backend reports missing DB for ${savedPlugin.id}. Syncing UI...`);
+                                 this.formData.databaseId = null;
+                                 if (config[`PLUGIN_DB_${savedPlugin.id}`]) delete config[`PLUGIN_DB_${savedPlugin.id}`];
+                                 localStorage.setItem('EzycoreConfig', JSON.stringify(config));
+                             }
 
                             // Jalankan inisialisasi jika tidak ada databaseId (baik baru maupun karena self-healing)
                             if (savedPlugin.actions.includes('setupPluginDatabase')) {
