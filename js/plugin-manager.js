@@ -1,6 +1,5 @@
 /**
  * Plugin Manager Page Logic
- * Manages external plugins via the Gateway Registry.
  */
 
 (function () {
@@ -100,48 +99,41 @@ async fetchAvailablePlugins() {
                     const candidates = [
                       window.appsScriptUrl,
                       window.EzyApi?.url,
-                      window.app?.appsScriptUrl,
-                      window.EzyApi?.gatewayUrl
+                      window.app?.appsScriptUrl
                     ];
                     return candidates.find(u => u && typeof u === 'string' && u.length > 10) || '';
                 },
 
-async fetchPlugins() {
-                     // Wait for API to be ready
+                async fetchPlugins() {
                      if (!window.EzyApi || !window.EzyApi.isReady) {
                          await new Promise(resolve => {
                              window.addEventListener('ezy-api-ready', resolve, { once: true });
                          });
                      }
-                     if (!this.apiUrl) {
-                         console.warn("API URL not found - using empty plugin list");
+                     const url = this.apiUrl;
+                     if (!url) {
+                         console.warn("[PluginManager] apiUrl empty — cannot load plugins.");
                          this.plugins = [];
                          return;
                      }
+                     console.log("[PluginManager] Fetching installed plugins from:", url);
                     try {
-                        const res = await window.app.fetchJsonp(this.apiUrl, { action: 'get_all_plugins' });
+                        const res = await window.app.fetchJsonp(url, { action: 'get_all_plugins' });
                         if (res && res.status === 'success') {
                             this.plugins = (res.plugins || []).map(p => ({
                                 ...p,
                                 pinging: false,
                                 pingResult: null
                             }));
-                            console.log(`Loaded ${this.plugins.length} plugins`);
+                            console.log(`[PluginManager] Loaded ${this.plugins.length} installed plugins`);
                         } else {
-                            console.warn("Failed to load plugins:", res?.message);
+                            console.warn("[PluginManager] get_all_plugins failed:", res);
                             this.plugins = [];
-                            if (window.showToast) {
-                                window.showToast(res?.message || "Failed to load plugins", "error");
-                            }
                         }
                     } catch (e) {
-                        console.error("Fetch plugins error:", e);
+                        console.error("[PluginManager] get_all_plugins error:", e);
                         this.plugins = [];
-                        if (window.showToast) {
-                            window.showToast("Connection error to Gateway", "error");
-                        }
                     }
-                    // Restore saved order from localStorage
                     this.restorePluginOrder();
                 },
 
