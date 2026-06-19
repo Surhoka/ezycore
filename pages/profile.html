@@ -1,5 +1,6 @@
-<div x-data="profilePage" id="profile-page-container" class="w-full animate-fade-in">
+<div x-data="profilePage" id="profile-page-container" class="w-full">
   <input type="file" x-ref="photoInput" @change="handlePhotoFileChange($event)" accept="image/*" class="hidden" />
+  <div class="animate-fade-in">
   <!-- ===== Main Content Start ===== -->
 
   <!-- Loading Overlay -->
@@ -8,7 +9,7 @@
   <!-- Tab Navigation -->
   <div class="tab-nav-container tab-nav-borderless mb-6">
     <button @click="activeTab = 'general'" :class="{ 'active': activeTab === 'general' }" class="tab-nav-btn">
-      <span class="w-4 h-4" x-icon="'user'"></span> General Profile
+      <span class="w-4 h-4 block" x-icon="'user'"></span> General Profile
     </button>
   </div>
 
@@ -186,6 +187,7 @@
         </div>
       </div>
     </div>
+  </div>
   </div>
 
   <!-- BEGIN MODAL PERSONAL INFO -->
