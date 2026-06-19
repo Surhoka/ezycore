@@ -63,7 +63,7 @@ async fetchAvailablePlugins() {
                          return;
                      }
                     try {
-                        const res = await window.app.fetchJsonp(this.gatewayUrl, { action: 'get_available_plugins' });
+                        const res = await window.app.fetchJsonp(this.apiUrl, { action: 'get_available_plugins' });
                         if (res && res.status === 'success') {
                             this.availablePlugins = res.plugins || [];
                             console.log(`Loaded ${this.availablePlugins.length} available plugins`);
