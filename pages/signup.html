@@ -8,8 +8,8 @@
 
 <div x-data="{
     formData: {
-        firstName: '',
-        lastName: '',
+        fname: '',
+        lname: '',
         email: '',
         password: '',
         confirmPassword: ''
@@ -17,7 +17,7 @@
     isSubmitting: false,
 
     async register() {
-        if (!this.formData.firstName || !this.formData.email || !this.formData.password) {
+        if (!this.formData.fname || !this.formData.email || !this.formData.password) {
             window.showToast('Mohon lengkapi data wajib!', 'error');
             return;
         }
@@ -28,7 +28,7 @@
 
         this.isSubmitting = true;
 
-        window.sendDataToGoogle('signup', this.formData, (response) => {
+        window.sendDataToGoogle('registerUser', this.formData, (response) => {
             if (response.status === 'success') {
                 window.showToast('Registrasi berhasil! Silakan login.', 'success');
                 setTimeout(() => {
@@ -71,7 +71,7 @@
                         <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                             <span x-text="$store.i18n ? $store.i18n.t('first_name') : 'First Name'">First Name</span><span class="text-error-500">*</span>
                         </label>
-                        <input type="text" x-model="formData.firstName" placeholder="First name" required
+                        <input type="text" x-model="formData.fname" placeholder="First name" required
                             class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-sm placeholder:text-gray-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white dark:placeholder:text-white/30 dark:focus:border-brand-500" />
                     </div>
                     <!-- Last Name -->
@@ -79,7 +79,7 @@
                         <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                             <span x-text="$store.i18n ? $store.i18n.t('last_name') : 'Last Name'">Last Name</span>
                         </label>
-                        <input type="text" x-model="formData.lastName" placeholder="Last name"
+                        <input type="text" x-model="formData.lname" placeholder="Last name"
                             class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-sm placeholder:text-gray-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white dark:placeholder:text-white/30 dark:focus:border-brand-500" />
                     </div>
                 </div>
