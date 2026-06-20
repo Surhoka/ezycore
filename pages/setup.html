@@ -11,6 +11,9 @@
     isSubmitting: false,
     isSearching: false,
     message: 'Menunggu respon...',
+    autoCreateModalOpen: false,
+    needsDatabaseConfirmation: false,
+    autoCreateConfirmed: false,
 
     init() {
         // Otomatis mencari database saat URL WebApp ditempelkan
@@ -23,6 +26,44 @@
                 this.discoverDatabase();
             }
         });
+
+        window.addEventListener('ezy-api-ready', (event) => {
+            const config = event.detail?.config || {};
+            if (config.webappUrl && !this.formData.webappUrl) {
+                this.formData.webappUrl = config.webappUrl;
+                this.formData.blogId = config.blogId || this.formData.blogId || window.EZY_BLOG_ID;
+                this.formData.email = config.email || this.formData.email;
+                this.$nextTick(() => this.discoverDatabase());
+            }
+            if (config.requiresDatabaseCreation) {
+                this.needsDatabaseConfirmation = true;
+                this.openAutoCreateModal();
+            }
+        });
+
+        if (this.formData.webappUrl && this.formData.blogId && this.formData.email) {
+            this.$nextTick(() => this.discoverDatabase());
+        }
+    },
+
+    openAutoCreateModal() {
+        this.autoCreateModalOpen = true;
+    },
+
+    closeAutoCreateModal() {
+        this.autoCreateModalOpen = false;
+    },
+
+    cancelAutoCreate() {
+        this.autoCreateModalOpen = false;
+        this.needsDatabaseConfirmation = false;
+    },
+
+    confirmAutoCreate() {
+        this.autoCreateConfirmed = true;
+        this.formData.dbSetup = 'force_new';
+        this.autoCreateModalOpen = false;
+        this.saveSetup(true);
     },
 
     async discoverDatabase() {
@@ -40,12 +81,17 @@
         }, (response) => {
             console.log('[EzyCore Discovery] Response:', response);
             
+            this.needsDatabaseConfirmation = !!(response.requiresDatabaseCreation || (response.isSetup === false && !response.dbId && !response.legacyDatabaseFound));
+
             if (response.status === 'success' && response.dbId) {
                 // Database ditemukan secara fisik di Drive
                 this.formData.dbName = response.dbName || 'DB_Admin';
                 this.formData.email = response.email || this.formData.email;
                 this.formData.dbSetup = 'use_existing'; // Pastikan mode kembali ke existing
                 window.showToast('Database terdeteksi: ' + (response.dbName || response.dbId.substring(0,8)), 'success');
+            } else if (response.requiresDatabaseCreation) {
+                window.showToast('Database legacy tidak ditemukan. Konfirmasi pembuatan database otomatis.', 'warning');
+                this.openAutoCreateModal();
             } else if (response.status === 'success') {
                 window.showToast('Sistem siap (Belum ada DB). Silakan buat baru.', 'info');
             } else {
@@ -111,9 +157,14 @@
         check();
     },
 
-    async saveSetup() {
+    async saveSetup(forceAutoCreate = false) {
         if (!this.formData.webappUrl || !this.formData.blogId || !this.formData.email) {
             window.showToast('Semua field harus diisi!', 'error');
+            return;
+        }
+
+        if (this.needsDatabaseConfirmation && !forceAutoCreate && !this.autoCreateConfirmed) {
+            this.openAutoCreateModal();
             return;
         }
 
@@ -137,13 +188,19 @@
                 blogId: this.formData.blogId, 
                 email: this.formData.email,
                 dbName: this.formData.dbName,
-                dbSetup: this.formData.dbSetup, 
+                dbSetup: forceAutoCreate ? 'force_new' : this.formData.dbSetup,
+                autoCreateConfirmed: forceAutoCreate || this.autoCreateConfirmed,
                 role: 'Admin'
             }, 
             async (response) => {
                 if (response.status === 'success') {
                     window.showToast('Setup backend dimulai...', 'info');
                     this.pollSetupStatus(); // Mulai polling status
+                } else if (response.status === 'warning' && response.requiresDatabaseCreation) {
+                    this.needsDatabaseConfirmation = true;
+                    this.openAutoCreateModal();
+                    window.showToast(response.message || 'Konfirmasi pembuatan database otomatis terlebih dahulu.', 'warning');
+                    this.isSubmitting = false;
                 } else {
                     window.showToast('Backend Error: ' + (response.message || 'Cek WebApp URL'), 'error');
                     this.isSubmitting = false;
@@ -254,6 +311,62 @@
                     </div>
                 </template>
             </button>
+        </div>
+    </div>
+
+    <div
+        class="modal"
+        :class="autoCreateModalOpen ? 'show' : ''"
+        x-show="autoCreateModalOpen"
+        x-cloak
+        @keydown.escape.window="closeAutoCreateModal()"
+        aria-hidden="true"
+    >
+        <div class="modal-backdrop absolute inset-0 bg-gray-950/60" @click="closeAutoCreateModal()"></div>
+        <div class="modal-dialog relative z-10">
+            <div class="modal-header-sticky">
+                <div class="flex items-start gap-3">
+                    <div class="p-3 bg-warning-50 text-warning-600 rounded-xl">
+                        <span class="w-6 h-6 block" x-icon="'alert-triangle'"></span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-theme-text">Konfirmasi Pembuatan Database</h3>
+                        <p class="mt-1 text-sm text-theme-text-sub">Database legacy tidak ditemukan di Google Drive.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-body-content">
+                <p class="text-sm leading-6 text-theme-text">
+                    EzyCore akan membuat database otomatis:
+                </p>
+                <ul class="space-y-2 text-sm text-theme-text-sub">
+                    <li class="flex gap-2">
+                        <span class="mt-1 w-1.5 h-1.5 rounded-full bg-brand-500 flex-none"></span>
+                        <span>Folder <strong>EzyCore_Database</strong> di Google Drive</span>
+                    </li>
+                    <li class="flex gap-2">
+                        <span class="mt-1 w-1.5 h-1.5 rounded-full bg-brand-500 flex-none"></span>
+                        <span>Spreadsheet <strong>DB_Admin</strong> dengan sheet <strong>Meta</strong></span>
+                    </li>
+                    <li class="flex gap-2">
+                        <span class="mt-1 w-1.5 h-1.5 rounded-full bg-brand-500 flex-none"></span>
+                        <span>Folder <strong>Images</strong> untuk penyimpanan file</span>
+                    </li>
+                </ul>
+                <p class="text-xs leading-5 text-theme-text-sub">
+                    Lanjutkan hanya jika Anda yakin ingin membuat database baru untuk Blog ID ini.
+                </p>
+            </div>
+
+            <div class="modal-footer-actions">
+                <button @click="cancelAutoCreate()" class="btn btn-outline w-full">
+                    Batal
+                </button>
+                <button @click="confirmAutoCreate()" class="btn btn-primary w-full">
+                    Buat Database Otomatis
+                </button>
+            </div>
         </div>
     </div>
 </div>
