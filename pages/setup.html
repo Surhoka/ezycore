@@ -62,8 +62,18 @@
     confirmAutoCreate() {
         this.autoCreateConfirmed = true;
         this.formData.dbSetup = 'force_new';
+        this.formData.dbName = 'DB_Admin';
         this.autoCreateModalOpen = false;
-        this.saveSetup(true);
+        
+        if (!this.formData.email) {
+            window.showToast('Silakan lengkapi Admin Email terlebih dahulu.', 'info');
+            setTimeout(() => {
+                const emailInput = document.querySelector('input[type="email"]');
+                if (emailInput) emailInput.focus();
+            }, 100);
+        } else {
+            this.saveSetup(true);
+        }
     },
 
     async discoverDatabase() {
@@ -252,7 +262,7 @@
                         <span class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
                             x-icon="'file-text'"></span>
                         <input type="text" x-model="formData.dbName" placeholder="Contoh: EzyCore_Database"
-                            class="auth-input">
+                            class="auth-input" :disabled="autoCreateConfirmed" :class="autoCreateConfirmed ? 'opacity-70 bg-theme-primary cursor-not-allowed' : ''">
                     </div>
                     <button @click="discoverDatabase()" :disabled="isSearching || !formData.webappUrl"
                         class="px-4 bg-theme-secondary border border-theme-border rounded-xl text-theme-text hover:bg-theme-primary transition-all disabled:opacity-50 flex items-center gap-2"
@@ -271,10 +281,10 @@
             </div>
 
             <!-- Setup Mode -->
-            <div class="p-4 rounded-xl bg-theme-primary border border-theme-border">
+            <div class="p-4 rounded-xl bg-theme-primary border border-theme-border" :class="autoCreateConfirmed ? 'opacity-70 pointer-events-none' : ''">
                 <label class="flex items-center gap-3 cursor-pointer">
                     <input type="checkbox" x-model="formData.dbSetup" x-bind:true-value="'force_new'"
-                        x-bind:false-value="'use_existing'"
+                        x-bind:false-value="'use_existing'" :disabled="autoCreateConfirmed"
                         class="w-5 h-5 rounded border-theme-border text-brand-500 focus:ring-brand-500">
                     <span class="text-sm font-medium text-theme-text">Reset / Buat Database Baru</span>
                 </label>
