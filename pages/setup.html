@@ -68,7 +68,7 @@
         if (!this.formData.email) {
             window.showToast('Silakan lengkapi Admin Email terlebih dahulu.', 'info');
             setTimeout(() => {
-                const emailInput = document.querySelector('input[type="email"]');
+                const emailInput = document.querySelector('input[type=email]');
                 if (emailInput) emailInput.focus();
             }, 100);
         } else {
