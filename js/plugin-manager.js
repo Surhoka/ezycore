@@ -3,12 +3,12 @@
  */
 
 (function () {
-    // Ensure Toast is always above Modals
+    // Ensure Toast is always above Modals (modal z-index: 99999)
     if (!document.getElementById('ezy-toast-zindex-fix')) {
         const style = document.createElement('style');
         style.id = 'ezy-toast-zindex-fix';
         style.textContent = `
-            #toast-container, .toast-container, [id^="toast-"] { z-index: 1000 !important; }
+            #toast-container, .toast-container, [id^="toast-"] { z-index: 1000001 !important; }
         `;
         document.head.appendChild(style);
     }
