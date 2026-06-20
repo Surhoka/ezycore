@@ -1,3 +1,11 @@
+<style>
+    [x-icon] svg {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+</style>
+
 <div x-data="{
     formData: {
         firstName: '',
@@ -9,7 +17,6 @@
     isSubmitting: false,
 
     async register() {
-        // Basic Validation
         if (!this.formData.firstName || !this.formData.email || !this.formData.password) {
             window.showToast('Mohon lengkapi data wajib!', 'error');
             return;
@@ -36,78 +43,152 @@
             this.isSubmitting = false;
         });
     }
-}" class="w-full flex items-center justify-center p-4">
-    <div class="auth-card max-w-lg animate-slide-up">
-        <!-- Header -->
-        <div class="p-8 text-center border-b border-theme-border bg-brand-500/5">
-            <div class="inline-flex p-3 bg-brand-500 rounded-xl text-white mb-4">
-                <span class="w-8 h-8 block" x-icon="'user-plus'"></span>
-            </div>
-            <h2 class="text-2xl font-bold text-theme-text">Create Account</h2>
-            <p class="text-theme-text-sub text-sm">Daftar untuk mulai menggunakan EzyCore Ai</p>
+}" class="auth-card max-w-md animate-slide-up">
+    <!-- Form Section -->
+    <div class="p-8 flex flex-col justify-center">
+        <div class="mb-4 2xl:mb-8">
+            <a href="/"
+                class="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
+                <span class="w-5 h-5 mr-2" x-icon="'arrow-left'"></span>
+                <span x-text="$store.i18n ? $store.i18n.t('back_to_dashboard') : 'Back to dashboard'">Back to dashboard</span>
+            </a>
         </div>
 
-        <!-- Form Content -->
-        <div class="p-8 space-y-4">
-            <!-- Name Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-semibold mb-2 text-theme-text">First Name</label>
-                    <input type="text" x-model="formData.firstName" placeholder="John" class="auth-input pl-4">
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold mb-2 text-theme-text">Last Name</label>
-                    <input type="text" x-model="formData.lastName" placeholder="Doe" class="auth-input pl-4">
-                </div>
-            </div>
+        <div class="mb-4 2xl:mb-6">
+            <h1 class="mb-2 text-2xl font-bold text-gray-800 dark:text-white" x-text="$store.i18n ? $store.i18n.t('signup_title') : 'Sign Up'">
+                Sign Up
+            </h1>
+            <p class="text-gray-500 dark:text-gray-400" x-text="$store.i18n ? $store.i18n.t('signup_subtitle') : 'Enter your details to sign up!'">
+                Enter your details to sign up!
+            </p>
+        </div>
 
-            <!-- Email -->
-            <div>
-                <label class="block text-sm font-semibold mb-2 text-theme-text">Email Address</label>
-                <div class="relative">
-                    <span class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" x-icon="'mail'"></span>
-                    <input type="email" x-model="formData.email" placeholder="nama@email.com" class="auth-input">
-                </div>
-            </div>
-
-            <!-- Password Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-semibold mb-2 text-theme-text">Password</label>
-                    <div class="relative">
-                        <span class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
-                            x-icon="'lock'"></span>
-                        <input type="password" x-model="formData.password" placeholder="••••••••" class="auth-input">
+        <form @submit.prevent="register()">
+            <div class="space-y-4 2xl:space-y-5">
+                <div class="grid grid-cols-1 gap-4 2xl:gap-5 sm:grid-cols-2">
+                    <!-- First Name -->
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            <span x-text="$store.i18n ? $store.i18n.t('first_name') : 'First Name'">First Name</span><span class="text-error-500">*</span>
+                        </label>
+                        <input type="text" x-model="formData.firstName" placeholder="First name" required
+                            class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-sm placeholder:text-gray-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white dark:placeholder:text-white/30 dark:focus:border-brand-500" />
+                    </div>
+                    <!-- Last Name -->
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            <span x-text="$store.i18n ? $store.i18n.t('last_name') : 'Last Name'">Last Name</span>
+                        </label>
+                        <input type="text" x-model="formData.lastName" placeholder="Last name"
+                            class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-sm placeholder:text-gray-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white dark:placeholder:text-white/30 dark:focus:border-brand-500" />
                     </div>
                 </div>
+                <!-- Email -->
                 <div>
-                    <label class="block text-sm font-semibold mb-2 text-theme-text">Confirm</label>
-                    <div class="relative">
-                        <span class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
-                            x-icon="'shield-check'"></span>
-                        <input type="password" x-model="formData.confirmPassword" placeholder="••••••••"
-                            class="auth-input">
+                    <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        <span x-text="$store.i18n ? $store.i18n.t('email_label') : 'Email'">Email</span><span class="text-error-500">*</span>
+                    </label>
+                    <input type="email" x-model="formData.email" :placeholder="$store.i18n ? $store.i18n.t('email_placeholder') : 'Enter your email'"
+                        placeholder="Enter your email" required
+                        class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-sm placeholder:text-gray-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white dark:placeholder:text-white/30 dark:focus:border-brand-500" />
+                </div>
+                <!-- Password Grid -->
+                <div class="grid grid-cols-1 gap-4 2xl:gap-5 sm:grid-cols-2">
+                    <!-- Password -->
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            <span x-text="$store.i18n ? $store.i18n.t('password_label') : 'Password'">Password</span><span
+                                class="text-error-500">*</span>
+                        </label>
+                        <div x-data="{ showPassword: false }" class="relative">
+                            <input x-model="formData.password" :type="showPassword ? 'text' : 'password'"
+                                :placeholder="$store.i18n ? $store.i18n.t('password_placeholder') : '••••••••'" placeholder="••••••••"
+                                required
+                                class="w-full h-11 rounded-lg border border-gray-300 bg-transparent py-2.5 pl-4 pr-11 text-sm text-gray-800 shadow-sm placeholder:text-gray-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white dark:placeholder:text-white/30 dark:focus:border-brand-500" />
+                            <span @click="showPassword = !showPassword"
+                                class="absolute z-30 text-gray-500 -translate-y-1/2 cursor-pointer right-4 top-1/2 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
+                                <span x-show="!showPassword" class="block w-5 h-5" x-icon="'eye-off'"></span>
+                                <span x-show="showPassword" class="block w-5 h-5" x-icon="'eye'"></span>
+                            </span>
+                        </div>
+                    </div>
+                    <!-- Confirm Password -->
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            <span>Confirm</span><span class="text-error-500">*</span>
+                        </label>
+                        <div x-data="{ showPassword: false }" class="relative">
+                            <input x-model="formData.confirmPassword" :type="showPassword ? 'text' : 'password'"
+                                placeholder="••••••••" required
+                                class="w-full h-11 rounded-lg border border-gray-300 bg-transparent py-2.5 pl-4 pr-11 text-sm text-gray-800 shadow-sm placeholder:text-gray-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white dark:placeholder:text-white/30 dark:focus:border-brand-500" />
+                            <span @click="showPassword = !showPassword"
+                                class="absolute z-30 text-gray-500 -translate-y-1/2 cursor-pointer right-4 top-1/2 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
+                                <span x-show="!showPassword" class="block w-5 h-5" x-icon="'eye-off'"></span>
+                                <span x-show="showPassword" class="block w-5 h-5" x-icon="'eye'"></span>
+                            </span>
+                        </div>
                     </div>
                 </div>
+                <!-- Checkbox -->
+                <div>
+                    <div x-data="{ checkboxToggle: false }">
+                        <label for="checkboxLabelOne"
+                            class="flex items-start text-sm font-normal text-gray-700 cursor-pointer select-none dark:text-gray-400">
+                            <div class="relative">
+                                <input type="checkbox" id="checkboxLabelOne" class="sr-only" required
+                                    @change="checkboxToggle = !checkboxToggle" />
+                                <div :class="checkboxToggle ? 'border-brand-500 bg-brand-500' : 'bg-transparent border-gray-300 dark:border-gray-700'"
+                                    class="mr-3 flex h-5 w-5 items-center justify-center rounded-md border-[1.25px]">
+                                    <span :class="checkboxToggle ? '' : 'opacity-0'">
+                                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M11.6666 3.5L5.24992 9.91667L2.33325 7" stroke="white"
+                                                stroke-width="1.94437" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                    </span>
+                                </div>
+                            </div>
+                            <span x-text="$store.i18n ? $store.i18n.t('agree_terms') : 'Agree to the Terms and Conditions and our Privacy Policy'">Agree to the Terms and Conditions and our Privacy Policy</span>
+                        </label>
+                    </div>
+                </div>
+                <!-- Button -->
+                <div>
+                    <button type="submit" :disabled="isSubmitting"
+                        class="flex items-center justify-center w-full px-4 py-3 text-sm font-bold text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+                        <template x-if="!isSubmitting">
+                            <span x-text="$store.i18n ? $store.i18n.t('sign_up') : 'Sign Up'">Sign Up</span>
+                        </template>
+                        <template x-if="isSubmitting">
+                            <svg class="w-6 h-6 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </template>
+                    </button>
+                </div>
             </div>
-
-            <div class="pt-2">
-                <button @click="register()" :disabled="isSubmitting"
-                    class="w-full bg-brand-500 hover:bg-brand-600 disabled:bg-brand-300 text-white font-bold py-4 rounded-xl shadow-lg shadow-brand-500/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
-                    <template x-if="!isSubmitting">
-                        <span>Daftar Sekarang</span>
-                    </template>
-                    <template x-if="isSubmitting">
-                        <div class="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    </template>
-                </button>
-            </div>
-
-            <!-- Footer Link -->
-            <p class="text-center text-sm text-theme-text-sub">
-                Sudah punya akun?
-                <a href="#signin" class="text-brand-500 font-bold hover:underline">Masuk di sini</a>
+        </form>
+        <div class="mt-4 2xl:mt-5">
+            <p class="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
+                <span x-text="$store.i18n ? $store.i18n.t('already_have_account') : 'Already have an account?'">Already have an account?</span>
+                <a href="#signin" class="text-brand-500 hover:text-brand-600 dark:text-brand-400 font-medium"
+                    x-text="$store.i18n ? $store.i18n.t('sign_in') : 'Sign In'">Sign In</a>
             </p>
         </div>
     </div>
+</div>
+
+<div class="fixed z-50 flex items-center gap-3 max-sm:hidden top-6 right-6">
+    <button x-show="$store.i18n"
+        class="inline-flex items-center justify-center size-10 text-xs font-bold text-white transition-colors rounded-full bg-brand-500 hover:bg-brand-600"
+        @click.prevent="$store.i18n.toggle()">
+        <span x-text="$store.i18n.locale.toUpperCase()"></span>
+    </button>
+    <button
+        class="inline-flex items-center justify-center text-white transition-colors rounded-full size-10 bg-brand-500 hover:bg-brand-600"
+        @click.prevent="darkMode = !darkMode">
+        <span class="w-5 h-5" x-icon="'moon'" x-show="darkMode"></span>
+        <span class="w-5 h-5" x-icon="'sun'" x-show="!darkMode"></span>
+    </button>
 </div>
