@@ -83,7 +83,7 @@
             
             this.needsDatabaseConfirmation = !!(response.requiresDatabaseCreation || (response.isSetup === false && !response.dbId && !response.legacyDatabaseFound));
 
-            if (response.status === 'success' && response.dbId) {
+            if (response.status === 'success' && response.isSetup) {
                 // Database ditemukan secara fisik di Drive
                 this.formData.dbName = response.dbName || 'DB_Admin';
                 this.formData.email = response.email || this.formData.email;
