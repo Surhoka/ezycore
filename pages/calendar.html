@@ -1,0 +1,117 @@
+<div x-data="calendar" class="w-full animate-fade-in relative px-1 sm:px-0">
+  <style>
+    /* Overrides for FullCalendar Responsiveness */
+    @media (max-width: 640px) {
+      .fc .fc-toolbar {
+        padding: 1rem !important;
+      }
+
+      .fc .fc-toolbar-title {
+        font-size: 1.1rem !important;
+        order: -1;
+        margin-bottom: 0.5rem;
+      }
+
+      .fc .fc-button {
+        padding: 0.4rem 0.6rem !important;
+        font-size: 0.75rem !important;
+      }
+    }
+  </style>
+
+  <div class="rounded-2xl border border-primary bg-secondary relative min-h-[500px] shadow-sm overflow-hidden">
+    <!-- Loading Overlay -->
+    <div x-show="isLoading" x-cloak
+      class="absolute inset-0 z-10 flex items-center justify-center bg-secondary/80 backdrop-blur-sm rounded-lg">
+      <div class="h-12 w-12 animate-spin rounded-full border-4 border-solid border-brand-500 border-t-transparent">
+      </div>
+    </div>
+    <!-- Tambahkan transition untuk penghalusan saat kalender muncul -->
+    <div x-ref="calendar" class="min-h-[600px] md:min-h-[750px] transition-opacity duration-500"
+      :class="isLoading ? 'opacity-0' : 'opacity-100'"></div>
+  </div>
+
+  <!-- BEGIN MODAL -->
+  <div :class="{ 'show': isModalOpen }" x-cloak
+    class="modal fixed inset-0 z-[99999] p-4 md:p-5 overflow-hidden flex justify-center items-center">
+    <div @click="closeModal()"
+      class="fixed inset-0 h-full w-full bg-gray-900/40 backdrop-blur-md transition-opacity duration-300"></div>
+    <div class="modal-dialog">
+      <!-- close btn -->
+      <button @click="closeModal()" class="modal-close-btn">
+        <span class="w-6 h-6 block" x-icon="'close'"></span>
+      </button>
+
+      <div class="modal-content custom-scrollbar">
+        <div class="modal-header-sticky">
+          <h3 class="h3" x-text="modalMode === 'add' ? 'Add Event' : 'Edit Event'"></h3>
+          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            Manage your schedule with precision and elegance.</p>
+        </div>
+        <div class="modal-body-content">
+          <div>
+            <label class="form-label">Event Title</label>
+            <input x-model="editingEvent.title" type="text" class="form-input" placeholder="Enter event title" />
+          </div>
+          <div>
+            <label class="form-label">Description</label>
+            <textarea x-model="editingEvent.description" rows="3" class="form-input"
+              placeholder="Enter event description"></textarea>
+          </div>
+          <div>
+            <label class="form-label">Event Color</label>
+            <div class="flex flex-wrap items-center gap-4 sm:gap-5">
+              <template x-for="color in ['Primary', 'Success', 'Warning', 'Danger']">
+                <label class="flex items-center text-sm text-gray-700 form-check-label dark:text-gray-400">
+                  <input type="radio" name="event-level" x-model="editingEvent.className" :value="color"
+                    class="form-radio h-4 w-4 text-brand-600 border-gray-300 focus:ring-brand-500" />
+                  <span class="ml-2" x-text="color"></span>
+                </label>
+              </template>
+            </div>
+          </div>
+          <div class="pt-2">
+            <label class="flex items-center">
+              <input type="checkbox" x-model="editingEvent.allDay" @change="toggleAllDay()"
+                class="form-checkbox h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/50">
+              <span class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-400">All Day Event</span>
+            </label>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="form-label">Start Date</label>
+              <input x-model="editingEvent.start" :type="editingEvent.allDay ? 'date' : 'datetime-local'"
+                @click="$el.showPicker()" class="form-input" />
+            </div>
+            <div>
+              <label class="form-label">End Date</label>
+              <input x-model="editingEvent.end" :type="editingEvent.allDay ? 'date' : 'datetime-local'"
+                @click="$el.showPicker()" class="form-input" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer-actions">
+          <button type="button" @click="deleteEvent($el)" x-show="modalMode === 'edit'"
+            class="btn btn-danger w-full sm:w-auto">
+            <span class="mr-2 w-[18px] h-[18px]" x-icon="'trash'"></span>
+            Delete Event
+          </button>
+          <div class="flex w-full sm:w-auto gap-3 ml-auto">
+            <button type="button" @click="closeModal()" class="btn btn-outline w-full sm:w-auto">
+              Cancel
+            </button>
+            <button type="button" @click="saveEvent($el)" x-show="modalMode === 'edit'"
+              class="btn btn-primary w-full sm:w-auto">
+              Save Changes
+            </button>
+            <button type="button" @click="saveEvent($el)" x-show="modalMode === 'add'"
+              class="btn btn-primary w-full sm:w-auto">
+              Create Event
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- END MODAL -->
+</div>
