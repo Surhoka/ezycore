@@ -83,7 +83,6 @@
                     if (template) {
                         this.formData.id = template.id;
                         this.formData.description = template.description;
-                        this.formData.url = template.url || '';
                         this.formData.actions = template.actions || '';
                         this.formData.template = template.template || '';
                         this.formData.menuLabel = template.menuLabel || template.name;
@@ -213,7 +212,7 @@
                 openAddModal() {
                     this.editMode = false;
                     this.formData = {
-                        id: '', name: '', url: '', actions: '', description: '', active: true,
+                        id: '', name: '', actions: '', description: '', active: true,
                         showInMenu: false, menuLabel: '', menuIcon: 'zap', menuGroup: 'TOOLS', template: '',
                         children: null
                     };
@@ -353,25 +352,20 @@
                 },
 
                 async pingPlugin(plugin) {
-                    if (!plugin.url) {
-                        window.showToast("Cannot ping: plugin URL is missing", "warning");
-                        return;
-                    }
                     plugin.pinging = true;
+                    const start = Date.now();
                     try {
-                        const res = await window.app.fetchJsonp(this.apiUrl, {
-                            action: 'ping_plugin',
-                            url: plugin.url
+                        await window.app.fetchJsonp(this.apiUrl, {
+                            action: 'ping',
+                            pluginId: plugin.id
                         });
+                        const latency = Date.now() - start;
                         plugin.pinging = false;
-                        plugin.pingResult = res;
-                        if (res.status === 'success') {
-                            window.showToast(`Ping successful: ${res.latency}`, "success");
-                        } else {
-                            window.showToast('Ping failed: ' + res.message, 'error');
-                        }
+                        plugin.pingResult = { status: 'success', latency: latency + 'ms' };
+                        window.showToast('Ping OK: ' + latency + 'ms', "success");
                     } catch (e) {
                         plugin.pinging = false;
+                        plugin.pingResult = { status: 'error' };
                         window.showToast("Ping connection error", "error");
                     }
                 },
