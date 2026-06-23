@@ -218,15 +218,15 @@
                     <div x-show="expandedPlugin === plugin.id" x-collapse
                         class="border-t border-gray-100 dark:border-slate-800">
                         <div class="p-4 space-y-3">
-                            <!-- Endpoint -->
+                            <!-- Mode: Integrated Library (no standalone URL) -->
                             <div class="rounded-2xl bg-gray-50 p-3 dark:bg-slate-800/50">
                                 <div class="flex items-center gap-2 mb-2">
                                     <span class="w-4 h-4 text-gray-500" x-icon="'link'"></span>
-                                    <span
-                                        class="text-xs font-bold uppercase text-gray-500 dark:text-slate-400 tracking-wider">Endpoint</span>
+                                    <span class="text-xs font-bold uppercase text-gray-500 dark:text-slate-400 tracking-wider">Mode</span>
                                 </div>
-                                <div class="font-mono text-sm text-gray-700 dark:text-slate-300 break-all bg-white dark:bg-slate-900 rounded-xl px-3 py-2 border border-gray-200 dark:border-slate-700"
-                                    x-text="plugin.url"></div>
+                                <div class="font-mono text-sm text-green-700 dark:text-green-400 bg-white dark:bg-slate-900 rounded-xl px-3 py-2 border border-gray-200 dark:border-slate-700">
+                                    Integrated Library — Direct Call
+                                </div>
                             </div>
 
                             <!-- Scripts (if available) -->
