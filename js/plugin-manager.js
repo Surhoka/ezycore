@@ -47,6 +47,8 @@
                     console.log("Plugin Manager Component Init");
                     await this.fetchAvailablePlugins();
                     await this.fetchPlugins();
+                    // Sync sidebar menu whenever plugin-manager page loads
+                    window.dispatchEvent(new CustomEvent('ezy:menu-update'));
                 },
 
  async fetchAvailablePlugins() {
