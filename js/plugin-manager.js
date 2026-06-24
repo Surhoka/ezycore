@@ -289,9 +289,14 @@
 
                     window.showToast(`Memulai inisialisasi database untuk ${plugin.name}...`, 'info');
                     try {
-                        const res = await new Promise((resolve, reject) => {
-                            window.sendDataToGoogle('setupPluginDatabase', { fileName: `DB_${plugin.name}`, pluginId: plugin.id }, resolve, reject);
-                        });
+                         const res = await new Promise((resolve, reject) => {
+                             window.sendDataToGoogle('setupPluginDatabase', {
+                                 fileName: `DB_${plugin.name}`,
+                                 pluginId: plugin.id,
+                                 databaseSchema: plugin.databaseSchema || [],
+                                 dbId: plugin.databaseId || this.mainDbId
+                             }, resolve, reject);
+                         });
                         if (res.status === 'success') {
                             // [REVISI] Simpan ID dan Nama Database ke Properti Plugin secara mandiri
                             plugin.databaseId = res.dbId;
