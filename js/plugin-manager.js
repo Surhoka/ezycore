@@ -303,9 +303,9 @@
                             window.showToast(`Database ${plugin.name} berhasil diinisialisasi!`, 'success');
 
                             // [REVISI] Sinkronisasi Cache Config tanpa reload halaman
-                            const config = JSON.parse(localStorage.getItem('EzypartsConfig') || '{}');
-                            config[`PLUGIN_DB_${plugin.id}`] = res.dbId;
-                            localStorage.setItem('EzypartsConfig', JSON.stringify(config));
+                             const config = JSON.parse(localStorage.getItem('EzycoreConfig') || '{}');
+                             config[`PLUGIN_DB_${plugin.id}`] = res.dbId;
+                             localStorage.setItem('EzycoreConfig', JSON.stringify(config));
 
                             // Perbarui daftar plugin di UI secara reaktif
                             await this.fetchPlugins();

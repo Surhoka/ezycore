@@ -1,0 +1,386 @@
+<div x-data="{
+    formData: {
+        webappUrl: localStorage.getItem('EzycoreConfig_' + (window.EZY_BLOG_ID || '')) ? JSON.parse(localStorage.getItem('EzycoreConfig_' + (window.EZY_BLOG_ID || ''))).webappUrl : '',
+        blogId: window.EZY_BLOG_ID || (localStorage.getItem('EzycoreConfig') ? JSON.parse(localStorage.getItem('EzycoreConfig')).blogId : ''),
+        email: localStorage.getItem('signedInUser_' + (window.EZY_BLOG_ID || '')) ? JSON.parse(localStorage.getItem('signedInUser_' + (window.EZY_BLOG_ID || ''))).email : '',
+        dbName: localStorage.getItem('EzycoreConfig_' + (window.EZY_BLOG_ID || '')) 
+                ? (JSON.parse(localStorage.getItem('EzycoreConfig_' + (window.EZY_BLOG_ID || ''))).dbName || '') 
+                : '',
+        dbSetup: 'use_existing' // Default: Gunakan data yang sudah ada
+    },
+    isSubmitting: false,
+    isSearching: false,
+    message: 'Menunggu respon...',
+    autoCreateModalOpen: false,
+    needsDatabaseConfirmation: false,
+    autoCreateConfirmed: false,
+
+    init() {
+        // Otomatis mencari database saat URL WebApp ditempelkan
+        this.$watch('formData.webappUrl', value => {
+            if (value && value.includes('https://script.google.com/macros/s/') && value.includes('/exec')) {
+                // Jika blogId kosong, coba ambil lagi dari window global
+                if (!this.formData.blogId) {
+                    this.formData.blogId = window.EZY_BLOG_ID;
+                }
+                this.discoverDatabase();
+            }
+        });
+
+        window.addEventListener('ezy-api-ready', (event) => {
+            const config = event.detail?.config || {};
+            if (config.webappUrl && !this.formData.webappUrl) {
+                this.formData.webappUrl = config.webappUrl;
+                this.formData.blogId = config.blogId || this.formData.blogId || window.EZY_BLOG_ID;
+                this.formData.email = config.email || this.formData.email;
+                this.$nextTick(() => this.discoverDatabase());
+            }
+            if (config.requiresDatabaseCreation) {
+                this.needsDatabaseConfirmation = true;
+                this.openAutoCreateModal();
+            }
+        });
+
+        if (this.formData.webappUrl && this.formData.blogId && this.formData.email) {
+            this.$nextTick(() => this.discoverDatabase());
+        }
+    },
+
+    openAutoCreateModal() {
+        this.autoCreateModalOpen = true;
+    },
+
+    closeAutoCreateModal() {
+        this.autoCreateModalOpen = false;
+    },
+
+    cancelAutoCreate() {
+        this.autoCreateModalOpen = false;
+        this.needsDatabaseConfirmation = false;
+    },
+
+    confirmAutoCreate() {
+        this.autoCreateConfirmed = true;
+        this.formData.dbSetup = 'force_new';
+        this.formData.dbName = 'DB_Admin';
+        this.autoCreateModalOpen = false;
+        
+        if (!this.formData.email) {
+            window.showToast('Silakan lengkapi Admin Email terlebih dahulu.', 'info');
+            setTimeout(() => {
+                const emailInput = document.querySelector('input[type=email]');
+                if (emailInput) emailInput.focus();
+            }, 100);
+        } else {
+            this.saveSetup(true);
+        }
+    },
+
+    async discoverDatabase() {
+        if (!this.formData.webappUrl || !this.formData.webappUrl.startsWith('http')) {
+            window.showToast('Harap isi Google Web App URL terlebih dahulu.', 'warning');
+            return;
+        }
+
+        this.isSearching = true;
+        console.log('[EzyCore Debug] Discovering database for BlogID:', this.formData.blogId);
+        
+        window.sendDataToGoogle('get_config', { 
+            blogId: this.formData.blogId,
+            email: this.formData.email 
+        }, (response) => {
+            console.log('[EzyCore Discovery] Response:', response);
+            
+            this.needsDatabaseConfirmation = !!(response.requiresDatabaseCreation || (response.isSetup === false && !response.dbId && !response.legacyDatabaseFound));
+
+            if (response.status === 'success' && response.isSetup) {
+                // Database ditemukan secara fisik di Drive
+                this.formData.dbName = response.dbName || 'DB_Admin';
+                this.formData.email = response.email || this.formData.email;
+                this.formData.dbSetup = 'use_existing'; // Pastikan mode kembali ke existing
+                window.showToast('Database terdeteksi: ' + (response.dbName || response.dbId.substring(0,8)), 'success');
+            } else if (response.requiresDatabaseCreation) {
+                window.showToast('Database legacy tidak ditemukan. Konfirmasi pembuatan database otomatis.', 'warning');
+                this.openAutoCreateModal();
+            } else if (response.status === 'success') {
+                window.showToast('Sistem siap (Belum ada DB). Silakan buat baru.', 'info');
+            } else {
+                console.error('[Discovery Error]', response);
+                window.showToast('Respon Server: ' + (response.message || 'Tidak dikenal'), 'warning');
+            }
+            this.isSearching = false;
+        }, (err) => {
+            window.showToast('Gagal terhubung ke Drive.', 'error');
+            this.isSearching = false;
+        }, this.formData.webappUrl);
+    },
+
+    pollSetupStatus() {
+        const check = () => {
+            if (!this.isSubmitting) return;
+
+            window.sendDataToGoogle('get_setup_status', { 
+                blogId: this.formData.blogId 
+            }, (res) => {
+                // Jika sukses atau DB ID sudah muncul, anggap selesai
+                if (res.setupStatus === 'COMPLETED' || (res.dbId && res.dbId.length > 5)) {
+                    this.message = 'Setup Selesai!';
+                    window.showToast('Sistem berhasil dikonfigurasi!', 'success');
+                    
+                    // Simpan DB ID terbaru ke form jika ada
+                    if (res.dbId) this.formData.dbName = res.dbName || this.formData.dbName;
+
+                    // PENTING: Hapus config lokal sementara.
+                    // Ini memaksa appinit.min.js melakukan 'Remote Discovery' ke Blogger Page
+                    // untuk memastikan integrasi benar-benar tersinkronisasi.
+                    const storageKey = 'EzycoreConfig_' + this.formData.blogId;
+                    localStorage.removeItem(storageKey);
+
+                    // Finalisasi status di global app
+                    if (window.app && typeof window.app.checkInitialSetup === 'function') {
+                        window.app.checkInitialSetup().then(() => {
+                            setTimeout(() => { window.location.hash = '#dashboard'; }, 1000);
+                        });
+                    } else {
+                        setTimeout(() => { window.location.hash = '#dashboard'; }, 1500);
+                    }
+                } else if (res.setupStatus === 'ERROR' || res.status === 'error') {
+                    this.message = 'Gagal: ' + (res.errorMessage || res.message || 'Unknown Error');
+                    window.showToast(this.message, 'error');
+                    this.isSubmitting = false;
+                } else {
+                    // Masih IN_PROGRESS atau status lainnya (IDLE dsb)
+                    this.message = res.statusMessage || 'Server sedang menyiapkan database...';
+                    
+                    // Tambahkan status teknis untuk debug jika statusMessage kosong
+                    if (!res.statusMessage && res.setupStatus) {
+                        this.message = `Status: ${res.setupStatus}...`;
+                    }
+                    setTimeout(check, 3000); // Cek lagi setelah 3 detik
+                }
+            }, (err) => {
+                console.warn('Polling error, retrying...', err);
+                this.message = 'Koneksi terganggu, mencoba kembali...';
+                setTimeout(check, 5000);
+            }, this.formData.webappUrl);
+        };
+        check();
+    },
+
+    async saveSetup(forceAutoCreate = false) {
+        if (!this.formData.webappUrl || !this.formData.blogId || !this.formData.email) {
+            window.showToast('Semua field harus diisi!', 'error');
+            return;
+        }
+
+        if (this.needsDatabaseConfirmation && !forceAutoCreate && !this.autoCreateConfirmed) {
+            this.openAutoCreateModal();
+            return;
+        }
+
+        this.isSubmitting = true;
+        this.message = 'Mengirim instruksi setup...';
+        
+        try {
+            // Simpan ke LocalStorage untuk EzyCoreAi
+            const config = {
+                webappUrl: this.formData.webappUrl,
+                blogId: this.formData.blogId,
+                role: 'Admin',
+                setupDate: new Date().toISOString()
+            };
+            
+            localStorage.setItem('EzycoreConfig_' + this.formData.blogId, JSON.stringify(config));
+            window.appsScriptUrl = this.formData.webappUrl;
+
+            // Menjalankan inisialisasi database di Apps Script
+            window.sendDataToGoogle('setup', { 
+                blogId: this.formData.blogId, 
+                email: this.formData.email,
+                dbName: this.formData.dbName,
+                dbSetup: forceAutoCreate ? 'force_new' : this.formData.dbSetup,
+                autoCreateConfirmed: forceAutoCreate || this.autoCreateConfirmed,
+                role: 'Admin'
+            }, 
+            async (response) => {
+                if (response.status === 'success') {
+                    window.showToast('Setup backend dimulai...', 'info');
+                    this.pollSetupStatus(); // Mulai polling status
+                } else if (response.status === 'warning' && response.requiresDatabaseCreation) {
+                    this.needsDatabaseConfirmation = true;
+                    this.openAutoCreateModal();
+                    window.showToast(response.message || 'Konfirmasi pembuatan database otomatis terlebih dahulu.', 'warning');
+                    this.isSubmitting = false;
+                } else {
+                    window.showToast('Backend Error: ' + (response.message || 'Cek WebApp URL'), 'error');
+                    this.isSubmitting = false;
+                }
+            }, (err) => {
+                window.showToast('Terjadi kesalahan jaringan atau URL tidak valid.', 'error');
+                this.isSubmitting = false;
+            }, this.formData.webappUrl);
+
+        } catch (e) {
+            console.error(e);
+            window.showToast('Gagal menyimpan konfigurasi.', 'error');
+            this.isSubmitting = false;
+        }
+    }
+}" class="w-full flex items-center justify-center p-4">
+    <div class="auth-card max-w-lg">
+        <!-- Header -->
+        <div class="p-8 border-b border-theme-primary bg-brand-500/5">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="p-3 bg-brand-500 rounded-xl text-white">
+                    <span class="w-8 h-8 block" x-icon="'settings'"></span>
+                </div>
+                <div class="min-w-0">
+                    <h2 class="text-2xl font-bold text-theme-text">System Setup</h2>
+                    <p class="text-theme-text-sub text-sm">Konfigurasi EzyCore Framework</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Content -->
+        <div class="p-8 space-y-6">
+            <!-- WebApp URL -->
+            <div>
+                <label class="block text-sm font-semibold mb-2 text-theme-text">Google Web App URL</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" x-icon="'link'"></span>
+                    <input type="url" x-model="formData.webappUrl"
+                        placeholder="https://script.google.com/macros/s/.../exec" class="auth-input">
+                </div>
+                <p class="mt-1 text-xs text-gray-500">URL dari Deployment Google Apps Script Anda.</p>
+            </div>
+
+            <!-- Database Name -->
+            <div>
+                <label class="block text-sm font-semibold mb-2 text-theme-text">Database Name</label>
+                <div class="flex gap-2">
+                    <div class="relative flex-1">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+                            x-icon="'file-text'"></span>
+                        <input type="text" x-model="formData.dbName" placeholder="Contoh: EzyCore_Database"
+                            class="auth-input" :disabled="autoCreateConfirmed"
+                            :class="autoCreateConfirmed ? 'opacity-70 bg-theme-primary cursor-not-allowed' : ''">
+                    </div>
+                    <button @click="discoverDatabase()" :disabled="isSearching || !formData.webappUrl"
+                        class="px-4 bg-theme-secondary border border-theme-border rounded-xl text-theme-text hover:bg-theme-primary transition-all disabled:opacity-50 flex items-center gap-2"
+                        title="Cari database di Drive">
+                        <template x-if="!isSearching">
+                            <span class="w-5 h-5" x-icon="'search'"></span>
+                        </template>
+                        <template x-if="isSearching">
+                            <svg class="w-5 h-5 animate-spin text-brand-500" xmlns="http://www.w3.org/2000/svg"
+                                fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                </path>
+                            </svg>
+                        </template>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Setup Mode -->
+            <div class="p-4 rounded-xl bg-theme-primary border border-theme-border"
+                :class="autoCreateConfirmed ? 'opacity-70 pointer-events-none' : ''">
+                <label class="flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" x-model="formData.dbSetup" x-bind:true-value="'force_new'"
+                        x-bind:false-value="'use_existing'" :disabled="autoCreateConfirmed"
+                        class="w-5 h-5 rounded border-theme-border text-brand-500 focus:ring-brand-500">
+                    <span class="text-sm font-medium text-theme-text">Reset / Buat Database Baru</span>
+                </label>
+                <p class="mt-2 text-xs text-theme-text-sub">Biarkan tidak tercentang jika Anda ingin menghubungkan
+                    kembali ke data yang sudah ada di Google Drive.</p>
+            </div>
+
+            <!-- Blog ID -->
+            <div>
+                <label class="block text-sm font-semibold mb-2 text-theme-text">Blogger Blog ID</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+                        x-icon="'database'"></span>
+                    <input type="text" x-model="formData.blogId" placeholder="Masukkan ID Blog Anda" class="auth-input">
+                </div>
+            </div>
+
+            <!-- Admin Email -->
+            <div>
+                <label class="block text-sm font-semibold mb-2 text-theme-text">Admin Email</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" x-icon="'user'"></span>
+                    <input type="email" x-model="formData.email" placeholder="admin@gmail.com" class="auth-input">
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button @click="saveSetup()" :disabled="isSubmitting"
+                class="w-full bg-brand-500 hover:bg-brand-600 disabled:bg-brand-300 text-white font-bold py-4 rounded-xl shadow-lg shadow-brand-500/20 transition-all active:scale-[0.98] flex flex-col items-center justify-center gap-1">
+                <template x-if="!isSubmitting"><span>Simpan & Hubungkan</span></template>
+                <template x-if="isSubmitting">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-5 h-5 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span x-text="message"></span>
+                    </span>
+                </template>
+            </button>
+        </div>
+    </div>
+
+    <div class="modal" :class="autoCreateModalOpen ? 'show' : ''" x-show="autoCreateModalOpen" x-cloak
+        @keydown.escape.window="closeAutoCreateModal()" aria-hidden="true">
+        <div class="modal-backdrop absolute inset-0 bg-gray-950/60" @click="closeAutoCreateModal()"></div>
+        <div class="modal-dialog relative z-10">
+            <div class="modal-header-sticky">
+                <div class="flex items-start gap-3">
+                    <div class="p-3 bg-warning-50 text-warning-600 rounded-xl">
+                        <span class="w-6 h-6 block" x-icon="'alert-triangle'"></span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-theme-text">Konfirmasi Pembuatan Database</h3>
+                        <p class="mt-1 text-sm text-theme-text-sub">Database legacy tidak ditemukan di Google Drive.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-body-content">
+                <p class="text-sm leading-6 text-theme-text">
+                    EzyCore akan membuat database otomatis:
+                </p>
+                <ul class="space-y-2 text-sm text-theme-text-sub">
+                    <li class="flex gap-2">
+                        <span class="mt-1 w-1.5 h-1.5 rounded-full bg-brand-500 flex-none"></span>
+                        <span>Folder <strong>EzyCore_Database</strong> di Google Drive</span>
+                    </li>
+                    <li class="flex gap-2">
+                        <span class="mt-1 w-1.5 h-1.5 rounded-full bg-brand-500 flex-none"></span>
+                        <span>Spreadsheet <strong>DB_Admin</strong> dengan sheet <strong>Meta</strong></span>
+                    </li>
+                    <li class="flex gap-2">
+                        <span class="mt-1 w-1.5 h-1.5 rounded-full bg-brand-500 flex-none"></span>
+                        <span>Folder <strong>Images</strong> untuk penyimpanan file</span>
+                    </li>
+                </ul>
+                <p class="text-xs leading-5 text-theme-text-sub">
+                    Lanjutkan hanya jika Anda yakin ingin membuat database baru untuk Blog ID ini.
+                </p>
+            </div>
+
+            <div class="modal-footer-actions">
+                <button @click="cancelAutoCreate()" class="btn btn-outline w-full">
+                    Batal
+                </button>
+                <button @click="confirmAutoCreate()" class="btn btn-primary w-full">
+                    Buat Database Otomatis
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
