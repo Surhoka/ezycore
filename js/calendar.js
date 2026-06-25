@@ -53,6 +53,16 @@
 
             // Inisialisasi ulang melalui helper method
             this.renderCalendar(calendarEl);
+
+            // Listen for SPA page navigation to re-layout calendar
+            this._onPageLoaded = (e) => {
+              if (e.detail.page === 'calendar' && this.calendar) {
+                this.$nextTick(() => {
+                  this.calendar.updateSize();
+                });
+              }
+            };
+            window.addEventListener('ezy:page-loaded', this._onPageLoaded);
           });
         },
 
@@ -308,6 +318,14 @@
             window.showToast('API Error while deleting event.', 'error');
             if (backupData) this.calendar.addEvent(backupData);
           });
+        },
+
+        refreshLayout() {
+          if (this.calendar) {
+            this.$nextTick(() => {
+              this.calendar.updateSize();
+            });
+          }
         },
 
         toggleAllDay() {
