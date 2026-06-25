@@ -1,9 +1,7 @@
-document.addEventListener('alpine:init', () => {
-
-  // ================================================================
-  // ECOMMERCE DASHBOARD
-  // ================================================================
-  Alpine.data('ecommerceDashboard', () => ({
+// ================================================================
+// ECOMMERCE DASHBOARD
+// ================================================================
+Alpine.data('ecommerceDashboard', () => ({
     isLoading: true,
     stats: { totalProducts: 0, totalOrders: 0, totalRevenue: 0, totalCustomers: 0 },
     recentOrders: [],
@@ -493,4 +491,3 @@ document.addEventListener('alpine:init', () => {
       }
     }
   }));
-});
