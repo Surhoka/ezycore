@@ -267,11 +267,11 @@
             window.setButtonLoading(button, false);
             if (res.status === 'success') {
               window.showToast(`Event ${this.modalMode === 'add' ? 'created' : 'updated'}!`, 'success');
-              // Sinkronisasi ulang untuk memastikan ID dari server benar
-              if (this.modalMode === 'add' && optimisticEvent) {
-                optimisticEvent.setProp('id', res.id);
+              if (this.modalMode === 'add') {
+                // Hapus temporary event sebelum refetch agar tidak duplikat
+                if (optimisticEvent) optimisticEvent.remove();
               }
-              // Tetap refetch di background untuk memastikan konsistensi data
+              // Refetch di background untuk memastikan konsistensi data
               this.calendar.refetchEvents();
             } else {
               window.showToast(`Error: ${res.message}`, 'error');
