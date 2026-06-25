@@ -2,7 +2,14 @@
 
   <div class="rounded-2xl border border-primary bg-secondary relative min-h-[500px] shadow-sm overflow-hidden">
     <!-- Loading Overlay -->
-  <div x-show="isLoading" class="text-center p-10">Loading profile...</div>
+    <div x-show="isLoading" x-cloak
+      class="absolute inset-0 z-10 flex items-center justify-center bg-secondary rounded-lg">
+      <div class="h-10 w-10 animate-spin rounded-full border-4 border-solid border-brand-500 border-t-transparent">
+      </div>
+    </div>
+    <!-- Tambahkan transition untuk penghalusan saat kalender muncul -->
+    <div x-ref="calendar" class="min-h-[600px] md:min-h-[750px]"></div>
+  </div>
 
   <!-- BEGIN MODAL -->
   <div :class="{ 'show': isModalOpen }" x-cloak
