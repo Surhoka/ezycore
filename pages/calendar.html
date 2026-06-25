@@ -23,13 +23,13 @@
         <span class="w-6 h-6 block" x-icon="'close'"></span>
       </button>
 
-      <div class="modal-content custom-scrollbar">
+      <div class="modal-content">
         <div class="modal-header-sticky">
           <h3 class="h3" x-text="modalMode === 'add' ? 'Add Event' : 'Edit Event'"></h3>
           <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
             Manage your schedule with precision and elegance.</p>
         </div>
-        <div class="modal-body-content">
+        <div class="modal-body-content custom-scrollbar">
           <div>
             <label class="form-label">Event Title</label>
             <input x-model="editingEvent.title" type="text" class="form-input" placeholder="Enter event title" />
