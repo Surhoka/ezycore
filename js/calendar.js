@@ -22,6 +22,7 @@
         },
 
         async init() {
+          this.isLoading = true;
           console.log("Calendar Initialized");
 
           // [PENTING] Tunggu sampai API Discovery selesai sebelum memuat data
@@ -53,6 +54,7 @@
 
             // Inisialisasi ulang melalui helper method
             this.renderCalendar(calendarEl);
+            this.isLoading = false;
           });
         },
 
