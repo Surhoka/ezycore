@@ -1,0 +1,55 @@
+<div x-data="ecommerceDashboard" id="ecommerce-dashboard-container" class="w-full animate-fade-in">
+  <div x-show="isLoading" class="text-center p-10">Loading dashboard...</div>
+  <div x-show="!isLoading" x-transition>
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+      <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+        <p class="text-sm text-gray-500 dark:text-gray-400">Total Products</p>
+        <p class="text-2xl font-bold text-gray-800 dark:text-white/90 mt-1" x-text="stats.totalProducts"></p>
+      </div>
+      <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+        <p class="text-sm text-gray-500 dark:text-gray-400">Total Orders</p>
+        <p class="text-2xl font-bold text-gray-800 dark:text-white/90 mt-1" x-text="stats.totalOrders"></p>
+      </div>
+      <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+        <p class="text-sm text-gray-500 dark:text-gray-400">Revenue</p>
+        <p class="text-2xl font-bold text-gray-800 dark:text-white/90 mt-1" x-text="'Rp ' + Number(stats.totalRevenue).toLocaleString()"></p>
+      </div>
+      <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+        <p class="text-sm text-gray-500 dark:text-gray-400">Customers</p>
+        <p class="text-2xl font-bold text-gray-800 dark:text-white/90 mt-1" x-text="stats.totalCustomers"></p>
+      </div>
+    </div>
+    <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+      <h4 class="text-base font-semibold text-gray-800 dark:text-white/90 mb-4">Recent Orders</h4>
+      <template x-if="recentOrders.length === 0">
+        <p class="text-sm text-gray-500">No orders yet.</p>
+      </template>
+      <div class="overflow-x-auto" x-show="recentOrders.length > 0">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-100 dark:border-gray-800">
+              <th class="text-left py-3 px-2 font-medium text-gray-500">Order</th>
+              <th class="text-left py-3 px-2 font-medium text-gray-500">Customer</th>
+              <th class="text-left py-3 px-2 font-medium text-gray-500">Total</th>
+              <th class="text-left py-3 px-2 font-medium text-gray-500">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template x-for="order in recentOrders" :key="order.id">
+              <tr class="border-b border-gray-50 dark:border-gray-800/50">
+                <td class="py-3 px-2" x-text="order.id"></td>
+                <td class="py-3 px-2" x-text="order.customername || '-'"></td>
+                <td class="py-3 px-2" x-text="'Rp ' + Number(order.total || 0).toLocaleString()"></td>
+                <td class="py-3 px-2">
+                  <span class="px-2 py-1 text-xs rounded-full"
+                    :class="order.status === 'paid' || order.status === 'processing' ? 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400' : order.status === 'cancelled' ? 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400'"
+                    x-text="order.status || 'pending'"></span>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

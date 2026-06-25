@@ -1,0 +1,37 @@
+<div x-data="ecommerceCustomers" id="ecommerce-customers-container" class="w-full animate-fade-in">
+  <div x-show="isLoading" class="text-center p-10">Loading customers...</div>
+  <div x-show="!isLoading" x-transition>
+    <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-6">Customers</h3>
+    <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+              <th class="text-left py-3 px-4 font-medium text-gray-500">Name</th>
+              <th class="text-left py-3 px-4 font-medium text-gray-500">Email</th>
+              <th class="text-left py-3 px-4 font-medium text-gray-500">Phone</th>
+              <th class="text-left py-3 px-4 font-medium text-gray-500">Orders</th>
+              <th class="text-left py-3 px-4 font-medium text-gray-500">Total Spent</th>
+              <th class="text-left py-3 px-4 font-medium text-gray-500">Joined</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template x-if="customers.length === 0">
+              <tr><td colspan="6" class="py-8 text-center text-gray-500">No customers yet.</td></tr>
+            </template>
+            <template x-for="customer in customers" :key="customer.id">
+              <tr class="border-b border-gray-50 dark:border-gray-800/50">
+                <td class="py-3 px-4 font-medium text-gray-800 dark:text-white/90" x-text="customer.name || '-'"></td>
+                <td class="py-3 px-4" x-text="customer.email || '-'"></td>
+                <td class="py-3 px-4" x-text="customer.phone || '-'"></td>
+                <td class="py-3 px-4" x-text="customer.totalorders || 0"></td>
+                <td class="py-3 px-4" x-text="'Rp ' + Number(customer.totalspent || 0).toLocaleString()"></td>
+                <td class="py-3 px-4 text-xs text-gray-500" x-text="customer.createdat ? new Date(customer.createdat).toLocaleDateString() : '-'"></td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,116 @@
+<div x-data="ecommerceAlbums" id="ecommerce-albums-container" class="w-full animate-fade-in">
+  <div x-show="isLoading" class="text-center p-10">Loading albums...</div>
+  <div x-show="!isLoading" x-transition>
+    <template x-if="!currentAlbum">
+      <div>
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Albums</h3>
+          <button @click="openAddAlbum()" class="px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600">Add Album</button>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <template x-if="albums.length === 0">
+            <p class="text-sm text-gray-500 col-span-full">No albums yet.</p>
+          </template>
+          <template x-for="album in albums" :key="album.id">
+            <div class="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03] cursor-pointer hover:shadow-md transition-shadow" @click="selectAlbum(album)">
+              <h4 class="font-semibold text-gray-800 dark:text-white/90" x-text="album.name || album.slug"></h4>
+              <p class="text-xs text-gray-500 mt-1" x-text="album.description || 'No description'"></p>
+              <p class="text-xs text-gray-400 mt-2">Sort: <span x-text="album.sortorder || 0"></span></p>
+              <div class="flex gap-2 mt-3">
+                <button @click.stop="openEditAlbum(album)" class="text-xs text-brand-500 font-medium">Edit</button>
+                <button @click.stop="deleteAlbum(album.id)" class="text-xs text-red-500 font-medium">Delete</button>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </template>
+    <template x-if="currentAlbum">
+      <div>
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center gap-3">
+            <button @click="backToAlbums()" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">&larr; Back</button>
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90" x-text="currentAlbum.name"></h3>
+          </div>
+          <div class="flex gap-2">
+            <button @click="syncMetadata()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">Sync Metadata</button>
+            <button @click="openAddImage()" class="px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600">Add Image</button>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <template x-if="images.length === 0">
+            <p class="text-sm text-gray-500 col-span-full">No images in this album. Add URLs or sync from Blogger.</p>
+          </template>
+          <template x-for="img in images" :key="img.id">
+            <div class="rounded-xl border border-gray-200 bg-white p-2 dark:border-gray-800 dark:bg-white/[0.03] group relative">
+              <img :src="img.thumbnailurl || img.fileurl" class="w-full h-28 object-cover rounded-lg">
+              <p class="text-xs text-gray-500 mt-1 truncate" x-text="img.filename || 'image'"></p>
+              <button @click="deleteImage(img.id)" class="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full text-xs hidden group-hover:flex items-center justify-center">&times;</button>
+            </div>
+          </template>
+        </div>
+      </div>
+    </template>
+
+    <div x-show="showForm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="closeForm()">
+      <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 w-full max-w-md m-4">
+        <h4 class="text-lg font-semibold mb-4 text-gray-800 dark:text-white/90" x-text="editingAlbum && editingAlbum.id ? 'Edit Album' : 'Add Album'"></h4>
+        <div class="space-y-4">
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Name</label>
+            <input type="text" x-model="editingAlbum.name" class="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Description</label>
+            <textarea x-model="editingAlbum.description" rows="2" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white/90"></textarea>
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Sort Order</label>
+            <input type="number" x-model="editingAlbum.sortOrder" class="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">
+          </div>
+          <label class="flex items-center gap-2">
+            <input type="checkbox" x-model="editingAlbum.active" class="rounded border-gray-300 dark:border-gray-700">
+            <span class="text-sm text-gray-700 dark:text-gray-400">Active</span>
+          </label>
+        </div>
+        <div class="mt-6 flex justify-end gap-3">
+          <button @click="closeForm()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">Cancel</button>
+          <button @click="saveAlbum()" class="px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <div x-show="showImageForm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="closeImageForm()">
+      <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 w-full max-w-md m-4">
+        <h4 class="text-lg font-semibold mb-4 text-gray-800 dark:text-white/90">Add Image</h4>
+        <div class="space-y-4">
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">File URL</label>
+            <input type="text" x-model="editingImage.fileUrl" placeholder="https://blogger.googleusercontent.com/..." class="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">File Name</label>
+            <input type="text" x-model="editingImage.fileName" class="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Content Type</label>
+            <select x-model="editingImage.contentType" class="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">
+              <option value="image">Image</option>
+              <option value="youtube">YouTube Video</option>
+              <option value="drive">Google Drive Video</option>
+              <option value="blogger_video">Blogger Video</option>
+            </select>
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Thumbnail URL</label>
+            <input type="text" x-model="editingImage.thumbnailUrl" class="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">
+          </div>
+        </div>
+        <div class="mt-6 flex justify-end gap-3">
+          <button @click="closeImageForm()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">Cancel</button>
+          <button @click="saveImage()" class="px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

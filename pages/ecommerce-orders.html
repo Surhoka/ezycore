@@ -1,0 +1,79 @@
+<div x-data="ecommerceOrders" id="ecommerce-orders-container" class="w-full animate-fade-in">
+  <div x-show="isLoading" class="text-center p-10">Loading orders...</div>
+  <div x-show="!isLoading" x-transition>
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Orders</h3>
+      <div class="flex gap-2">
+        <button @click="filter = 'all'" class="px-3 py-1.5 text-xs font-medium rounded-lg" :class="filter === 'all' ? 'bg-brand-500 text-white' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'">All</button>
+        <button @click="filter = 'pending'" class="px-3 py-1.5 text-xs font-medium rounded-lg" :class="filter === 'pending' ? 'bg-brand-500 text-white' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'">Pending</button>
+        <button @click="filter = 'processing'" class="px-3 py-1.5 text-xs font-medium rounded-lg" :class="filter === 'processing' ? 'bg-brand-500 text-white' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'">Processing</button>
+        <button @click="filter = 'cancelled'" class="px-3 py-1.5 text-xs font-medium rounded-lg" :class="filter === 'cancelled' ? 'bg-brand-500 text-white' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'">Cancelled</button>
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+              <th class="text-left py-3 px-4 font-medium text-gray-500">Order ID</th>
+              <th class="text-left py-3 px-4 font-medium text-gray-500">Customer</th>
+              <th class="text-left py-3 px-4 font-medium text-gray-500">Total</th>
+              <th class="text-left py-3 px-4 font-medium text-gray-500">Payment</th>
+              <th class="text-left py-3 px-4 font-medium text-gray-500">Status</th>
+              <th class="text-left py-3 px-4 font-medium text-gray-500">Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template x-if="filteredOrders.length === 0">
+              <tr><td colspan="6" class="py-8 text-center text-gray-500">No orders found.</td></tr>
+            </template>
+            <template x-for="order in filteredOrders" :key="order.id">
+              <tr class="border-b border-gray-50 dark:border-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800/30 cursor-pointer" @click="viewOrder(order)">
+                <td class="py-3 px-4 font-mono text-xs" x-text="order.id"></td>
+                <td class="py-3 px-4" x-text="order.customername || order.customeremail || '-'"></td>
+                <td class="py-3 px-4" x-text="'Rp ' + Number(order.total || 0).toLocaleString()"></td>
+                <td class="py-3 px-4">
+                  <span class="px-2 py-1 text-xs rounded-full"
+                    :class="order.paymentstatus === 'paid' ? 'bg-green-100 text-green-700' : order.paymentstatus === 'failed' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'"
+                    x-text="order.paymentstatus || 'pending'"></span>
+                </td>
+                <td class="py-3 px-4" x-text="order.status || 'pending'"></td>
+                <td class="py-3 px-4 text-xs text-gray-500" x-text="order.createdat ? new Date(order.createdat).toLocaleDateString() : '-'"></td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div x-show="selectedOrder" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="closeDetail()">
+      <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto m-4">
+        <h4 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-4">Order Detail</h4>
+        <div class="space-y-3 text-sm">
+          <div><span class="font-medium text-gray-500">ID:</span> <span class="font-mono" x-text="selectedOrder.id"></span></div>
+          <div><span class="font-medium text-gray-500">Customer:</span> <span x-text="selectedOrder.customername"></span></div>
+          <div><span class="font-medium text-gray-500">Email:</span> <span x-text="selectedOrder.customeremail"></span></div>
+          <div><span class="font-medium text-gray-500">Phone:</span> <span x-text="selectedOrder.customerphone"></span></div>
+          <div><span class="font-medium text-gray-500">Address:</span> <span x-text="selectedOrder.shippingaddress"></span></div>
+          <div><span class="font-medium text-gray-500">Total:</span> <span x-text="'Rp ' + Number(selectedOrder.total || 0).toLocaleString()"></span></div>
+          <div><span class="font-medium text-gray-500">Payment:</span> <span x-text="selectedOrder.paymentmethod || '-'"></span></div>
+          <div><span class="font-medium text-gray-500">Status:</span> <span x-text="selectedOrder.status"></span></div>
+          <div><span class="font-medium text-gray-500">Payment Status:</span> <span x-text="selectedOrder.paymentstatus"></span></div>
+          <div x-show="selectedOrder.items && selectedOrder.items.length > 0">
+            <span class="font-medium text-gray-500">Items:</span>
+            <div class="mt-1 space-y-1">
+              <template x-for="(item, i) in selectedOrder.items" :key="i">
+                <div class="text-xs bg-gray-50 dark:bg-gray-800 p-2 rounded" x-text="(item.name || item.sku || 'Item') + ' x' + (item.quantity || 1)"></div>
+              </template>
+            </div>
+          </div>
+          <div class="flex gap-2 mt-4">
+            <button @click="updateStatus(selectedOrder.id, 'processing')" class="px-3 py-1.5 text-xs font-medium text-white bg-green-500 rounded-lg hover:bg-green-600">Mark Processing</button>
+            <button @click="updateStatus(selectedOrder.id, 'cancelled')" class="px-3 py-1.5 text-xs font-medium text-white bg-red-500 rounded-lg hover:bg-red-600">Cancel Order</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

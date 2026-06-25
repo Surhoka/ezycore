@@ -1,0 +1,116 @@
+<div x-data="ecommerceProducts" id="ecommerce-products-container" class="w-full animate-fade-in">
+  <div x-show="isLoading" class="text-center p-10">Loading products...</div>
+  <div x-show="!isLoading" x-transition>
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Products</h3>
+      <div class="flex gap-2">
+        <button @click="republishShop()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90 dark:hover:bg-gray-700">Republish Shop</button>
+        <button @click="openAddForm()" class="px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600">Add Product</button>
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+              <th class="text-left py-3 px-4 font-medium text-gray-500">Name</th>
+              <th class="text-left py-3 px-4 font-medium text-gray-500">Price</th>
+              <th class="text-left py-3 px-4 font-medium text-gray-500">Stock</th>
+              <th class="text-left py-3 px-4 font-medium text-gray-500">Category</th>
+              <th class="text-left py-3 px-4 font-medium text-gray-500">Status</th>
+              <th class="text-right py-3 px-4 font-medium text-gray-500">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template x-if="products.length === 0">
+              <tr><td colspan="6" class="py-8 text-center text-gray-500">No products yet. Click "Add Product" to create one.</td></tr>
+            </template>
+            <template x-for="product in products" :key="product.id">
+              <tr class="border-b border-gray-50 dark:border-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800/30">
+                <td class="py-3 px-4 font-medium text-gray-800 dark:text-white/90" x-text="product.name || product.slug"></td>
+                <td class="py-3 px-4" x-text="'Rp ' + Number(product.price || 0).toLocaleString()"></td>
+                <td class="py-3 px-4" x-text="product.stock || 0"></td>
+                <td class="py-3 px-4" x-text="product.category || '-'"></td>
+                <td class="py-3 px-4">
+                  <span class="px-2 py-1 text-xs rounded-full"
+                    :class="product.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'"
+                    x-text="product.status || 'draft'"></span>
+                </td>
+                <td class="py-3 px-4 text-right">
+                  <button @click="openEditForm(product)" class="text-brand-500 hover:text-brand-600 text-xs font-medium mr-2">Edit</button>
+                  <button @click="publishProduct(product.id)" class="text-blue-500 hover:text-blue-600 text-xs font-medium mr-2">Publish</button>
+                  <button @click="deleteProduct(product.id)" class="text-red-500 hover:text-red-600 text-xs font-medium">Delete</button>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div x-show="showForm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="closeForm()">
+      <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto m-4">
+        <h4 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-4" x-text="editingProduct.id ? 'Edit Product' : 'Add Product'"></h4>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div class="sm:col-span-2">
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Name</label>
+            <input type="text" x-model="editingProduct.name" class="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Price</label>
+            <input type="number" x-model="editingProduct.price" class="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Compare At Price</label>
+            <input type="number" x-model="editingProduct.compareAtPrice" class="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Stock</label>
+            <input type="number" x-model="editingProduct.stock" class="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Category</label>
+            <select x-model="editingProduct.category" class="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">
+              <option value="">None</option>
+              <template x-for="cat in categories" :key="cat.id">
+                <option x-text="cat.name" :value="cat.name"></option>
+              </template>
+            </select>
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Weight (gram)</label>
+            <input type="number" x-model="editingProduct.weight" class="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Status</label>
+            <select x-model="editingProduct.status" class="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">
+              <option value="draft">Draft</option>
+              <option value="published">Published</option>
+            </select>
+          </div>
+          <div class="sm:col-span-2">
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Images</label>
+            <div class="flex flex-wrap gap-2 mb-2">
+              <template x-for="(img, i) in editingProduct.images" :key="i">
+                <div class="relative group">
+                  <img :src="img" class="w-16 h-16 object-cover rounded-lg border">
+                  <button @click="removeImage(i)" class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs hidden group-hover:flex items-center justify-center">&times;</button>
+                </div>
+              </template>
+            </div>
+            <button @click="addImageUrl()" class="text-xs text-brand-500 font-medium">+ Add Image URL</button>
+          </div>
+          <div class="sm:col-span-2">
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Description</label>
+            <textarea x-model="editingProduct.description" rows="3" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white/90"></textarea>
+          </div>
+        </div>
+        <div class="mt-6 flex justify-end gap-3">
+          <button @click="closeForm()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">Cancel</button>
+          <button @click="saveProduct()" class="px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

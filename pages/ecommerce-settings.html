@@ -1,0 +1,57 @@
+<div x-data="ecommerceSettings" id="ecommerce-settings-container" class="w-full animate-fade-in">
+  <div x-show="isLoading" class="text-center p-10">Loading settings...</div>
+  <div x-show="!isLoading" x-transition>
+    <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
+      <h4 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-6">Ecommerce Settings</h4>
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div>
+          <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Blog ID</label>
+          <input type="text" x-model="settings.blogId" placeholder="Blogger blog ID"
+            class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+        </div>
+        <div>
+          <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Blog URL</label>
+          <input type="text" x-model="settings.blogUrl" placeholder="https://tokoku.blogspot.com"
+            class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+        </div>
+        <div>
+          <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">WebApp URL</label>
+          <input type="text" x-model="settings.webAppUrl" placeholder="Admin WebApp URL for Midtrans callback"
+            class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+        </div>
+        <div>
+          <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Shop Page ID</label>
+          <input type="text" x-model="settings.pageIdShop" placeholder="Blogger page ID for /p/shop.html"
+            class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+        </div>
+        <div>
+          <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Home Data Page ID</label>
+          <input type="text" x-model="settings.pageIdHomeData" placeholder="Blogger page ID for /p/home-data.html"
+            class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+        </div>
+        <div>
+          <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Currency</label>
+          <input type="text" x-model="settings.currency" placeholder="IDR"
+            class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+        </div>
+        <div>
+          <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Tax Rate (%)</label>
+          <input type="number" x-model="settings.taxRate" step="0.1"
+            class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+        </div>
+        <div>
+          <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Midtrans Client Key</label>
+          <input type="text" x-model="settings.midtransClientKey" placeholder="SB-Mid-client-xxxxx"
+            class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+          <p class="mt-1 text-xs text-gray-500">Server key di-set manual di Apps Script Properties > ECOMMERCE_MIDTRANS_SERVER_KEY</p>
+        </div>
+      </div>
+      <div class="mt-6 flex justify-end">
+        <button @click="saveSettings()"
+          class="px-5 py-2.5 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600 transition-all">
+          Save Settings
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
