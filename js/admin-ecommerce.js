@@ -742,14 +742,17 @@ Alpine.data('ecommerceDashboard', () => ({
         siteKey: this.settings.siteKey
       };
       try {
-        const res = await ecomApi('saveEcommerceSettings', { ecommerce: payload });
+        const res = await Promise.race([
+          ecomApi('saveEcommerceSettings', { ecommerce: payload }),
+          new Promise(function (_, reject) { setTimeout(function () { reject(new Error('Timeout')); }, 25000); })
+        ]);
         if (res.status === 'success') {
           if (window.showToast) window.showToast('Settings saved', 'success');
         } else {
           if (window.showToast) window.showToast(res.message, 'error');
         }
       } catch (e) {
-        if (window.showToast) window.showToast('Failed to save settings', 'error');
+        if (window.showToast) window.showToast(e.message === 'Timeout' ? 'Server tidak merespon, coba lagi' : 'Failed to save settings', 'error');
       }
       this.isSaving = false;
     }
