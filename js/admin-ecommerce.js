@@ -705,6 +705,7 @@ Alpine.data('ecommerceDashboard', () => ({
   // ================================================================
   Alpine.data('ecommerceSettings', () => ({
     isLoading: true,
+    isSaving: false,
     activeTab: 'general',
     settings: {
       blogId: '', blogUrl: '', webAppUrl: '', pageIdShop: '', pageIdHomeData: '',
@@ -712,45 +713,15 @@ Alpine.data('ecommerceDashboard', () => ({
     },
 
     init() {
-      if (this.$watch) {
-        this.$watch('settings.blogId', (val) => {
-          if (val && val.length > 5) this.fetchAdminConfig(val);
-        });
-      }
       this.loadSettings();
-    },
-
-    async fetchAdminConfig(blogId) {
-      try {
-        const res = await ecomApi('getAdminEcommerceConfig', { blogId: blogId || this.settings.blogId });
-        if (res.status === 'success' && res.data) {
-          this.settings.webAppUrl = res.data.webAppUrl || '';
-          this.settings.siteKey = res.data.siteKey || '';
-        } else {
-          this.settings.webAppUrl = '';
-          this.settings.siteKey = '';
-        }
-      } catch (e) {
-        // silent
-      }
     },
 
     async loadSettings() {
       this.isLoading = true;
       try {
-        const [res, adminRes] = await Promise.all([
-          ecomApi('getEcommerceSettings'),
-          ecomApi('getAdminEcommerceConfig', { blogId: '' })
-        ]);
+        const res = await ecomApi('getEcommerceSettings');
         if (res.status === 'success' && res.data) {
           this.settings = { ...this.settings, ...res.data };
-          if (this.settings.blogId && this.settings.blogId.length > 5) {
-            this.fetchAdminConfig(this.settings.blogId);
-          }
-        }
-        if (adminRes.status === 'success' && adminRes.data) {
-          if (adminRes.data.webAppUrl) this.settings.webAppUrl = adminRes.data.webAppUrl;
-          if (adminRes.data.siteKey) this.settings.siteKey = adminRes.data.siteKey;
         }
       } catch (e) {
         if (window.showToast) window.showToast('Failed to load settings', 'error');
@@ -759,6 +730,7 @@ Alpine.data('ecommerceDashboard', () => ({
     },
 
     async saveSettings() {
+      this.isSaving = true;
       var payload = {
         blogId: this.settings.blogId,
         blogUrl: this.settings.blogUrl,
@@ -779,5 +751,6 @@ Alpine.data('ecommerceDashboard', () => ({
       } catch (e) {
         if (window.showToast) window.showToast('Failed to save settings', 'error');
       }
+      this.isSaving = false;
     }
   }));
