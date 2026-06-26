@@ -766,7 +766,8 @@ Alpine.data('ecommerceDashboard', () => ({
         pageIdHomeData: this.settings.pageIdHomeData,
         currency: this.settings.currency,
         taxRate: this.settings.taxRate,
-        midtransClientKey: this.settings.midtransClientKey
+        midtransClientKey: this.settings.midtransClientKey,
+        siteKey: this.settings.siteKey
       };
       try {
         const res = await ecomApi('saveEcommerceSettings', { ecommerce: payload });
