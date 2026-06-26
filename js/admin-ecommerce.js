@@ -163,139 +163,381 @@ Alpine.data('ecommerceDashboard', () => ({
   // ECOMMERCE ALBUMS
   // ================================================================
   Alpine.data('ecommerceAlbums', () => ({
-    isLoading: true,
+    dbId: null,
     albums: [],
-    currentAlbum: null,
-    images: [],
+    albumFiles: [],
+    fileSearchQuery: '',
+    selectedAlbumId: '',
+    isLoading: false,
+    expandedIds: [],
+    isSyncing: false,
+    showAlbumModal: false,
+    showYoutubeModal: false,
+    showDriveModal: false,
+    isEditing: false,
     editingAlbum: {},
-    showForm: false,
-    showImageForm: false,
-    editingImage: {},
+    youtubeInput: { url: '', title: '', isSaving: false },
+    driveInput: { url: '', title: '', isSaving: false },
+    currentPage: 1,
+    itemsPerPage: 10,
 
-    init() { this.loadAlbums(); },
-
-    async loadAlbums() {
-      this.isLoading = true;
-      try {
-        const res = await ecomApi('getAlbums');
-        this.albums = res.data || [];
-      } catch (e) {
-        if (window.showToast) window.showToast('Failed to load albums', 'error');
-      }
-      this.isLoading = false;
+    get paginatedAlbumFiles() {
+      const start = (this.currentPage - 1) * this.itemsPerPage;
+      return this.filteredAlbumFiles.slice(start, start + this.itemsPerPage);
     },
 
-    async selectAlbum(album) {
-      this.currentAlbum = album;
-      try {
-        const res = await ecomApi('getAlbumImages', { albumId: album.id });
-        this.images = res.data || [];
-      } catch (e) {
-        this.images = [];
-      }
+    get totalPages() {
+      return Math.max(1, Math.ceil(this.filteredAlbumFiles.length / this.itemsPerPage));
     },
 
-    backToAlbums() {
-      this.currentAlbum = {};
-      this.images = [];
+    get filteredAlbumFiles() {
+      if (!this.fileSearchQuery.trim()) return this.albumFiles;
+      const q = this.fileSearchQuery.toLowerCase();
+      return this.albumFiles.filter(f =>
+        (f.filename && f.filename.toLowerCase().includes(q)) ||
+        (f.originalfilename && f.originalfilename.toLowerCase().includes(q))
+      );
+    },
+
+    get selectedAlbumPath() {
+      if (!this.selectedAlbumId) return [];
+      const path = [];
+      let currentId = this.selectedAlbumId;
+      let safety = 0;
+      while (currentId && safety < 10) {
+        const album = this.albums.find(a => a.id === currentId);
+        if (album) { path.unshift(album); currentId = album.parentid; }
+        else break;
+        safety++;
+      }
+      return path;
+    },
+
+    init() {
+      if (this.$watch) {
+        this.$watch('fileSearchQuery', () => { this.currentPage = 1; });
+        this.$watch('selectedAlbumId', () => { this.currentPage = 1; });
+      }
+      const cache = JSON.parse(localStorage.getItem('EzypartsConfig') || '{}');
+      this.dbId = cache.pluginContentDbId || cache.sheetId || cache.dbId || null;
+      this.selectedAlbumId = cache.pageId || '';
+      this.fetchAlbums();
+      if (this.selectedAlbumId) {
+        this.fetchAlbumFiles(this.selectedAlbumId);
+      }
     },
 
     openAddAlbum() {
-      this.editingAlbum = { id: '', name: '', slug: '', description: '', parentId: '', active: true, sortOrder: 0 };
-      this.showForm = true;
+      this.isEditing = false;
+      this.editingAlbum = { name: '', slug: '', description: '', parent_id: '', active: true, sortOrder: 0 };
+      this.showAlbumModal = true;
     },
 
-    openEditAlbum(album) {
-      this.editingAlbum = { ...album };
-      this.editingAlbum.active = album.active === 'TRUE' || album.active === true;
-      this.showForm = true;
-    },
-
-    closeForm() {
-      this.showForm = false;
-      this.editingAlbum = {};
+    editAlbum(item) {
+      this.isEditing = true;
+      this.editingAlbum = { ...item, parent_id: item.parentid || '' };
+      this.showAlbumModal = true;
     },
 
     async saveAlbum() {
+      if (!this.editingAlbum.name) { if (window.showToast) window.showToast('Nama album harus diisi', 'warning'); return; }
+      const btn = document.getElementById('save-album-btn');
+      if (window.setButtonLoading) window.setButtonLoading(btn, true);
       try {
-        const res = await ecomApi('saveAlbum', { ...this.editingAlbum });
-        if (res.status === 'success') {
-          if (window.showToast) window.showToast('Album saved', 'success');
-          this.closeForm();
-          this.loadAlbums();
+        const payload = { ...this.editingAlbum, dbId: this.dbId };
+        if (!payload.slug) {
+          payload.slug = window.slugify_ ? window.slugify_(payload.name) : payload.name.toLowerCase().replace(/\s+/g, '-');
+        }
+        const res = await ecomApi('saveAlbum', payload);
+        if (res && res.status === 'success') {
+          if (window.showToast) window.showToast('Album berhasil disimpan', 'success');
+          this.showAlbumModal = false;
+          await this.fetchAlbums();
         } else {
-          if (window.showToast) window.showToast(res.message, 'error');
+          if (window.showToast) window.showToast((res && res.message) || 'Gagal menyimpan album', 'error');
         }
       } catch (e) {
-        if (window.showToast) window.showToast('Failed to save album', 'error');
+        if (window.showToast) window.showToast('Terjadi kesalahan: ' + e, 'error');
+      } finally {
+        if (window.setButtonLoading) window.setButtonLoading(btn, false);
       }
     },
 
     async deleteAlbum(id) {
-      if (!confirm('Delete this album and all its images?')) return;
+      if (!confirm('Hapus album ini? Semua file di dalamnya akan dihapus.')) return;
       try {
-        const res = await ecomApi('deleteAlbum', { id: id });
-        if (res.status === 'success') {
-          if (window.showToast) window.showToast('Album deleted', 'success');
-          if (this.currentAlbum && this.currentAlbum.id === id) this.backToAlbums();
-          this.loadAlbums();
+        const res = await ecomApi('deleteAlbum', { id: id, dbId: this.dbId });
+        if (res && res.status === 'success') {
+          if (window.showToast) window.showToast('Album dihapus', 'success');
+          if (this.selectedAlbumId === id) { this.selectedAlbumId = ''; this.albumFiles = []; }
+          await this.fetchAlbums();
+        } else {
+          if (window.showToast) window.showToast((res && res.message) || 'Gagal menghapus album', 'error');
         }
       } catch (e) {
-        if (window.showToast) window.showToast('Failed to delete album', 'error');
+        if (window.showToast) window.showToast('Gagal menghapus: ' + e, 'error');
       }
     },
 
-    openAddImage() {
-      this.editingImage = { albumId: this.currentAlbum.id, fileName: '', fileUrl: '', contentType: 'image', thumbnailUrl: '' };
-      this.showImageForm = true;
-    },
-
-    closeImageForm() {
-      this.showImageForm = false;
-      this.editingImage = {};
-    },
-
-    async saveImage() {
+    async fetchAlbums() {
+      this.isLoading = true;
       try {
-        const res = await ecomApi('saveAlbumImage', { ...this.editingImage });
-        if (res.status === 'success') {
-          if (window.showToast) window.showToast('Image saved', 'success');
-          this.closeImageForm();
-          this.selectAlbum(this.currentAlbum);
+        const res = await ecomApi('getAlbums', { dbId: this.dbId });
+        if (res && res.status === 'success') {
+          this.albums = res.data || [];
+          const cache = JSON.parse(localStorage.getItem('EzypartsConfig') || '{}');
+          if (cache.pageId && !this.albums.find(a => a.id === cache.pageId)) {
+            this.albums.unshift({ id: cache.pageId, name: 'Blogger Database', description: 'Main album from Blogger Page', active: true, parentid: '' });
+          }
+          if (!this.selectedAlbumId && this.albums.length) {
+            this.selectAlbum(this.albums[0].id);
+          }
+        } else {
+          if (window.showToast) window.showToast((res && res.message) || 'Gagal memuat album', 'error');
         }
       } catch (e) {
-        if (window.showToast) window.showToast('Failed to save image', 'error');
+        console.error('fetchAlbums:', e);
+        if (window.showToast) window.showToast('Gagal memuat album', 'error');
+      } finally {
+        this.isLoading = false;
       }
     },
 
-    async deleteImage(id) {
-      if (!confirm('Remove this image?')) return;
+    async selectAlbum(albumId) {
+      this.selectedAlbumId = albumId;
+      await this.fetchAlbumFiles(albumId);
+    },
+
+    async fetchAlbumFiles(albumId) {
+      if (!albumId) return;
+      this.isLoading = true;
       try {
-        const res = await ecomApi('deleteAlbumImage', { id: id });
-        if (res.status === 'success') {
-          if (window.showToast) window.showToast('Image removed', 'success');
-          this.selectAlbum(this.currentAlbum);
+        const res = await ecomApi('getAlbumImages', { dbId: this.dbId, albumId: albumId });
+        if (res && res.status === 'success') {
+          this.albumFiles = res.data || [];
+        } else {
+          if (window.showToast) window.showToast((res && res.message) || 'Gagal memuat file', 'error');
         }
       } catch (e) {
-        if (window.showToast) window.showToast('Failed to delete image', 'error');
+        console.error('fetchAlbumFiles:', e);
+        if (window.showToast) window.showToast('Gagal memuat file album', 'error');
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async editFileCaption(file) {
+      const newName = prompt('Ubah Nama/Caption:', file.filename || '');
+      if (newName !== null && newName !== file.filename) {
+        const originalName = file.filename;
+        file.filename = newName;
+        try {
+          const res = await ecomApi('saveAlbumImage', {
+            ...file, dbId: this.dbId, albumId: this.selectedAlbumId,
+            fileName: file.filename, originalFileName: file.originalfilename,
+            fileUrl: file.fileurl, contentType: file.contenttype || 'image',
+            thumbnailUrl: file.thumbnailurl || ''
+          });
+          if (res && res.status === 'success') {
+            if (window.showToast) window.showToast('Caption diperbarui', 'success');
+          } else {
+            file.filename = originalName;
+            if (window.showToast) window.showToast((res && res.message) || 'Gagal menyimpan caption', 'error');
+          }
+        } catch (e) {
+          file.filename = originalName;
+          if (window.showToast) window.showToast('Gagal menyimpan: ' + e, 'error');
+        }
+      }
+    },
+
+    async deleteFile(id) {
+      if (!confirm('Hapus file ini?')) return;
+      try {
+        const res = await ecomApi('deleteAlbumImage', { id: id, dbId: this.dbId });
+        if (res && res.status === 'success') {
+          if (window.showToast) window.showToast('File dihapus', 'success');
+          await this.fetchAlbumFiles(this.selectedAlbumId);
+        } else {
+          if (window.showToast) window.showToast((res && res.message) || 'Gagal menghapus file', 'error');
+        }
+      } catch (e) {
+        if (window.showToast) window.showToast('Gagal menghapus: ' + e, 'error');
+      }
+    },
+
+    async openBloggerEditor() {
+      const cache = JSON.parse(localStorage.getItem('EzypartsConfig') || '{}');
+      const blogId = cache.blogId || '';
+      const pageId = cache.pageId;
+      if (!blogId || !this.selectedAlbumId) {
+        if (window.showToast) window.showToast('Harap isi Blog ID dan Page ID di menu Settings.', 'warning');
+        return;
+      }
+      const template = `<div class="ezy-album-entry" data-album-id="${this.selectedAlbumId}" style="background-color: white; border-radius: 20px; border: 2px solid rgb(226, 232, 240); box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 6px -1px; font-family: Inter, sans-serif; margin-bottom: 30px; padding: 25px;">\n  <h3 style="border-bottom: 1px solid rgb(241, 245, 249); color: #0f172a; font-size: 18px; margin-top: 0px; padding-bottom: 10px;"><span style="color: #475569; font-size: 13px;">Area Gambar :</span></h3><div style="text-align: center;"><br /></div>\n  \n  <div style="align-items: center; border-top: 1px solid rgb(241, 245, 249); display: flex; justify-content: space-between; margin-top: 20px; padding-top: 15px;">\n    <span style="color: #94a3b8; font-size: 11px;">EzyStore Metadata System v2.0</span>\n    <span style="background: rgb(59, 130, 246); border-radius: 4px; color: white; font-size: 10px; font-weight: bold; padding: 2px 8px;">SYNC READY</span>\n  </div>\n</div><br />`;
+      try {
+        await navigator.clipboard.writeText(template);
+        if (window.showToast) window.showToast('Template disalin! Silakan paste di Editor Blogger.', 'success');
+      } catch (err) {
+        console.error('Gagal menyalin template:', err);
+      }
+      const url = `https://draft.blogger.com/blog/page/edit/${blogId}/${pageId}`;
+      window.open(url, 'BloggerEditor', 'width=1100,height=800,scrollbars=yes,resizable=yes');
+    },
+
+    openYoutubeModal() {
+      if (!this.selectedAlbumId) { if (window.showToast) window.showToast('Pilih album terlebih dahulu!', 'warning'); return; }
+      this.youtubeInput = { url: '', title: '', isSaving: false };
+      this.showYoutubeModal = true;
+    },
+
+    openDriveModal() {
+      if (!this.selectedAlbumId) { if (window.showToast) window.showToast('Pilih album terlebih dahulu!', 'warning'); return; }
+      this.driveInput = { url: '', title: '', isSaving: false };
+      this.showDriveModal = true;
+    },
+
+    async addYoutubeVideo() {
+      const url = (this.youtubeInput.url || '').trim();
+      if (!url) { if (window.showToast) window.showToast('URL YouTube harus diisi', 'warning'); return; }
+      const videoId = extractYoutubeId(url);
+      if (!videoId) { if (window.showToast) window.showToast('URL YouTube tidak valid.', 'error'); return; }
+      this.youtubeInput.isSaving = true;
+      const embedUrl = `https://www.youtube.com/embed/${videoId}`;
+      const thumbUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+      const title = (this.youtubeInput.title || '').trim() || 'Video ' + videoId;
+      try {
+        const res = await ecomApi('saveAlbumImage', {
+          albumId: this.selectedAlbumId, dbId: this.dbId,
+          fileName: title, originalFileName: url, fileUrl: embedUrl,
+          thumbnailUrl: thumbUrl, contentType: 'youtube', mimeType: 'video/youtube', size: 0
+        });
+        if (res && res.status === 'success') {
+          if (window.showToast) window.showToast('Video YouTube berhasil ditambahkan!', 'success');
+          this.showYoutubeModal = false;
+          await this.fetchAlbumFiles(this.selectedAlbumId);
+        } else {
+          if (window.showToast) window.showToast((res && res.message) || 'Gagal menyimpan video', 'error');
+        }
+      } catch (e) {
+        if (window.showToast) window.showToast('Terjadi kesalahan: ' + e, 'error');
+      } finally {
+        this.youtubeInput.isSaving = false;
+      }
+    },
+
+    async addDriveVideo() {
+      const url = (this.driveInput.url || '').trim();
+      if (!url) { if (window.showToast) window.showToast('URL Google Drive harus diisi', 'warning'); return; }
+      const driveId = this._extractDriveId(url);
+      if (!driveId) { if (window.showToast) window.showToast('URL Google Drive tidak valid.', 'error'); return; }
+      this.driveInput.isSaving = true;
+      const directUrl = 'https://drive.google.com/uc?id=' + driveId;
+      const title = (this.driveInput.title || '').trim() || 'Drive Video ' + driveId.slice(-4);
+      try {
+        const res = await ecomApi('saveAlbumImage', {
+          albumId: this.selectedAlbumId, dbId: this.dbId,
+          fileName: title, originalFileName: url, fileurl: directUrl,
+          thumbnailUrl: '', contentType: 'drive', mimeType: 'video/mp4', size: 0
+        });
+        if (res && res.status === 'success') {
+          if (window.showToast) window.showToast('Video Drive berhasil ditambahkan!', 'success');
+          this.showDriveModal = false;
+          await this.fetchAlbumFiles(this.selectedAlbumId);
+        } else {
+          if (window.showToast) window.showToast((res && res.message) || 'Gagal menyimpan video', 'error');
+        }
+      } catch (e) {
+        if (window.showToast) window.showToast('Terjadi kesalahan: ' + e, 'error');
+      } finally {
+        this.driveInput.isSaving = false;
       }
     },
 
     async syncMetadata() {
-      if (!this.currentAlbum) return;
+      if (!this.selectedAlbumId) { if (window.showToast) window.showToast('Pilih album terlebih dahulu!', 'warning'); return; }
+      this.isSyncing = true;
+      if (window.showToast) window.showToast('Menarik metadata dari Blogger...', 'info');
       try {
-        const res = await ecomApi('syncAlbumMetadata', { albumId: this.currentAlbum.id });
-        if (res.status === 'success') {
+        const cache = JSON.parse(localStorage.getItem('EzypartsConfig') || '{}');
+        const webUrl = cache.webUrl || '';
+        if (!webUrl) { throw new Error('Web URL tidak ditemukan. Harap simpan konfigurasi di menu Settings.'); }
+        const res = await ecomApi('syncAlbumMetadataFromBloggerUrl', { dbId: this.dbId, albumId: this.selectedAlbumId, webUrl: webUrl });
+        if (res && res.status === 'success') {
           if (window.showToast) window.showToast(res.message, 'success');
-          this.selectAlbum(this.currentAlbum);
+          await this.fetchAlbumFiles(this.selectedAlbumId);
         } else {
-          if (window.showToast) window.showToast(res.message, 'error');
+          if (window.showToast) window.showToast((res && res.message) || 'Gagal sinkron metadata', 'error');
         }
       } catch (e) {
-        if (window.showToast) window.showToast('Failed to sync album metadata', 'error');
+        console.error('syncMetadata:', e);
+        if (window.showToast) window.showToast(e.message || 'Gagal sinkron metadata', 'error');
+      } finally {
+        this.isSyncing = false;
+      }
+    },
+
+    hasChildren(id) {
+      return this.albums.some(a => a.parentid === id);
+    },
+
+    toggleExpand(id) {
+      if (this.expandedIds.includes(id)) {
+        this.expandedIds = this.expandedIds.filter(i => i !== id);
+      } else {
+        this.expandedIds.push(id);
+      }
+    },
+
+    isRowVisible(alb) {
+      if (!alb.parentid) return true;
+      let currentParentId = alb.parentid;
+      while (currentParentId) {
+        if (!this.expandedIds.includes(currentParentId)) return false;
+        const parent = this.albums.find(a => a.id === currentParentId);
+        currentParentId = parent ? parent.parentid : null;
+      }
+      return true;
+    },
+
+    getThumbUrl(file) {
+      if (file.thumbnailurl) return file.thumbnailurl;
+      if (file.contenttype === 'youtube') {
+        const m = String(file.fileurl || '').match(/embed\/([a-zA-Z0-9_-]{11})/);
+        if (m) return 'https://img.youtube.com/vi/' + m[1] + '/hqdefault.jpg';
+      }
+      if (file.contenttype === 'drive') return 'https://www.gstatic.com/images/branding/product/2x/drive_48dp.png';
+      if (file.contenttype === 'blogger_video') return 'https://www.gstatic.com/images/icons/material/system/2x/movie_black_48dp.png';
+      return file.fileurl || '';
+    },
+
+    isYoutube(file) { return file.contenttype === 'youtube' || file.mimetype === 'video/youtube'; },
+    isDriveVideo(file) { return file.contenttype === 'drive'; },
+    isBloggerVideo(file) { return file.contenttype === 'blogger_video'; },
+    isVideo(file) { return this.isYoutube(file) || this.isDriveVideo(file) || this.isBloggerVideo(file) || (file.contenttype && file.contenttype.includes('video')); },
+
+    _extractDriveId(url) {
+      if (!url) return null;
+      const m = String(url).match(/(?:drive\.google\.com\/(?:file\/d\/|open\?id=)|docs\.google\.com\/file\/d\/)([a-zA-Z0-9_-]+)/);
+      return m ? m[1] : null;
+    },
+
+    copyUrl(url) {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url);
+        if (window.showToast) window.showToast('URL disalin!', 'success');
       }
     }
   }));
+
+  // Helper: extract YouTube ID
+  if (typeof window.extractYoutubeId !== 'function') {
+    window.extractYoutubeId = function(url) {
+      if (!url) return null;
+      var m = String(url).match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      return m ? m[1] : null;
+    };
+  }
 
   // ================================================================
   // ECOMMERCE ORDERS
