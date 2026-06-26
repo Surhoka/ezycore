@@ -748,6 +748,7 @@ Alpine.data('ecommerceDashboard', () => ({
         ]);
         if (res.status === 'success') {
           if (window.showToast) window.showToast('Settings saved', 'success');
+          await this.loadSettings();
         } else {
           if (window.showToast) window.showToast(res.message, 'error');
         }
