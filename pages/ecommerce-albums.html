@@ -1,4 +1,4 @@
-<div x-data="ecommerceAlbums" id="ecommerce-albums-container" class="w-full animate-fade-in">
+<div x-data="ecommerceAlbums" class="w-full px-1 sm:px-0">
 
   <div class="rounded-2xl border border-primary bg-secondary relative min-h-[500px] shadow-sm overflow-hidden">
     <!-- Loading Overlay -->
@@ -10,7 +10,7 @@
       </svg>
     </div>
 
-    <div x-show="!isLoading" class="transition-opacity duration-500" :class="isLoading ? 'opacity-0' : 'opacity-100'">
+    <div x-show="!isLoading" class="p-4 md:p-6 transition-opacity duration-500" :class="isLoading ? 'opacity-0' : 'opacity-100'">
       <!-- Album List -->
       <template x-if="!currentAlbum || !currentAlbum.id">
         <div>
