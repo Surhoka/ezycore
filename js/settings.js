@@ -31,11 +31,11 @@
                     } catch (e) { console.error('Error parsing settings', e); }
                 }
 
-                // Load live settings from backend
+                // Load live settings from backend (async — akan update saat response tiba)
                 this.loadLiveSettings();
 
                 // Load live sensitive settings from server cache
-                const configCache = localStorage.getItem('Ezyparts_Config_Cache');
+                const configCache = localStorage.getItem('Ezycore_Config_Cache');
                 if (configCache) {
                     const config = JSON.parse(configCache);
                     if (config.gatewayToken) {
@@ -53,6 +53,15 @@
                     if (config.blogId) {
                         this.settings.blogId = config.blogId;
                     }
+                }
+
+                // Fallback synchronous dari EzyApi.config (paling cepat, tanpa network)
+                if (window.EzyApi && window.EzyApi.config) {
+                    if (!this.settings.blogId && window.EzyApi.config.blogId) this.settings.blogId = window.EzyApi.config.blogId;
+                    if (!this.settings.siteKey && window.EzyApi.config.siteKey) this.settings.siteKey = window.EzyApi.config.siteKey;
+                    if (!this.settings.adminUrl) this.settings.adminUrl = window.EzyApi.config.adminUrl || window.EzyApi.config.webappUrl || window.EzyApi.url || '';
+                    if (!this.settings.dbName && window.EzyApi.config.dbName) this.settings.dbName = window.EzyApi.config.dbName;
+                    if (!this.settings.gatewayToken && window.EzyApi.config.gatewayToken) this.settings.gatewayToken = window.EzyApi.config.gatewayToken;
                 }
 
             },
@@ -102,8 +111,8 @@
                                 }
 
                                 // Update Local Cache untuk konsistensi antar halaman
-                                const currentCache = JSON.parse(localStorage.getItem('Ezyparts_Config_Cache') || '{}');
-                                localStorage.setItem('Ezyparts_Config_Cache', JSON.stringify({ ...currentCache, blogId: blogId, ...settingsPayload }));
+                                const currentCache = JSON.parse(localStorage.getItem('Ezycore_Config_Cache') || '{}');
+                                localStorage.setItem('Ezycore_Config_Cache', JSON.stringify({ ...currentCache, blogId: blogId, ...settingsPayload }));
 
                                 if (btn && window.setButtonSuccess) window.setButtonSuccess(btn, { closeModal: false });
                             } else {
