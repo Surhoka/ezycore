@@ -49,7 +49,7 @@ Alpine.data('ecommerceDashboard', () => ({
     isLoading: true,
     products: [],
     categories: [],
-    editingProduct: null,
+    editingProduct: {},
     showForm: false,
 
     init() { this.loadData(); },
@@ -90,7 +90,7 @@ Alpine.data('ecommerceDashboard', () => ({
 
     closeForm() {
       this.showForm = false;
-      this.editingProduct = null;
+      this.editingProduct = {};
     },
 
     async saveProduct() {
@@ -167,10 +167,10 @@ Alpine.data('ecommerceDashboard', () => ({
     albums: [],
     currentAlbum: null,
     images: [],
-    editingAlbum: null,
+    editingAlbum: {},
     showForm: false,
     showImageForm: false,
-    editingImage: null,
+    editingImage: {},
 
     init() { this.loadAlbums(); },
 
@@ -196,7 +196,7 @@ Alpine.data('ecommerceDashboard', () => ({
     },
 
     backToAlbums() {
-      this.currentAlbum = null;
+      this.currentAlbum = {};
       this.images = [];
     },
 
@@ -213,7 +213,7 @@ Alpine.data('ecommerceDashboard', () => ({
 
     closeForm() {
       this.showForm = false;
-      this.editingAlbum = null;
+      this.editingAlbum = {};
     },
 
     async saveAlbum() {
@@ -252,7 +252,7 @@ Alpine.data('ecommerceDashboard', () => ({
 
     closeImageForm() {
       this.showImageForm = false;
-      this.editingImage = null;
+      this.editingImage = {};
     },
 
     async saveImage() {
@@ -303,7 +303,7 @@ Alpine.data('ecommerceDashboard', () => ({
   Alpine.data('ecommerceOrders', () => ({
     isLoading: true,
     orders: [],
-    selectedOrder: null,
+    selectedOrder: {},
     filter: 'all',
 
     init() { this.loadOrders(); },
@@ -331,7 +331,7 @@ Alpine.data('ecommerceDashboard', () => ({
       } catch (e) { this.selectedOrder.items = []; }
     },
 
-    closeDetail() { this.selectedOrder = null; },
+    closeDetail() { this.selectedOrder = {}; },
 
     async updateStatus(orderId, status) {
       try {
@@ -373,7 +373,7 @@ Alpine.data('ecommerceDashboard', () => ({
   // ================================================================
   Alpine.data('ecommerceReports', () => ({
     isLoading: true,
-    report: null,
+    report: { totalOrders: 0, paidOrders: 0, totalRevenue: 0, orders: [] },
     period: 'month',
 
     init() { this.loadReport(); },
@@ -396,7 +396,7 @@ Alpine.data('ecommerceDashboard', () => ({
   Alpine.data('ecommerceShipping', () => ({
     isLoading: true,
     rates: [],
-    editingRate: null,
+    editingRate: {},
     showForm: false,
 
     init() { this.loadRates(); },
@@ -428,7 +428,7 @@ Alpine.data('ecommerceDashboard', () => ({
 
     closeForm() {
       this.showForm = false;
-      this.editingRate = null;
+      this.editingRate = {};
     },
 
     async saveRate() {
