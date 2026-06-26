@@ -1,99 +1,126 @@
-<div x-data="ecommerceShipping" id="ecommerce-shipping-container" class="w-full animate-fade-in">
-  <div x-show="isLoading" class="text-center p-10">Loading shipping rates...</div>
-  <div x-show="!isLoading" x-transition>
-    <div class="flex items-center justify-between mb-6">
-      <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Shipping Rates</h3>
-      <button @click="openAddForm()" class="px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600">Add Rate</button>
+<div x-data="ecommerceShipping" class="w-full px-1 sm:px-0">
+
+  <div class="rounded-2xl border border-primary bg-secondary relative min-h-[500px] shadow-sm overflow-hidden">
+    <!-- Loading Overlay -->
+    <div x-show="isLoading" x-cloak
+      class="absolute inset-0 z-10 flex items-center justify-center bg-secondary/80 backdrop-blur-sm rounded-lg">
+      <svg class="h-8 w-8 animate-spin text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+      </svg>
     </div>
 
-    <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
-              <th class="text-left py-3 px-4 font-medium text-gray-500">Zone</th>
-              <th class="text-left py-3 px-4 font-medium text-gray-500">Courier</th>
-              <th class="text-left py-3 px-4 font-medium text-gray-500">Rate</th>
-              <th class="text-left py-3 px-4 font-medium text-gray-500">Est. Days</th>
-              <th class="text-left py-3 px-4 font-medium text-gray-500">Weight Range</th>
-              <th class="text-left py-3 px-4 font-medium text-gray-500">Free Ship Min</th>
-              <th class="text-left py-3 px-4 font-medium text-gray-500">Status</th>
-              <th class="text-right py-3 px-4 font-medium text-gray-500">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <template x-if="rates.length === 0">
-              <tr><td colspan="8" class="py-8 text-center text-gray-500">No shipping rates configured.</td></tr>
-            </template>
-            <template x-for="rate in rates" :key="rate.id">
-              <tr class="border-b border-gray-50 dark:border-gray-800/50">
-                <td class="py-3 px-4" x-text="rate.zone || '-'"></td>
-                <td class="py-3 px-4" x-text="rate.courier || '-'"></td>
-                <td class="py-3 px-4" x-text="'Rp ' + Number(rate.rate || 0).toLocaleString()"></td>
-                <td class="py-3 px-4" x-text="rate.estimateddays || '-'"></td>
-                <td class="py-3 px-4 text-xs" x-text="(rate.minweight || 0) + ' - ' + (rate.maxweight || '∞') + ' g'"></td>
-                <td class="py-3 px-4 text-xs" x-text="rate.freeshippingmin ? 'Rp ' + Number(rate.freeshippingmin).toLocaleString() : '-'"></td>
-                <td class="py-3 px-4">
-                  <span class="px-2 py-1 text-xs rounded-full"
-                    :class="rate.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'"
-                    x-text="rate.status || 'inactive'"></span>
-                </td>
-                <td class="py-3 px-4 text-right">
-                  <button @click="openEditForm(rate)" class="text-brand-500 hover:text-brand-600 text-xs font-medium mr-2">Edit</button>
-                  <button @click="deleteRate(rate.id)" class="text-red-500 hover:text-red-600 text-xs font-medium">Delete</button>
-                </td>
-              </tr>
-            </template>
-          </tbody>
-        </table>
+    <div x-show="!isLoading" class="p-4 md:p-6 transition-opacity duration-500">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Shipping Rates</h3>
+        <button @click="openAddForm()" class="px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600">Add Rate</button>
       </div>
-    </div>
 
-    <div x-show="showForm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="closeForm()">
-      <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 w-full max-w-lg m-4">
-        <h4 class="text-lg font-semibold mb-4 text-gray-800 dark:text-white/90" x-text="editingRate && editingRate.id ? 'Edit Rate' : 'Add Rate'"></h4>
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Zone</label>
-            <input type="text" x-model="editingRate.zone" placeholder="Jabodetabek" class="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">
-          </div>
-          <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Courier</label>
-            <input type="text" x-model="editingRate.courier" placeholder="JNE, SiCepat, etc." class="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">
-          </div>
-          <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Rate (Rp)</label>
-            <input type="number" x-model="editingRate.rate" class="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">
-          </div>
-          <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Est. Days</label>
-            <input type="text" x-model="editingRate.estimatedDays" placeholder="1-2" class="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">
-          </div>
-          <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Min Weight (g)</label>
-            <input type="number" x-model="editingRate.minWeight" class="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">
-          </div>
-          <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Max Weight (g)</label>
-            <input type="number" x-model="editingRate.maxWeight" placeholder="0 = unlimited" class="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">
-          </div>
-          <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Free Shipping Min (Rp)</label>
-            <input type="number" x-model="editingRate.freeShippingMin" placeholder="0 = no free shipping" class="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">
-          </div>
-          <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Status</label>
-            <select x-model="editingRate.status" class="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </div>
-        </div>
-        <div class="mt-6 flex justify-end gap-3">
-          <button @click="closeForm()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">Cancel</button>
-          <button @click="saveRate()" class="px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600">Save</button>
+      <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+                <th class="text-left py-3 px-4 font-medium text-gray-500">Zone</th>
+                <th class="text-left py-3 px-4 font-medium text-gray-500">Courier</th>
+                <th class="text-left py-3 px-4 font-medium text-gray-500">Rate</th>
+                <th class="text-left py-3 px-4 font-medium text-gray-500">Est. Days</th>
+                <th class="text-left py-3 px-4 font-medium text-gray-500">Weight Range</th>
+                <th class="text-left py-3 px-4 font-medium text-gray-500">Free Ship Min</th>
+                <th class="text-left py-3 px-4 font-medium text-gray-500">Status</th>
+                <th class="text-right py-3 px-4 font-medium text-gray-500">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template x-if="rates.length === 0">
+                <tr><td colspan="8" class="py-8 text-center text-gray-500">No shipping rates configured.</td></tr>
+              </template>
+              <template x-for="rate in rates" :key="rate.id">
+                <tr class="border-b border-gray-50 dark:border-gray-800/50">
+                  <td class="py-3 px-4" x-text="rate.zone || '-'"></td>
+                  <td class="py-3 px-4" x-text="rate.courier || '-'"></td>
+                  <td class="py-3 px-4" x-text="'Rp ' + Number(rate.rate || 0).toLocaleString()"></td>
+                  <td class="py-3 px-4" x-text="rate.estimateddays || '-'"></td>
+                  <td class="py-3 px-4 text-xs" x-text="(rate.minweight || 0) + ' - ' + (rate.maxweight || '∞') + ' g'"></td>
+                  <td class="py-3 px-4 text-xs" x-text="rate.freeshippingmin ? 'Rp ' + Number(rate.freeshippingmin).toLocaleString() : '-'"></td>
+                  <td class="py-3 px-4">
+                    <span class="px-2 py-1 text-xs rounded-full"
+                      :class="rate.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'"
+                      x-text="rate.status || 'inactive'"></span>
+                  </td>
+                  <td class="py-3 px-4 text-right">
+                    <button @click="openEditForm(rate)" class="text-brand-500 hover:text-brand-600 text-xs font-medium mr-2">Edit</button>
+                    <button @click="deleteRate(rate.id)" class="text-red-500 hover:text-red-600 text-xs font-medium">Delete</button>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- BEGIN MODAL: SHIPPING RATE FORM -->
+  <div :class="{ 'show': showForm }" x-cloak
+    class="modal fixed inset-0 p-4 md:p-5 overflow-hidden flex justify-center items-center isolate z-[99999]">
+    <div @click="closeForm()" class="fixed inset-0 h-full w-full bg-gray-900/40 transition-opacity duration-300"></div>
+    <div class="modal-dialog">
+      <button @click="closeForm()" class="modal-close-btn">
+        <span class="w-6 h-6 block" x-icon="'close'"></span>
+      </button>
+      <div class="modal-content">
+        <div class="modal-header-sticky">
+          <h3 class="h3" x-text="editingRate && editingRate.id ? 'Edit Rate' : 'Add Rate'"></h3>
+          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Configure a shipping rate.</p>
+        </div>
+        <div class="modal-body-content custom-scrollbar">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label class="form-label">Zone</label>
+              <input type="text" x-model="editingRate.zone" class="form-input" placeholder="Jabodetabek" />
+            </div>
+            <div>
+              <label class="form-label">Courier</label>
+              <input type="text" x-model="editingRate.courier" class="form-input" placeholder="JNE, SiCepat, etc." />
+            </div>
+            <div>
+              <label class="form-label">Rate (Rp)</label>
+              <input type="number" x-model="editingRate.rate" class="form-input" />
+            </div>
+            <div>
+              <label class="form-label">Est. Days</label>
+              <input type="text" x-model="editingRate.estimatedDays" class="form-input" placeholder="1-2" />
+            </div>
+            <div>
+              <label class="form-label">Min Weight (g)</label>
+              <input type="number" x-model="editingRate.minWeight" class="form-input" />
+            </div>
+            <div>
+              <label class="form-label">Max Weight (g)</label>
+              <input type="number" x-model="editingRate.maxWeight" class="form-input" placeholder="0 = unlimited" />
+            </div>
+            <div>
+              <label class="form-label">Free Shipping Min (Rp)</label>
+              <input type="number" x-model="editingRate.freeShippingMin" class="form-input" placeholder="0 = no free shipping" />
+            </div>
+            <div>
+              <label class="form-label">Status</label>
+              <select x-model="editingRate.status" class="form-input">
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer-actions">
+          <div class="flex w-full sm:w-auto gap-3 ml-auto">
+            <button type="button" @click="closeForm()" class="btn btn-outline w-full sm:w-auto">Cancel</button>
+            <button type="button" @click="saveRate()" class="btn btn-primary w-full sm:w-auto">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- END MODAL: SHIPPING RATE FORM -->
 </div>

@@ -1,37 +1,49 @@
-<div x-data="ecommerceCustomers" id="ecommerce-customers-container" class="w-full animate-fade-in">
-  <div x-show="isLoading" class="text-center p-10">Loading customers...</div>
-  <div x-show="!isLoading" x-transition>
-    <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-6">Customers</h3>
-    <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
-              <th class="text-left py-3 px-4 font-medium text-gray-500">Name</th>
-              <th class="text-left py-3 px-4 font-medium text-gray-500">Email</th>
-              <th class="text-left py-3 px-4 font-medium text-gray-500">Phone</th>
-              <th class="text-left py-3 px-4 font-medium text-gray-500">Orders</th>
-              <th class="text-left py-3 px-4 font-medium text-gray-500">Total Spent</th>
-              <th class="text-left py-3 px-4 font-medium text-gray-500">Joined</th>
-            </tr>
-          </thead>
-          <tbody>
-            <template x-if="customers.length === 0">
-              <tr><td colspan="6" class="py-8 text-center text-gray-500">No customers yet.</td></tr>
-            </template>
-            <template x-for="customer in customers" :key="customer.id">
-              <tr class="border-b border-gray-50 dark:border-gray-800/50">
-                <td class="py-3 px-4 font-medium text-gray-800 dark:text-white/90" x-text="customer.name || '-'"></td>
-                <td class="py-3 px-4" x-text="customer.email || '-'"></td>
-                <td class="py-3 px-4" x-text="customer.phone || '-'"></td>
-                <td class="py-3 px-4" x-text="customer.totalorders || 0"></td>
-                <td class="py-3 px-4" x-text="'Rp ' + Number(customer.totalspent || 0).toLocaleString()"></td>
-                <td class="py-3 px-4 text-xs text-gray-500" x-text="customer.createdat ? new Date(customer.createdat).toLocaleDateString() : '-'"></td>
+<div x-data="ecommerceCustomers" class="w-full px-1 sm:px-0">
+
+  <div class="rounded-2xl border border-primary bg-secondary relative min-h-[500px] shadow-sm overflow-hidden">
+    <!-- Loading Overlay -->
+    <div x-show="isLoading" x-cloak
+      class="absolute inset-0 z-10 flex items-center justify-center bg-secondary/80 backdrop-blur-sm rounded-lg">
+      <svg class="h-8 w-8 animate-spin text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+      </svg>
+    </div>
+
+    <div x-show="!isLoading" class="p-4 md:p-6 transition-opacity duration-500">
+      <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-6">Customers</h3>
+      <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+                <th class="text-left py-3 px-4 font-medium text-gray-500">Name</th>
+                <th class="text-left py-3 px-4 font-medium text-gray-500">Email</th>
+                <th class="text-left py-3 px-4 font-medium text-gray-500">Phone</th>
+                <th class="text-left py-3 px-4 font-medium text-gray-500">Orders</th>
+                <th class="text-left py-3 px-4 font-medium text-gray-500">Total Spent</th>
+                <th class="text-left py-3 px-4 font-medium text-gray-500">Joined</th>
               </tr>
-            </template>
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              <template x-if="customers.length === 0">
+                <tr><td colspan="6" class="py-8 text-center text-gray-500">No customers yet.</td></tr>
+              </template>
+              <template x-for="customer in customers" :key="customer.id">
+                <tr class="border-b border-gray-50 dark:border-gray-800/50">
+                  <td class="py-3 px-4 font-medium text-gray-800 dark:text-white/90" x-text="customer.name || '-'"></td>
+                  <td class="py-3 px-4" x-text="customer.email || '-'"></td>
+                  <td class="py-3 px-4" x-text="customer.phone || '-'"></td>
+                  <td class="py-3 px-4" x-text="customer.totalorders || 0"></td>
+                  <td class="py-3 px-4" x-text="'Rp ' + Number(customer.totalspent || 0).toLocaleString()"></td>
+                  <td class="py-3 px-4 text-xs text-gray-500" x-text="customer.createdat ? new Date(customer.createdat).toLocaleDateString() : '-'"></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
+
 </div>
