@@ -705,11 +705,11 @@ Alpine.data('ecommerceDashboard', () => ({
   // ================================================================
   Alpine.data('ecommerceSettings', () => ({
     isLoading: true,
+    activeTab: 'general',
     settings: {
       blogId: '', blogUrl: '', webAppUrl: '', pageIdShop: '', pageIdHomeData: '',
-      currency: 'IDR', taxRate: '11', midtransClientKey: ''
+      currency: 'IDR', taxRate: '11', midtransClientKey: '', siteKey: ''
     },
-    midtransServerKey: '',
 
     init() { this.loadSettings(); },
 
@@ -727,8 +727,17 @@ Alpine.data('ecommerceDashboard', () => ({
     },
 
     async saveSettings() {
+      var payload = {
+        blogId: this.settings.blogId,
+        blogUrl: this.settings.blogUrl,
+        pageIdShop: this.settings.pageIdShop,
+        pageIdHomeData: this.settings.pageIdHomeData,
+        currency: this.settings.currency,
+        taxRate: this.settings.taxRate,
+        midtransClientKey: this.settings.midtransClientKey
+      };
       try {
-        const res = await ecomApi('saveEcommerceSettings', { ecommerce: this.settings });
+        const res = await ecomApi('saveEcommerceSettings', { ecommerce: payload });
         if (res.status === 'success') {
           if (window.showToast) window.showToast('Settings saved', 'success');
         } else {
