@@ -1,4 +1,17 @@
 // ================================================================
+// HELPER: Promise-based sendDataToGoogle untuk ecommerce
+// ================================================================
+function ecomApi(action, data) {
+  return new Promise(function (resolve, reject) {
+    if (typeof window.sendDataToGoogle !== 'function') {
+      reject(new Error('sendDataToGoogle is not available'));
+      return;
+    }
+    window.sendDataToGoogle(action, data || {}, resolve, reject);
+  });
+}
+
+// ================================================================
 // ECOMMERCE DASHBOARD
 // ================================================================
 Alpine.data('ecommerceDashboard', () => ({
@@ -11,11 +24,9 @@ Alpine.data('ecommerceDashboard', () => ({
     async loadDashboard() {
       this.isLoading = true;
       try {
-        const [products, orders, customers] = await Promise.all([
-          sendDataToGoogle({ action: 'getProducts' }),
-          sendDataToGoogle({ action: 'getOrders' }),
-          sendDataToGoogle({ action: 'getCustomers' })
-        ]);
+        const products = await ecomApi('getProducts');
+        const orders = await ecomApi('getOrders');
+        const customers = await ecomApi('getCustomers');
         this.stats.totalProducts = (products.data || []).length;
         this.stats.totalOrders = (orders.data || []).length;
         this.stats.totalCustomers = (customers.data || []).length;
@@ -46,10 +57,8 @@ Alpine.data('ecommerceDashboard', () => ({
     async loadData() {
       this.isLoading = true;
       try {
-        const [pRes, cRes] = await Promise.all([
-          sendDataToGoogle({ action: 'getProducts' }),
-          sendDataToGoogle({ action: 'getCategories' })
-        ]);
+        const pRes = await ecomApi('getProducts');
+        const cRes = await ecomApi('getCategories');
         this.products = pRes.data || [];
         this.categories = cRes.data || [];
       } catch (e) {
@@ -86,10 +95,10 @@ Alpine.data('ecommerceDashboard', () => ({
 
     async saveProduct() {
       try {
-        const payload = { action: 'saveProduct', ...this.editingProduct };
+        var payload = { ...this.editingProduct };
         payload.images = JSON.stringify(payload.images);
         payload.variants = JSON.stringify(payload.variants);
-        const res = await sendDataToGoogle(payload);
+        const res = await ecomApi('saveProduct', payload);
         if (res.status === 'success') {
           if (window.showToast) window.showToast('Product saved', 'success');
           this.closeForm();
@@ -105,7 +114,7 @@ Alpine.data('ecommerceDashboard', () => ({
     async deleteProduct(id) {
       if (!confirm('Delete this product?')) return;
       try {
-        const res = await sendDataToGoogle({ action: 'deleteProduct', id: id });
+        const res = await ecomApi('deleteProduct', { id: id });
         if (res.status === 'success') {
           if (window.showToast) window.showToast('Product deleted', 'success');
           this.loadData();
@@ -117,7 +126,7 @@ Alpine.data('ecommerceDashboard', () => ({
 
     async publishProduct(id) {
       try {
-        const res = await sendDataToGoogle({ action: 'publishProductToBlogger', productId: id });
+        const res = await ecomApi('publishProductToBlogger', { productId: id });
         if (res.status === 'success') {
           if (window.showToast) window.showToast('Product published to Blogger', 'success');
         } else {
@@ -130,7 +139,7 @@ Alpine.data('ecommerceDashboard', () => ({
 
     async republishShop() {
       try {
-        const res = await sendDataToGoogle({ action: 'republishShopListing' });
+        const res = await ecomApi('republishShopListing');
         if (res.status === 'success') {
           if (window.showToast) window.showToast('Shop listing republished', 'success');
         }
@@ -168,7 +177,7 @@ Alpine.data('ecommerceDashboard', () => ({
     async loadAlbums() {
       this.isLoading = true;
       try {
-        const res = await sendDataToGoogle({ action: 'getAlbums' });
+        const res = await ecomApi('getAlbums');
         this.albums = res.data || [];
       } catch (e) {
         if (window.showToast) window.showToast('Failed to load albums', 'error');
@@ -179,7 +188,7 @@ Alpine.data('ecommerceDashboard', () => ({
     async selectAlbum(album) {
       this.currentAlbum = album;
       try {
-        const res = await sendDataToGoogle({ action: 'getAlbumImages', albumId: album.id });
+        const res = await ecomApi('getAlbumImages', { albumId: album.id });
         this.images = res.data || [];
       } catch (e) {
         this.images = [];
@@ -209,7 +218,7 @@ Alpine.data('ecommerceDashboard', () => ({
 
     async saveAlbum() {
       try {
-        const res = await sendDataToGoogle({ action: 'saveAlbum', ...this.editingAlbum });
+        const res = await ecomApi('saveAlbum', { ...this.editingAlbum });
         if (res.status === 'success') {
           if (window.showToast) window.showToast('Album saved', 'success');
           this.closeForm();
@@ -225,7 +234,7 @@ Alpine.data('ecommerceDashboard', () => ({
     async deleteAlbum(id) {
       if (!confirm('Delete this album and all its images?')) return;
       try {
-        const res = await sendDataToGoogle({ action: 'deleteAlbum', id: id });
+        const res = await ecomApi('deleteAlbum', { id: id });
         if (res.status === 'success') {
           if (window.showToast) window.showToast('Album deleted', 'success');
           if (this.currentAlbum && this.currentAlbum.id === id) this.backToAlbums();
@@ -248,7 +257,7 @@ Alpine.data('ecommerceDashboard', () => ({
 
     async saveImage() {
       try {
-        const res = await sendDataToGoogle({ action: 'saveAlbumImage', ...this.editingImage });
+        const res = await ecomApi('saveAlbumImage', { ...this.editingImage });
         if (res.status === 'success') {
           if (window.showToast) window.showToast('Image saved', 'success');
           this.closeImageForm();
@@ -262,7 +271,7 @@ Alpine.data('ecommerceDashboard', () => ({
     async deleteImage(id) {
       if (!confirm('Remove this image?')) return;
       try {
-        const res = await sendDataToGoogle({ action: 'deleteAlbumImage', id: id });
+        const res = await ecomApi('deleteAlbumImage', { id: id });
         if (res.status === 'success') {
           if (window.showToast) window.showToast('Image removed', 'success');
           this.selectAlbum(this.currentAlbum);
@@ -275,7 +284,7 @@ Alpine.data('ecommerceDashboard', () => ({
     async syncMetadata() {
       if (!this.currentAlbum) return;
       try {
-        const res = await sendDataToGoogle({ action: 'syncAlbumMetadata', albumId: this.currentAlbum.id });
+        const res = await ecomApi('syncAlbumMetadata', { albumId: this.currentAlbum.id });
         if (res.status === 'success') {
           if (window.showToast) window.showToast(res.message, 'success');
           this.selectAlbum(this.currentAlbum);
@@ -302,7 +311,7 @@ Alpine.data('ecommerceDashboard', () => ({
     async loadOrders() {
       this.isLoading = true;
       try {
-        const res = await sendDataToGoogle({ action: 'getOrders' });
+        const res = await ecomApi('getOrders');
         this.orders = res.data || [];
       } catch (e) {
         if (window.showToast) window.showToast('Failed to load orders', 'error');
@@ -326,7 +335,7 @@ Alpine.data('ecommerceDashboard', () => ({
 
     async updateStatus(orderId, status) {
       try {
-        const res = await sendDataToGoogle({ action: 'updateOrderStatus', id: orderId, status: status });
+        const res = await ecomApi('updateOrderStatus', { id: orderId, status: status });
         if (res.status === 'success') {
           if (window.showToast) window.showToast('Order status updated', 'success');
           this.loadOrders();
@@ -350,7 +359,7 @@ Alpine.data('ecommerceDashboard', () => ({
     async loadCustomers() {
       this.isLoading = true;
       try {
-        const res = await sendDataToGoogle({ action: 'getCustomers' });
+        const res = await ecomApi('getCustomers');
         this.customers = res.data || [];
       } catch (e) {
         if (window.showToast) window.showToast('Failed to load customers', 'error');
@@ -372,7 +381,7 @@ Alpine.data('ecommerceDashboard', () => ({
     async loadReport() {
       this.isLoading = true;
       try {
-        const res = await sendDataToGoogle({ action: 'getSalesReport', period: this.period });
+        const res = await ecomApi('getSalesReport', { period: this.period });
         this.report = res.data || { totalOrders: 0, paidOrders: 0, totalRevenue: 0, orders: [] };
       } catch (e) {
         if (window.showToast) window.showToast('Failed to load report', 'error');
@@ -395,7 +404,7 @@ Alpine.data('ecommerceDashboard', () => ({
     async loadRates() {
       this.isLoading = true;
       try {
-        const res = await sendDataToGoogle({ action: 'getShippingRates' });
+        const res = await ecomApi('getShippingRates');
         this.rates = res.data || [];
       } catch (e) {
         if (window.showToast) window.showToast('Failed to load shipping rates', 'error');
@@ -424,7 +433,7 @@ Alpine.data('ecommerceDashboard', () => ({
 
     async saveRate() {
       try {
-        const res = await sendDataToGoogle({ action: 'saveShippingRate', ...this.editingRate });
+        const res = await ecomApi('saveShippingRate', { ...this.editingRate });
         if (res.status === 'success') {
           if (window.showToast) window.showToast('Shipping rate saved', 'success');
           this.closeForm();
@@ -438,7 +447,7 @@ Alpine.data('ecommerceDashboard', () => ({
     async deleteRate(id) {
       if (!confirm('Delete this shipping rate?')) return;
       try {
-        const res = await sendDataToGoogle({ action: 'deleteShippingRate', id: id });
+        const res = await ecomApi('deleteShippingRate', { id: id });
         if (res.status === 'success') {
           if (window.showToast) window.showToast('Shipping rate deleted', 'success');
           this.loadRates();
@@ -465,7 +474,7 @@ Alpine.data('ecommerceDashboard', () => ({
     async loadSettings() {
       this.isLoading = true;
       try {
-        const res = await sendDataToGoogle({ action: 'getEcommerceSettings' });
+        const res = await ecomApi('getEcommerceSettings');
         if (res.status === 'success' && res.data) {
           this.settings = { ...this.settings, ...res.data };
         }
@@ -477,10 +486,7 @@ Alpine.data('ecommerceDashboard', () => ({
 
     async saveSettings() {
       try {
-        const res = await sendDataToGoogle({
-          action: 'saveEcommerceSettings',
-          ecommerce: this.settings
-        });
+        const res = await ecomApi('saveEcommerceSettings', { ecommerce: this.settings });
         if (res.status === 'success') {
           if (window.showToast) window.showToast('Settings saved', 'success');
         } else {
