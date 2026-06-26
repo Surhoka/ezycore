@@ -5,23 +5,17 @@
             activeTab: 'general',
             showToken: false,
             settings: {
-                theme: 'light',
                 language: 'en',
                 notifications: {
                     orders: true,
                     stock: true,
                     marketing: false
                 },
-                publicTheme: 'blue',
-                templateName: 'public-1',
-                customColor: '#3b82f6',
-                headerColor: '#ffffff',
-                sidebarColor: '#ffffff',
-                footerColor: '#1e3a8a',
                 gatewayToken: '',
                 siteKey: '',
                 adminUrl: '',
-                dbName: ''
+                dbName: '',
+                blogId: ''
             },
 
             init() {
@@ -37,13 +31,10 @@
                     } catch (e) { console.error('Error parsing settings', e); }
                 }
 
-                // Sync theme state with global app state
-                const isDark = document.documentElement.classList.contains('dark');
-                if (!saved) {
-                    this.settings.theme = isDark ? 'dark' : 'light';
-                }
+                // Load live settings from backend
+                this.loadLiveSettings();
 
-                // [NEW] Load live sensitive settings from server cache
+                // Load live sensitive settings from server cache
                 const configCache = localStorage.getItem('Ezyparts_Config_Cache');
                 if (configCache) {
                     const config = JSON.parse(configCache);
@@ -59,22 +50,23 @@
                     if (config.dbName) {
                         this.settings.dbName = config.dbName;
                     }
+                    if (config.blogId) {
+                        this.settings.blogId = config.blogId;
+                    }
                 }
 
             },
 
-            applyDefaultTheme() {
-                this.settings.publicTheme = 'blue';
-                this.settings.customColor = '#3b82f6';
-                this.settings.headerColor = '#ffffff';
-                this.settings.footerColor = '#1e3a8a';
-
-                // Adjust sidebar color based on layout to ensure text contrast
-                if (this.settings.templateName === 'public-2') {
-                    this.settings.sidebarColor = '#ffffff'; // Modern: White Sidebar
-                } else {
-                    this.settings.sidebarColor = '#1e3a8a'; // Standard: Dark Nav Bar
-                }
+            loadLiveSettings() {
+                if (!window.sendDataToGoogle) return;
+                window.sendDataToGoogle('get_settings', {}, (res) => {
+                    if (res && res.status === 'success') {
+                        if (res.blogId) this.settings.blogId = res.blogId;
+                        if (res.siteKey) this.settings.siteKey = res.siteKey;
+                        if (res.adminUrl) this.settings.adminUrl = res.adminUrl;
+                        if (res.dbName) this.settings.dbName = res.dbName;
+                    }
+                }, () => {});
             },
 
             saveSettings(btn) {
@@ -84,31 +76,11 @@
                 setTimeout(() => {
                     localStorage.setItem('userSettings', JSON.stringify(this.settings));
 
-                    // Apply Theme Immediately
-                    if (this.settings.theme === 'dark' || (this.settings.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                        if (window.app) window.app.darkMode = true;
-                        document.documentElement.classList.add('dark');
-                    } else {
-                        if (window.app) window.app.darkMode = false;
-                        document.documentElement.classList.remove('dark');
-                    }
-
-                    // [NEW] Save Theme Settings to Cloud (for Public Template Live Update)
                     if (window.sendDataToGoogle) {
-                        const themePayload = {
-                            publicTheme: this.settings.publicTheme,
-                            customColor: this.settings.customColor,
-                            templateName: this.settings.templateName,
-                            headerColor: this.settings.headerColor,
-                            sidebarColor: this.settings.sidebarColor,
-                            footerColor: this.settings.footerColor
-                        };
-
-                        // 1. Simpan Theme Settings
-                        window.sendDataToGoogle('saveThemeSettings', themePayload);
-
-                        // 2. Simpan General & Security Settings ke backend (PropertiesService)
+                        // Simpan General & Security Settings ke backend (PropertiesService)
+                        const blogId = this.settings.blogId || (window.EzyApi && window.EzyApi.config && window.EzyApi.config.blogId) || '';
                         const settingsPayload = {
+                            blogId: blogId,
                             gatewayToken: this.settings.gatewayToken,
                             dbName: this.settings.dbName
                         };
@@ -119,7 +91,7 @@
 
                                 // Update runtime config & cache untuk konsistensi langsung tanpa reload
                                 if (window.EzyApi && window.EzyApi.config) {
-                                    window.EzyApi.config.blogId = this.settings.blogId;
+                                    window.EzyApi.config.blogId = blogId;
                                     window.EzyApi.config.pageId = this.settings.pageId;
                                     window.EzyApi.config.pageIdJsonLd = this.settings.pageIdJsonLd;
                                     window.EzyApi.config.webUrl = this.settings.webUrl;
@@ -131,7 +103,7 @@
 
                                 // Update Local Cache untuk konsistensi antar halaman
                                 const currentCache = JSON.parse(localStorage.getItem('Ezyparts_Config_Cache') || '{}');
-                                localStorage.setItem('Ezyparts_Config_Cache', JSON.stringify({ ...currentCache, ...settingsPayload }));
+                                localStorage.setItem('Ezyparts_Config_Cache', JSON.stringify({ ...currentCache, blogId: blogId, ...settingsPayload }));
 
                                 if (btn && window.setButtonSuccess) window.setButtonSuccess(btn, { closeModal: false });
                             } else {
@@ -146,49 +118,6 @@
                 }, 600);
             },
 
-            downloadPublicTemplate(raw = false) {
-                try {
-                    const config = JSON.parse(localStorage.getItem('Ezyparts_Config_Cache') || '{}');
-
-                    // Determine Gateway URL
-                    // Prioritize CONFIG.WEBAPP_URL_DEV (Gateway) over EzyApi.gatewayUrl (which might be Project URL)
-                    let gatewayUrl = (typeof CONFIG !== 'undefined' && CONFIG.WEBAPP_URL_DEV)
-                        ? CONFIG.WEBAPP_URL_DEV
-                        : window.EzyApi?.gatewayUrl;
-
-                    if (!gatewayUrl) {
-                        window.showToast('Gateway URL not found.', 'error');
-                        return;
-                    }
-
-                    // [FIX] Gunakan data dari state Alpine (this.settings) agar sinkron dengan yang tampil di UI
-                    const adminUrl = this.settings.adminUrl || config.adminUrl || config.webappUrl || window.EzyApi?.url;
-                    const siteKey = this.settings.siteKey || config.siteKey;
-                    const dbName = this.settings.dbName || config.dbName || 'Database';
-
-                    if (!adminUrl || !siteKey) {
-                        window.showToast('Configuration incomplete (Missing Site Key or URL).', 'error');
-                        return;
-                    }
-
-                    const params = new URLSearchParams({
-                        action: 'download_public_template',
-                        adminUrl: adminUrl,
-                        siteKey: siteKey,
-                        dbName: dbName,
-                        theme: this.settings.publicTheme === 'custom' ? this.settings.customColor : (this.settings.publicTheme || 'blue'),
-                        templateName: this.settings.templateName || 'public-1',
-                        headerColor: this.settings.headerColor,
-                        sidebarColor: this.settings.sidebarColor,
-                        footerColor: this.settings.footerColor,
-                        mode: raw ? 'raw' : 'injected'
-                    });
-                    window.open(`${gatewayUrl}${gatewayUrl.includes('?') ? '&' : '?'}${params.toString()}`, '_blank');
-                } catch (e) {
-                    console.error('Download error:', e);
-                    window.showToast('Failed to prepare download.', 'error');
-                }
-            }
         }));
     };
 
