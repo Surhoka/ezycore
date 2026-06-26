@@ -1,5 +1,11 @@
 <div x-data="ecommerceSettings" class="w-full px-1 sm:px-0">
 
+  <!-- Tabs -->
+  <div class="tab-nav-container tab-nav-borderless mb-6">
+    <button @click="activeTab = 'general'" :class="{ 'active': activeTab === 'general' }" class="tab-nav-btn">General</button>
+    <button @click="activeTab = 'storefront'" :class="{ 'active': activeTab === 'storefront' }" class="tab-nav-btn">Storefront</button>
+  </div>
+
   <div class="rounded-2xl border border-primary bg-secondary relative min-h-[500px] shadow-sm overflow-hidden">
     <!-- Loading Overlay -->
     <div x-show="isLoading" x-cloak
@@ -11,12 +17,6 @@
     </div>
 
     <div x-show="!isLoading" class="p-4 md:p-6 transition-opacity duration-500">
-
-      <!-- Tabs -->
-      <div class="tab-nav-container tab-nav-borderless mb-6">
-        <button @click="activeTab = 'general'" :class="{ 'active': activeTab === 'general' }" class="tab-nav-btn">General</button>
-        <button @click="activeTab = 'storefront'" :class="{ 'active': activeTab === 'storefront' }" class="tab-nav-btn">Storefront</button>
-      </div>
 
       <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] p-5 lg:p-6">
 
