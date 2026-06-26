@@ -303,7 +303,7 @@ Alpine.data('ecommerceDashboard', () => ({
   Alpine.data('ecommerceOrders', () => ({
     isLoading: true,
     orders: [],
-    selectedOrder: {},
+    selectedOrder: null,
     filter: 'all',
 
     init() { this.loadOrders(); },
@@ -331,7 +331,7 @@ Alpine.data('ecommerceDashboard', () => ({
       } catch (e) { this.selectedOrder.items = []; }
     },
 
-    closeDetail() { this.selectedOrder = {}; },
+    closeDetail() { this.selectedOrder = null; },
 
     async updateStatus(orderId, status) {
       try {
@@ -339,7 +339,7 @@ Alpine.data('ecommerceDashboard', () => ({
         if (res.status === 'success') {
           if (window.showToast) window.showToast('Order status updated', 'success');
           this.loadOrders();
-          if (this.selectedOrder && this.selectedOrder.id === orderId) this.selectedOrder.status = status;
+          if (this.selectedOrder?.id === orderId) this.selectedOrder.status = status;
         }
       } catch (e) {
         if (window.showToast) window.showToast('Failed to update order', 'error');
