@@ -20,6 +20,20 @@
 
             init() {
                 this.loadSettings();
+
+                // Saat discovery selesai, update settings dengan data server terbaru
+                window.addEventListener('ezy-api-ready', (event) => {
+                    const config = event.detail?.config || {};
+                    this.applyServerConfig(config);
+                });
+            },
+
+            applyServerConfig(config) {
+                if (config.blogId) this.settings.blogId = config.blogId;
+                if (config.siteKey) this.settings.siteKey = config.siteKey;
+                if (config.adminUrl || config.webappUrl) this.settings.adminUrl = config.adminUrl || config.webappUrl;
+                if (config.dbName) this.settings.dbName = config.dbName;
+                if (config.gatewayToken) this.settings.gatewayToken = config.gatewayToken;
             },
 
             loadSettings() {
@@ -76,10 +90,7 @@
                 if (!window.sendDataToGoogle) return;
                 window.sendDataToGoogle('get_settings', {}, (res) => {
                     if (res && res.status === 'success') {
-                        if (res.blogId) this.settings.blogId = res.blogId;
-                        if (res.siteKey) this.settings.siteKey = res.siteKey;
-                        if (res.adminUrl) this.settings.adminUrl = res.adminUrl;
-                        if (res.dbName) this.settings.dbName = res.dbName;
+                        this.applyServerConfig(res);
                     }
                 }, () => {});
             },
