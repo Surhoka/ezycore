@@ -10,156 +10,406 @@
       </svg>
     </div>
 
-    <div x-show="!isLoading" class="p-4 md:p-6 transition-opacity duration-500" :class="isLoading ? 'opacity-0' : 'opacity-100'">
-      <!-- Album List -->
-      <template x-if="!currentAlbum || !currentAlbum.id">
-        <div>
-          <div class="flex items-center justify-between mb-6">
-            <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Albums</h3>
-            <button @click="openAddAlbum()" class="px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600">Add Album</button>
+    <div x-show="!isLoading" class="p-4 md:p-6 transition-opacity duration-500">
+      <!-- ===== Album Explorer ===== -->
+      <section class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] mb-6">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+          <div class="flex items-center gap-2">
+            <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90">Album Explorer</h3>
+            <span class="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold dark:bg-gray-800 text-gray-500" x-text="albums.length + ' Album'"></span>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <template x-if="albums.length === 0">
-              <p class="text-sm text-gray-500 col-span-full">No albums yet.</p>
-            </template>
-            <template x-for="album in albums" :key="album.id">
-              <div class="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03] cursor-pointer hover:shadow-md transition-shadow" @click="selectAlbum(album)">
-                <h4 class="font-semibold text-gray-800 dark:text-white/90" x-text="album.name || album.slug"></h4>
-                <p class="text-xs text-gray-500 mt-1" x-text="album.description || 'No description'"></p>
-                <p class="text-xs text-gray-400 mt-2">Sort: <span x-text="album.sortorder || 0"></span></p>
-                <div class="flex gap-2 mt-3">
-                  <button @click.stop="openEditAlbum(album)" class="text-xs text-brand-500 font-medium">Edit</button>
-                  <button @click.stop="deleteAlbum(album.id)" class="text-xs text-red-500 font-medium">Delete</button>
-                </div>
-              </div>
-            </template>
+          <div class="flex items-center gap-2">
+            <div class="relative hidden sm:block">
+              <input type="text" x-model="fileSearchQuery" placeholder="Cari file..."
+                class="h-8 w-40 lg:w-56 rounded-lg border border-gray-200 bg-gray-50 pl-3 pr-3 text-xs focus:border-brand-500 focus:ring-0 dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
+            </div>
+            <button @click="openAddAlbum()" class="px-3 py-1.5 text-xs font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600">+ Album</button>
           </div>
         </div>
-      </template>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <tbody class="divide-y divide-gray-50 dark:divide-gray-800">
+              <template x-for="alb in albums" :key="alb.id">
+                <tr class="group hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-all cursor-pointer"
+                  x-show="isRowVisible(alb)" x-transition.opacity
+                  :class="selectedAlbumId === alb.id ? 'bg-brand-50/30 dark:bg-brand-500/5' : ''"
+                  @click="selectAlbum(alb.id)">
+                  <td class="px-4 py-2.5">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-3">
+                        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                          :class="alb.parentid ? '' : 'bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400'">
+                          <template x-if="!alb.parentid">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+                          </template>
+                          <template x-if="alb.parentid">
+                            <div class="w-1.5 h-1.5 rounded-full bg-gray-300"></div>
+                          </template>
+                        </div>
+                        <div>
+                          <span class="text-sm font-semibold text-gray-900 dark:text-white" x-text="alb.name"></span>
+                          <span x-show="alb.parentid" class="rounded-md bg-orange-50 px-1.5 py-0.5 text-[8px] font-bold uppercase text-orange-600 dark:bg-orange-500/10 ml-1">Sub</span>
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-1">
+                        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button @click.stop="editAlbum(alb)" class="rounded-lg p-1.5 text-gray-400 hover:text-brand-500 transition-colors" title="Edit">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                          </button>
+                          <button @click.stop="deleteAlbum(alb.id)" class="rounded-lg p-1.5 text-gray-400 hover:text-red-500 transition-colors" title="Delete">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                          </button>
+                        </div>
+                        <button x-show="hasChildren(alb.id)" @click.stop="toggleExpand(alb.id)" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all">
+                          <svg class="w-4 h-4 text-gray-400 transition-transform duration-300" :class="expandedIds.includes(alb.id) ? 'rotate-180 text-brand-500' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-      <!-- Album Detail -->
-      <template x-if="currentAlbum && currentAlbum.id">
-        <div>
-          <div class="flex items-center justify-between mb-6">
-            <div class="flex items-center gap-3">
-              <button @click="backToAlbums()" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">&larr; Back</button>
-              <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90" x-text="currentAlbum.name"></h3>
-            </div>
-            <div class="flex gap-2">
-              <button @click="syncMetadata()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">Sync Metadata</button>
-              <button @click="openAddImage()" class="px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600">Add Image</button>
-            </div>
+      <!-- ===== File Browser ===== -->
+      <section class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] min-h-[300px]">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800 gap-2">
+          <div>
+            <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 flex items-center gap-1">
+              <span>Album:</span>
+              <template x-for="(step, index) in selectedAlbumPath" :key="step.id">
+                <span class="flex items-center gap-1">
+                  <span x-show="index > 0" class="text-gray-300 dark:text-gray-600">/</span>
+                  <button type="button" @click="selectAlbum(step.id)"
+                    :class="index === selectedAlbumPath.length - 1 ? 'text-brand-500' : 'text-gray-400 hover:text-brand-400'"
+                    x-text="step.name"></button>
+                </span>
+              </template>
+              <span x-show="!selectedAlbumId" class="text-gray-400 font-normal text-xs">Pilih album</span>
+            </h3>
           </div>
-          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            <template x-if="images.length === 0">
-              <p class="text-sm text-gray-500 col-span-full">No images in this album. Add URLs or sync from Blogger.</p>
-            </template>
-            <template x-for="img in images" :key="img.id">
-              <div class="rounded-xl border border-gray-200 bg-white p-2 dark:border-gray-800 dark:bg-white/[0.03] group relative">
-                <img :src="img.thumbnailurl || img.fileurl" class="w-full h-28 object-cover rounded-lg">
-                <p class="text-xs text-gray-500 mt-1 truncate" x-text="img.filename || 'image'"></p>
-                <button @click="deleteImage(img.id)" class="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full text-xs hidden group-hover:flex items-center justify-center">&times;</button>
-              </div>
-            </template>
+          <div class="flex gap-2">
+            <button @click="openYoutubeModal()" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20 whitespace-nowrap">
+              <svg class="w-3.5 h-3.5 inline mr-1" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+              YouTube
+            </button>
+            <button @click="openDriveModal()" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-emerald-200 text-emerald-600 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-900/20 whitespace-nowrap">
+              <svg class="w-3.5 h-3.5 inline mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+              Drive
+            </button>
+            <button @click="openBloggerEditor()" class="px-3 py-1.5 text-xs font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600 whitespace-nowrap">
+              <svg class="w-3.5 h-3.5 inline mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+              Upload
+            </button>
           </div>
         </div>
-      </template>
+
+        <!-- Empty State -->
+        <template x-if="selectedAlbumId && filteredAlbumFiles.length === 0">
+          <div class="flex flex-col items-center justify-center py-12 text-gray-500">
+            <svg class="w-12 h-12 text-gray-300 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <p class="font-medium text-gray-900 dark:text-white" x-text="fileSearchQuery ? 'Tidak ada file yang cocok.' : 'Belum ada file di album ini.'"></p>
+            <p class="text-xs mt-1" x-show="!fileSearchQuery">Gunakan tombol "Upload" untuk menambahkan gambar dari Blogger.</p>
+          </div>
+        </template>
+
+        <!-- Desktop Table -->
+        <template x-if="selectedAlbumId && filteredAlbumFiles.length > 0">
+          <div>
+            <div class="max-md:hidden overflow-x-auto">
+              <table class="w-full text-left text-sm">
+                <thead>
+                  <tr class="border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50">
+                    <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500 w-16">Preview</th>
+                    <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500">Nama</th>
+                    <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500">URL</th>
+                    <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500 text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                  <template x-for="file in paginatedAlbumFiles" :key="file.id">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-900/40 transition-colors">
+                      <td class="px-4 py-3">
+                        <div class="h-12 w-12 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 relative cursor-pointer group"
+                          @click="isVideo(file) ? window.open(file.originalfilename || file.fileurl, '_blank') : window.open(file.fileurl, '_blank')">
+                          <img :src="getThumbUrl(file)" alt="" class="h-full w-full object-cover">
+                          <template x-if="isVideo(file)">
+                            <div class="absolute inset-0 flex items-center justify-center bg-black/30">
+                              <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                            </div>
+                          </template>
+                        </div>
+                      </td>
+                      <td class="px-4 py-3">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                          <span class="font-medium text-gray-900 dark:text-white text-xs" x-text="file.filename || 'Tanpa Judul'"></span>
+                          <template x-if="!isVideo(file)">
+                            <span class="rounded-md bg-blue-50 px-1.5 py-0.5 text-[8px] font-bold uppercase text-blue-600 dark:bg-blue-500/10">Gambar</span>
+                          </template>
+                          <template x-if="isYoutube(file)">
+                            <span class="rounded-md bg-red-50 px-1.5 py-0.5 text-[8px] font-bold uppercase text-red-600 dark:bg-red-500/10">YouTube</span>
+                          </template>
+                          <template x-if="isDriveVideo(file)">
+                            <span class="rounded-md bg-emerald-50 px-1.5 py-0.5 text-[8px] font-bold uppercase text-emerald-600 dark:bg-emerald-500/10">Drive</span>
+                          </template>
+                        </div>
+                      </td>
+                      <td class="px-4 py-3">
+                        <div class="flex items-center gap-1">
+                          <code class="max-w-[180px] truncate rounded bg-gray-100 px-2 py-0.5 text-[10px] text-gray-600 dark:bg-gray-800 dark:text-gray-400" x-text="file.fileurl"></code>
+                          <button @click="copyUrl(file.fileurl)" class="text-gray-400 hover:text-brand-500 p-0.5 shrink-0">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                          </button>
+                        </div>
+                      </td>
+                      <td class="px-4 py-3 text-right">
+                        <div class="flex items-center justify-end gap-1">
+                          <button @click="editFileCaption(file)" class="text-gray-400 hover:text-brand-500 p-1.5" title="Edit Caption">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                          </button>
+                          <button @click="deleteFile(file.id)" class="text-red-500 hover:text-red-700 p-1.5" title="Hapus">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Mobile Cards -->
+            <div class="md:hidden space-y-3 p-4">
+              <template x-for="file in paginatedAlbumFiles" :key="file.id">
+                <div class="bg-gray-50 dark:bg-gray-800/30 rounded-xl border border-gray-100 dark:border-gray-700 p-3">
+                  <div class="flex gap-3">
+                    <div class="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700 relative cursor-pointer"
+                      @click="isVideo(file) ? window.open(file.originalfilename || file.fileurl, '_blank') : window.open(file.fileurl, '_blank')">
+                      <img :src="getThumbUrl(file)" alt="" class="h-full w-full object-cover">
+                      <template x-if="isVideo(file)">
+                        <div class="absolute inset-0 flex items-center justify-center bg-black/30">
+                          <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                        </div>
+                      </template>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-1 flex-wrap">
+                        <span class="font-semibold text-gray-900 dark:text-white text-xs truncate" x-text="file.filename || 'Tanpa Judul'"></span>
+                        <template x-if="!isVideo(file)"><span class="rounded-md bg-blue-50 px-1 py-0.5 text-[7px] font-bold uppercase text-blue-600">IMG</span></template>
+                        <template x-if="isYoutube(file)"><span class="rounded-md bg-red-50 px-1 py-0.5 text-[7px] font-bold uppercase text-red-600">YT</span></template>
+                      </div>
+                      <code class="block truncate rounded bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 text-[9px] text-gray-500 mt-1" x-text="file.fileurl"></code>
+                    </div>
+                  </div>
+                  <div class="mt-2 flex items-center justify-end gap-2 border-t border-gray-100 dark:border-gray-700 pt-2">
+                    <button @click="editFileCaption(file)" class="text-xs font-medium text-gray-500 hover:text-brand-500">Edit</button>
+                    <button @click="deleteFile(file.id)" class="text-xs font-medium text-red-500 hover:text-red-700">Hapus</button>
+                  </div>
+                </div>
+              </template>
+            </div>
+
+            <!-- Pagination -->
+            <div class="flex flex-col items-center justify-between gap-3 sm:flex-row border-t border-gray-100 dark:border-gray-800 px-4 py-3"
+              x-show="totalPages > 1">
+              <div class="text-xs text-gray-500">
+                <span x-text="(currentPage - 1) * itemsPerPage + 1"></span>-<span x-text="Math.min(currentPage * itemsPerPage, filteredAlbumFiles.length)"></span>
+                dari <span class="font-medium" x-text="filteredAlbumFiles.length"></span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button @click="currentPage > 1 ? currentPage-- : null" :disabled="currentPage === 1"
+                  class="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                  Prev
+                </button>
+                <span class="text-xs text-gray-600 dark:text-gray-300" x-text="'Page ' + currentPage + ' of ' + totalPages"></span>
+                <button @click="currentPage < totalPages ? currentPage++ : null" :disabled="currentPage === totalPages"
+                  class="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        </template>
+      </section>
     </div>
   </div>
 
-  <!-- BEGIN MODAL: ALBUM FORM -->
-  <div :class="{ 'show': showForm }" x-cloak
+  <!-- ===== MODAL: Album Form ===== -->
+  <div :class="{ 'show': showAlbumModal }" x-cloak
     class="modal fixed inset-0 p-4 md:p-5 overflow-hidden flex justify-center items-center isolate z-[99999]">
-    <div @click="closeForm()" class="fixed inset-0 h-full w-full bg-gray-900/40 transition-opacity duration-300"></div>
-    <div class="modal-dialog">
-      <button @click="closeForm()" class="modal-close-btn">
+    <div @click="showAlbumModal = false" class="fixed inset-0 h-full w-full bg-gray-900/40 transition-opacity duration-300"></div>
+    <div class="modal-dialog max-w-2xl">
+      <button @click="showAlbumModal = false" class="modal-close-btn">
         <span class="w-6 h-6 block" x-icon="'close'"></span>
       </button>
       <div class="modal-content">
         <div class="modal-header-sticky">
-          <h3 class="h3" x-text="editingAlbum && editingAlbum.id ? 'Edit Album' : 'Add Album'"></h3>
-          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Manage your album collection.</p>
+          <h3 class="h3" x-text="isEditing ? 'Edit Album' : 'Buat Album Baru'"></h3>
+          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Kelola folder virtual untuk mengelompokkan file.</p>
         </div>
         <div class="modal-body-content custom-scrollbar">
-          <div>
-            <label class="form-label">Name</label>
-            <input type="text" x-model="editingAlbum.name" class="form-input" placeholder="Enter album name" />
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label class="form-label">Nama Album</label>
+              <input type="text" x-model="editingAlbum.name"
+                @input="if(!isEditing) editingAlbum.slug = window.slugify_ ? window.slugify_(editingAlbum.name) : editingAlbum.name.toLowerCase().replace(/\\s+/g,'-')"
+                placeholder="Contoh: Summer Product" class="form-input" />
+            </div>
+            <div>
+              <label class="form-label">Slug URL</label>
+              <input type="text" x-model="editingAlbum.slug" placeholder="summer-product" class="form-input font-mono" />
+              <p class="mt-1 text-[10px] text-gray-500">Dibuat otomatis dari nama.</p>
+            </div>
+          </div>
+          <div x-show="albums.length > 0">
+            <label class="form-label">Induk Album</label>
+            <select x-model="editingAlbum.parent_id" class="form-input">
+              <option value="">Tanpa Induk</option>
+              <template x-for="alb in albums.filter(a => a.id !== (editingAlbum.id || '') && a.active)" :key="alb.id">
+                <option :value="alb.id" x-text="(alb.parentid ? '└ ' : '') + alb.name"></option>
+              </template>
+            </select>
           </div>
           <div>
-            <label class="form-label">Description</label>
-            <textarea x-model="editingAlbum.description" rows="3" class="form-input" placeholder="Enter album description"></textarea>
-          </div>
-          <div>
-            <label class="form-label">Parent ID</label>
-            <input type="text" x-model="editingAlbum.parentId" class="form-input" placeholder="Optional parent album ID" />
+            <label class="form-label">Deskripsi</label>
+            <textarea x-model="editingAlbum.description" rows="3" class="form-input"></textarea>
           </div>
           <div>
             <label class="form-label">Sort Order</label>
             <input type="number" x-model="editingAlbum.sortOrder" class="form-input" />
           </div>
-          <div class="pt-2">
-            <label class="flex items-center">
-              <input type="checkbox" x-model="editingAlbum.active"
-                class="form-checkbox h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/50">
-              <span class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-400">Active</span>
-            </label>
-          </div>
         </div>
         <div class="modal-footer-actions">
-          <div class="flex w-full sm:w-auto gap-3 ml-auto">
-            <button type="button" @click="closeForm()" class="btn btn-outline w-full sm:w-auto">Cancel</button>
-            <button type="button" @click="saveAlbum()" class="btn btn-primary w-full sm:w-auto">Save Album</button>
+          <div class="flex w-full sm:w-auto gap-3 ml-auto items-center">
+            <label class="flex items-center gap-2 mr-auto">
+              <input type="checkbox" x-model="editingAlbum.active" class="form-checkbox h-4 w-4 rounded border-gray-300 text-brand-500" />
+              <span class="text-xs font-medium text-gray-600 dark:text-gray-400">Aktif</span>
+            </label>
+            <button type="button" @click="showAlbumModal = false" class="btn btn-outline w-full sm:w-auto">Batal</button>
+            <button id="save-album-btn" type="button" @click="saveAlbum()" class="btn btn-primary w-full sm:w-auto">Simpan Album</button>
           </div>
         </div>
       </div>
     </div>
   </div>
-  <!-- END MODAL: ALBUM FORM -->
 
-  <!-- BEGIN MODAL: IMAGE FORM -->
-  <div :class="{ 'show': showImageForm }" x-cloak
+  <!-- ===== MODAL: YouTube Video ===== -->
+  <div :class="{ 'show': showYoutubeModal }" x-cloak
     class="modal fixed inset-0 p-4 md:p-5 overflow-hidden flex justify-center items-center isolate z-[99999]">
-    <div @click="closeImageForm()" class="fixed inset-0 h-full w-full bg-gray-900/40 transition-opacity duration-300"></div>
-    <div class="modal-dialog">
-      <button @click="closeImageForm()" class="modal-close-btn">
+    <div @click="showYoutubeModal = false" class="fixed inset-0 h-full w-full bg-gray-900/40 transition-opacity duration-300"></div>
+    <div class="modal-dialog max-w-lg">
+      <button @click="showYoutubeModal = false" class="modal-close-btn">
         <span class="w-6 h-6 block" x-icon="'close'"></span>
       </button>
       <div class="modal-content">
         <div class="modal-header-sticky">
-          <h3 class="h3">Add Image</h3>
-          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Add a new image to this album.</p>
+          <div class="flex items-center gap-3">
+            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-600 dark:bg-red-500/10">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+            </div>
+            <div>
+              <h3 class="h3">Tambah Video YouTube</h3>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Tambahkan video YouTube ke album ini.</p>
+            </div>
+          </div>
         </div>
         <div class="modal-body-content custom-scrollbar">
+          <template x-if="youtubeInput.url && extractYoutubeId(youtubeInput.url)">
+            <div class="relative overflow-hidden rounded-xl bg-black aspect-video">
+              <img :src="`https://img.youtube.com/vi/${extractYoutubeId(youtubeInput.url)}/hqdefault.jpg`" class="w-full h-full object-cover opacity-80" />
+              <div class="absolute inset-0 flex items-center justify-center">
+                <div class="flex h-12 w-12 items-center justify-center rounded-full bg-red-600 shadow-lg">
+                  <svg class="w-6 h-6 text-white ml-0.5" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+              </div>
+            </div>
+          </template>
           <div>
-            <label class="form-label">File URL</label>
-            <input type="text" x-model="editingImage.fileUrl" class="form-input" placeholder="https://blogger.googleusercontent.com/..." />
+            <label class="form-label">URL Video YouTube</label>
+            <input type="url" x-model="youtubeInput.url" placeholder="https://www.youtube.com/watch?v=..." class="form-input font-mono" />
+            <p class="mt-1 text-[10px] text-gray-500">Mendukung: youtube.com/watch?v=, youtu.be/, youtube.com/shorts/</p>
           </div>
           <div>
-            <label class="form-label">File Name</label>
-            <input type="text" x-model="editingImage.fileName" class="form-input" placeholder="e.g. sunset-photo.jpg" />
-          </div>
-          <div>
-            <label class="form-label">Content Type</label>
-            <select x-model="editingImage.contentType" class="form-input">
-              <option value="image">Image</option>
-              <option value="youtube">YouTube Video</option>
-              <option value="drive">Google Drive Video</option>
-              <option value="blogger_video">Blogger Video</option>
-            </select>
-          </div>
-          <div>
-            <label class="form-label">Thumbnail URL</label>
-            <input type="text" x-model="editingImage.thumbnailUrl" class="form-input" placeholder="Optional thumbnail URL" />
+            <label class="form-label">Judul / Caption</label>
+            <input type="text" x-model="youtubeInput.title" placeholder="Contoh: Demo Produk" class="form-input" />
           </div>
         </div>
         <div class="modal-footer-actions">
           <div class="flex w-full sm:w-auto gap-3 ml-auto">
-            <button type="button" @click="closeImageForm()" class="btn btn-outline w-full sm:w-auto">Cancel</button>
-            <button type="button" @click="saveImage()" class="btn btn-primary w-full sm:w-auto">Save Image</button>
+            <button type="button" @click="showYoutubeModal = false" class="btn btn-outline w-full sm:w-auto">Batal</button>
+            <button id="save-youtube-btn" type="button" @click="addYoutubeVideo()" :disabled="youtubeInput.isSaving"
+              class="btn btn-primary w-full sm:w-auto" style="background-color:#dc2626;border-color:#dc2626">
+              <template x-if="!youtubeInput.isSaving">
+                <svg class="w-4 h-4 mr-1" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+              </template>
+              <template x-if="youtubeInput.isSaving">
+                <span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-1"></span>
+              </template>
+              <span x-text="youtubeInput.isSaving ? 'Menyimpan...' : 'Simpan Video'"></span>
+            </button>
           </div>
         </div>
       </div>
     </div>
   </div>
-  <!-- END MODAL: IMAGE FORM -->
+
+  <!-- ===== MODAL: Google Drive Video ===== -->
+  <div :class="{ 'show': showDriveModal }" x-cloak
+    class="modal fixed inset-0 p-4 md:p-5 overflow-hidden flex justify-center items-center isolate z-[99999]">
+    <div @click="showDriveModal = false" class="fixed inset-0 h-full w-full bg-gray-900/40 transition-opacity duration-300"></div>
+    <div class="modal-dialog max-w-lg">
+      <button @click="showDriveModal = false" class="modal-close-btn">
+        <span class="w-6 h-6 block" x-icon="'close'"></span>
+      </button>
+      <div class="modal-content">
+        <div class="modal-header-sticky">
+          <div class="flex items-center gap-3">
+            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            </div>
+            <div>
+              <h3 class="h3">Tambah Video Google Drive</h3>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Tambahkan video dari Google Drive.</p>
+            </div>
+          </div>
+        </div>
+        <div class="modal-body-content custom-scrollbar">
+          <template x-if="driveInput.url && _extractDriveId(driveInput.url)">
+            <div class="relative overflow-hidden rounded-xl bg-black aspect-video flex items-center justify-center">
+              <div class="absolute inset-0 flex items-center justify-center bg-emerald-900/10">
+                <svg class="w-10 h-10 text-emerald-500 opacity-30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+              </div>
+              <video :src="`https://drive.google.com/uc?id=${_extractDriveId(driveInput.url)}`" class="w-full h-full object-contain relative z-10" controls playsinline></video>
+            </div>
+          </template>
+          <div>
+            <label class="form-label">URL File Google Drive</label>
+            <input type="url" x-model="driveInput.url" placeholder="https://drive.google.com/file/d/..." class="form-input font-mono" />
+            <p class="mt-1 text-[10px] text-gray-500">Format: drive.google.com/file/d/ID. Pastikan sharing publik aktif.</p>
+          </div>
+          <div>
+            <label class="form-label">Judul / Caption</label>
+            <input type="text" x-model="driveInput.title" placeholder="Contoh: Cinematic Intro" class="form-input" />
+          </div>
+        </div>
+        <div class="modal-footer-actions">
+          <div class="flex w-full sm:w-auto gap-3 ml-auto">
+            <button type="button" @click="showDriveModal = false" class="btn btn-outline w-full sm:w-auto">Batal</button>
+            <button id="save-drive-btn" type="button" @click="addDriveVideo()" :disabled="driveInput.isSaving"
+              class="btn btn-primary w-full sm:w-auto" style="background-color:#059669;border-color:#059669">
+              <template x-if="!driveInput.isSaving">
+                <svg class="w-4 h-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+              </template>
+              <template x-if="driveInput.isSaving">
+                <span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-1"></span>
+              </template>
+              <span x-text="driveInput.isSaving ? 'Menyimpan...' : 'Simpan Video'"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
