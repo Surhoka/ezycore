@@ -21,7 +21,12 @@
             init() {
                 this.loadSettings();
 
-                // Saat discovery selesai, update settings dengan data server terbaru
+                // Jika discovery sudah selesai, ambil config langsung
+                if (window.EzyApi && window.EzyApi.isReady) {
+                    this.applyServerConfig(window.EzyApi.config || {});
+                }
+
+                // Jika discovery menyusul, update saat event tiba
                 window.addEventListener('ezy-api-ready', (event) => {
                     const config = event.detail?.config || {};
                     this.applyServerConfig(config);
@@ -48,7 +53,7 @@
                 // Load live settings from backend (async — akan update saat response tiba)
                 this.loadLiveSettings();
 
-                // Load live sensitive settings from server cache
+                // Load live sensitive settings from server cache (EzyCoreConfig_Cache)
                 const configCache = localStorage.getItem('EzyCoreConfig_Cache');
                 if (configCache) {
                     const config = JSON.parse(configCache);
@@ -67,6 +72,17 @@
                     if (config.blogId) {
                         this.settings.blogId = config.blogId;
                     }
+                }
+
+                // Load dari EzycoreConfig_<blogId> (discovery appinit — lebih lengkap)
+                const blogConfigKey = 'EzycoreConfig_' + (window.EZY_BLOG_ID || '');
+                const blogConfigCache = localStorage.getItem(blogConfigKey);
+                if (blogConfigCache) {
+                    const config = JSON.parse(blogConfigCache);
+                    if (config.siteKey && !this.settings.siteKey) this.settings.siteKey = config.siteKey;
+                    if (config.dbName && !this.settings.dbName) this.settings.dbName = config.dbName;
+                    if (config.webappUrl && !this.settings.adminUrl) this.settings.adminUrl = config.webappUrl;
+                    if (config.blogId && !this.settings.blogId) this.settings.blogId = config.blogId;
                 }
 
                 // Fallback synchronous dari EzyApi.config dan EZY_BLOG_ID template
@@ -88,7 +104,7 @@
 
             loadLiveSettings() {
                 if (!window.sendDataToGoogle) return;
-                window.sendDataToGoogle('get_settings', {}, (res) => {
+                window.sendDataToGoogle('get_settings', { blogId: window.EZY_BLOG_ID || '' }, (res) => {
                     if (res && res.status === 'success') {
                         this.applyServerConfig(res);
                     }
