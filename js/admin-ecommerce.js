@@ -716,9 +716,16 @@ Alpine.data('ecommerceDashboard', () => ({
     async loadSettings() {
       this.isLoading = true;
       try {
-        const res = await ecomApi('getEcommerceSettings');
+        const [res, adminRes] = await Promise.all([
+          ecomApi('getEcommerceSettings'),
+          ecomApi('getAdminEcommerceConfig')
+        ]);
         if (res.status === 'success' && res.data) {
           this.settings = { ...this.settings, ...res.data };
+        }
+        if (adminRes.status === 'success' && adminRes.data) {
+          this.settings.webAppUrl = adminRes.data.webAppUrl || this.settings.webAppUrl;
+          this.settings.siteKey = adminRes.data.siteKey || this.settings.siteKey;
         }
       } catch (e) {
         if (window.showToast) window.showToast('Failed to load settings', 'error');
