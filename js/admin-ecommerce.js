@@ -706,14 +706,21 @@ Alpine.data('ecommerceDashboard', () => ({
   Alpine.data('ecommerceSettings', () => ({
     isLoading: true,
     isSaving: false,
+    isPublishing: false,
     activeTab: 'general',
     settings: {
       blogId: '', blogUrl: '', webAppUrl: '', pageIdShop: '', pageIdHomeData: '',
       currency: 'IDR', taxRate: '11', midtransClientKey: '', siteKey: ''
     },
+    homeData: {
+      companyName: '', supportPhone: '', supportEmail: '', storeAddress: '',
+      operatingHours: '', operatingDays: '',
+      socialFacebook: '', socialTwitter: '', socialInstagram: '', socialLinkedin: ''
+    },
 
     init() {
       this.loadSettings();
+      this.loadHomeData();
     },
 
     async loadSettings() {
@@ -756,5 +763,54 @@ Alpine.data('ecommerceDashboard', () => ({
         if (window.showToast) window.showToast(e.message === 'Timeout' ? 'Server tidak merespon, coba lagi' : 'Failed to save settings', 'error');
       }
       this.isSaving = false;
+    },
+
+    async loadHomeData() {
+      try {
+        const res = await ecomApi('getHomeData');
+        if (res.status === 'success' && res.data) {
+          this.homeData = { ...this.homeData, ...res.data };
+        }
+      } catch (e) {
+        if (window.showToast) window.showToast('Failed to load home data', 'error');
+      }
+    },
+
+    async saveHomeData() {
+      this.isSaving = true;
+      try {
+        const res = await ecomApi('saveHomeData', this.homeData);
+        if (res.status === 'success') {
+          if (window.showToast) window.showToast('Home data saved', 'success');
+        } else {
+          if (window.showToast) window.showToast(res.message, 'error');
+        }
+      } catch (e) {
+        if (window.showToast) window.showToast('Failed to save home data', 'error');
+      }
+      this.isSaving = false;
+    },
+
+    async publishHomeData() {
+      this.isPublishing = true;
+      try {
+        const res = await ecomApi('publishHomeData', this.homeData);
+        if (res.status === 'success') {
+          if (window.showToast) window.showToast('Home data published to Blogger!', 'success');
+        } else {
+          if (window.showToast) window.showToast(res.message, 'error');
+        }
+      } catch (e) {
+        if (window.showToast) window.showToast('Failed to publish home data', 'error');
+      }
+      this.isPublishing = false;
+    },
+
+    handleSave() {
+      if (this.activeTab === 'homedata') {
+        this.saveHomeData();
+      } else {
+        this.saveSettings();
+      }
     }
   }));
