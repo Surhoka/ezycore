@@ -754,7 +754,8 @@ Alpine.data('ecommerceDashboard', () => ({
           new Promise(function (_, reject) { setTimeout(function () { reject(new Error('Timeout')); }, 25000); })
         ]);
         if (res.status === 'success') {
-          if (window.showToast) window.showToast('Settings saved', 'success');
+          var syncMsg = res.syncInfo ? (typeof res.syncInfo === 'object' ? res.syncInfo.message || JSON.stringify(res.syncInfo) : res.syncInfo) : '';
+          if (window.showToast) window.showToast('Settings saved. Sync: ' + syncMsg, 'success');
           await this.loadSettings();
         } else {
           if (window.showToast) window.showToast(res.message, 'error');
