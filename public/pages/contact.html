@@ -1,0 +1,118 @@
+<div id='contact-page-container' class='space-y-8'>
+  <!-- Hero -->
+  <section class='relative overflow-hidden rounded-xl bg-gradient-to-r from-brand-600 to-brand-800 p-8 md:p-12 text-white text-center'>
+    <div class='relative z-10'>
+      <span class='inline-block text-xs font-bold bg-white/20 px-3 py-1 rounded-full mb-3'>Hubungi Kami</span>
+      <h1 class='text-3xl md:text-4xl font-extrabold leading-tight'>Kami Siap Membantu</h1>
+      <p class='text-white/80 mt-2 max-w-lg mx-auto'>Tim customer service kami siap melayani pertanyaan dan kebutuhan Anda.</p>
+    </div>
+  </section>
+
+  <!-- Info Grid -->
+  <div class='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
+    <div class='bg-theme-secondary border border-theme-border rounded-xl p-5 flex items-start gap-4'>
+      <div class='w-10 h-10 bg-brand-100 dark:bg-brand-900/30 rounded-lg flex items-center justify-center flex-shrink-0'>
+        <div class='w-5 h-5 text-brand-600 dark:text-brand-400' x-icon='&quot;map-pin&quot;' />
+      </div>
+      <div>
+        <h4 class='font-semibold text-theme-text text-sm'>Alamat</h4>
+        <p class='text-sm text-theme-text-sub mt-0.5' x-text='publicAddress || &quot;Jl. Otomotif No. 123, Jakarta Selatan&quot;' />
+      </div>
+    </div>
+    <div class='bg-theme-secondary border border-theme-border rounded-xl p-5 flex items-start gap-4'>
+      <div class='w-10 h-10 bg-brand-100 dark:bg-brand-900/30 rounded-lg flex items-center justify-center flex-shrink-0'>
+        <div class='w-5 h-5 text-brand-600 dark:text-brand-400' x-icon='&quot;phone&quot;' />
+      </div>
+      <div>
+        <h4 class='font-semibold text-theme-text text-sm'>Telepon</h4>
+        <p class='text-sm text-theme-text-sub mt-0.5' x-text='publicPhone || &quot;+62 21 1234 5678&quot;' />
+      </div>
+    </div>
+    <div class='bg-theme-secondary border border-theme-border rounded-xl p-5 flex items-start gap-4'>
+      <div class='w-10 h-10 bg-brand-100 dark:bg-brand-900/30 rounded-lg flex items-center justify-center flex-shrink-0'>
+        <div class='w-5 h-5 text-brand-600 dark:text-brand-400' x-icon='&quot;mail&quot;' />
+      </div>
+      <div>
+        <h4 class='font-semibold text-theme-text text-sm'>Email</h4>
+        <p class='text-sm text-theme-text-sub mt-0.5' x-text='publicEmail || &quot;info@ezycore.com&quot;' />
+      </div>
+    </div>
+    <div class='bg-theme-secondary border border-theme-border rounded-xl p-5 flex items-start gap-4'>
+      <div class='w-10 h-10 bg-brand-100 dark:bg-brand-900/30 rounded-lg flex items-center justify-center flex-shrink-0'>
+        <div class='w-5 h-5 text-brand-600 dark:text-brand-400' x-icon='&quot;clock&quot;' />
+      </div>
+      <div>
+        <h4 class='font-semibold text-theme-text text-sm'>Jam Operasional</h4>
+        <p class='text-sm text-theme-text-sub mt-0.5' x-text='operatingHours.weekdays || &quot;Senin - Jumat: 08:00 - 17:00&quot;' />
+        <p class='text-xs text-theme-text-sub' x-text='operatingHours.days || &quot;Sabtu: 08:00 - 14:00&quot;' />
+      </div>
+    </div>
+  </div>
+
+  <div class='grid md:grid-cols-5 gap-8'>
+    <!-- Contact Form -->
+    <div class='md:col-span-3 bg-theme-secondary border border-theme-border rounded-xl p-6 md:p-8'>
+      <h2 class='text-xl font-bold text-theme-text mb-6'>Kirim Pesan</h2>
+      <form class='space-y-4' x-data='{ name: &quot;&quot;, email: &quot;&quot;, phone: &quot;&quot;, message: &quot;&quot;, sent: false }' x-on:submit.prevent='sent = true; setTimeout(() => sent = false, 3000)'>
+        <div class='grid grid-cols-1 md:grid-cols-2 gap-4'>
+          <div>
+            <label class='block text-sm font-medium text-theme-text mb-1.5'>Nama Lengkap</label>
+            <input class='w-full px-4 py-2.5 rounded-lg border border-theme-border bg-theme-primary text-theme-text focus:ring-2 focus:ring-brand-500 outline-none transition-all placeholder:text-theme-text-sub/50 text-sm' type='text' placeholder='Nama Anda' x-model='name' required />
+          </div>
+          <div>
+            <label class='block text-sm font-medium text-theme-text mb-1.5'>Email</label>
+            <input class='w-full px-4 py-2.5 rounded-lg border border-theme-border bg-theme-primary text-theme-text focus:ring-2 focus:ring-brand-500 outline-none transition-all placeholder:text-theme-text-sub/50 text-sm' type='email' placeholder='email@anda.com' x-model='email' required />
+          </div>
+        </div>
+        <div>
+          <label class='block text-sm font-medium text-theme-text mb-1.5'>Nomor Telepon</label>
+          <input class='w-full px-4 py-2.5 rounded-lg border border-theme-border bg-theme-primary text-theme-text focus:ring-2 focus:ring-brand-500 outline-none transition-all placeholder:text-theme-text-sub/50 text-sm' type='tel' placeholder='+62 812 3456 7890' x-model='phone' />
+        </div>
+        <div>
+          <label class='block text-sm font-medium text-theme-text mb-1.5'>Pesan</label>
+          <textarea class='w-full px-4 py-2.5 rounded-lg border border-theme-border bg-theme-primary text-theme-text focus:ring-2 focus:ring-brand-500 outline-none transition-all placeholder:text-theme-text-sub/50 text-sm' rows='5' placeholder='Tulis pesan Anda...' x-model='message' required></textarea>
+        </div>
+        <button class='inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors text-sm' type='submit'>
+          <span x-show='!sent'>Kirim Pesan</span>
+          <span x-show='sent' class='flex items-center gap-2'>
+            <svg class='w-4 h-4' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>
+            Terkirim!
+          </span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Sidebar -->
+    <div class='md:col-span-2 space-y-4'>
+      <!-- Social Media -->
+      <div class='bg-theme-secondary border border-theme-border rounded-xl p-6'>
+        <h3 class='font-semibold text-theme-text mb-4'>Ikuti Kami</h3>
+        <div class='flex flex-wrap gap-3'>
+          <a :href='socials.facebook' class='flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-brand-500 hover:text-white transition-colors text-sm' target='_blank'>
+            <div class='w-4 h-4' x-icon='&quot;facebook&quot;' /> Facebook
+          </a>
+          <a :href='socials.instagram' class='flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-brand-500 hover:text-white transition-colors text-sm' target='_blank'>
+            <div class='w-4 h-4' x-icon='&quot;instagram&quot;' /> Instagram
+          </a>
+          <a :href='socials.twitter' class='flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-brand-500 hover:text-white transition-colors text-sm' target='_blank'>
+            <div class='w-4 h-4' x-icon='&quot;twitter&quot;' /> Twitter
+          </a>
+          <a :href='socials.linkedin' class='flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-brand-500 hover:text-white transition-colors text-sm' target='_blank'>
+            <div class='w-4 h-4' x-icon='&quot;linkedin&quot;' /> LinkedIn
+          </a>
+        </div>
+      </div>
+
+      <!-- Map Placeholder -->
+      <div class='bg-theme-secondary border border-theme-border rounded-xl p-6'>
+        <h3 class='font-semibold text-theme-text mb-3'>Lokasi Kami</h3>
+        <div class='bg-gray-200 dark:bg-gray-800 rounded-lg h-48 flex items-center justify-center text-theme-text-sub text-sm'>
+          <div class='text-center'>
+            <svg class='w-8 h-8 mx-auto mb-2 text-gray-400' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z'/><circle cx='12' cy='10' r='3'/></svg>
+            <span>Peta Lokasi</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

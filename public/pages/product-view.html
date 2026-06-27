@@ -1,0 +1,122 @@
+<div id='product-page-container' x-data='{
+  product: null,
+  qty: 1,
+  activeImage: 0,
+  images: [],
+  init() {
+    const meta = window._lastResolvedMeta;
+    if (meta) {
+      this.product = meta;
+      if (meta.images &amp;&amp; meta.images.length > 0) {
+        this.images = meta.images;
+      } else {
+        const initial = (meta.title || meta.name || &quot;?&quot;).substring(0, 2).toUpperCase();
+        this.images = [initial, initial, initial];
+      }
+    } else {
+      this.product = {
+        title: &quot;Produk Tidak Ditemukan&quot;,
+        name: &quot;Produk Tidak Ditemukan&quot;,
+        price: 0,
+        description: &quot;Maaf, produk yang Anda cari tidak tersedia.&quot;
+      };
+    }
+  },
+  formatPrice(num) {
+    return `Rp ${Number(num).toLocaleString(&quot;id-ID&quot;)}`;
+  },
+  addToCart() {
+    if (!this.product || !this.product.title) return;
+    this.$store.cart.add({
+      id: this.product.slug || this.product.id || &quot;unknown&quot;,
+      name: this.product.title || this.product.name,
+      price: this.product.price || 0,
+      imageurl: &quot;&quot;
+    }, this.qty);
+    this.qty = 1;
+  }
+}'>
+  <template x-if='product'>
+    <div class='grid lg:grid-cols-2 gap-8'>
+      <!-- Images -->
+      <div>
+        <div class='bg-theme-secondary border border-theme-border rounded-xl p-8 flex items-center justify-center h-80 mb-4'>
+          <span class='text-6xl font-extrabold text-gray-200 dark:text-gray-700' x-text='typeof images[activeImage] === &quot;string&quot; &amp;&amp; images[activeImage].length === 2 ? images[activeImage] : product.title.substring(0, 2).toUpperCase()' />
+        </div>
+        <div class='flex gap-3'>
+          <template x-for='(img, idx) in images' :key='idx'>
+            <button class='w-16 h-16 rounded-lg border-2 flex items-center justify-center transition-all' :class='activeImage === idx ? &quot;border-brand-500 bg-brand-50 dark:bg-brand-900/20&quot; : &quot;border-theme-border bg-theme-secondary hover:border-brand-300&quot;' x-on:click='activeImage = idx'>
+              <span class='text-sm font-bold text-gray-400' x-text='typeof img === &quot;string&quot; &amp;&amp; img.length === 2 ? img : product.title.substring(0, 1)' />
+            </button>
+          </template>
+        </div>
+      </div>
+
+      <!-- Info -->
+      <div>
+        <span class='inline-block text-xs font-medium text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 px-2 py-0.5 rounded-full mb-3'>Produk</span>
+        <h1 class='text-2xl md:text-3xl font-bold text-theme-text mb-3' x-text='product.title || product.name' />
+        <div class='flex items-center gap-2 mb-4'>
+          <div class='flex text-yellow-400'>
+            <svg class='w-4 h-4' viewBox='0 0 24 24' fill='currentColor'><polygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2'/></svg>
+            <svg class='w-4 h-4' viewBox='0 0 24 24' fill='currentColor'><polygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2'/></svg>
+            <svg class='w-4 h-4' viewBox='0 0 24 24' fill='currentColor'><polygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2'/></svg>
+            <svg class='w-4 h-4' viewBox='0 0 24 24' fill='currentColor'><polygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2'/></svg>
+            <svg class='w-4 h-4' viewBox='0 0 24 24' fill='currentColor' fill-opacity='0.3'><polygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2'/></svg>
+          </div>
+          <span class='text-xs text-theme-text-sub'>(4.0)</span>
+        </div>
+        <p class='text-2xl font-extrabold text-brand-600 dark:text-brand-400 mb-6' x-text='formatPrice(product.price)' />
+
+        <p class='text-sm text-theme-text-sub leading-relaxed mb-6' x-text='product.description || product.content || &quot;Deskripsi produk belum tersedia.&quot;' />
+
+        <!-- Qty + Add to Cart -->
+        <div class='flex items-center gap-4 mb-6'>
+          <div class='flex items-center border border-theme-border rounded-lg'>
+            <button class='w-10 h-10 flex items-center justify-center text-theme-text hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors' x-on:click='qty = Math.max(1, qty - 1)'>
+              <svg class='w-4 h-4' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><line x1='5' y1='12' x2='19' y2='12'/></svg>
+            </button>
+            <span class='w-12 text-center font-semibold text-theme-text text-sm' x-text='qty' />
+            <button class='w-10 h-10 flex items-center justify-center text-theme-text hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors' x-on:click='qty = Math.min(99, qty + 1)'>
+              <svg class='w-4 h-4' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><line x1='12' y1='5' x2='12' y2='19'/><line x1='5' y1='12' x2='19' y2='12'/></svg>
+            </button>
+          </div>
+          <button class='flex-1 bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 rounded-lg transition-colors text-sm flex items-center justify-center gap-2' x-on:click='addToCart()'>
+            <svg class='w-4 h-4' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z'/><line x1='3' y1='6' x2='21' y2='6'/><path d='M16 10a4 4 0 0 1-8 0'/></svg>
+            Tambah ke Keranjang
+          </button>
+        </div>
+
+        <!-- Meta -->
+        <div class='border-t border-theme-border pt-4 space-y-2 text-sm text-theme-text-sub'>
+          <p><span class='font-medium text-theme-text'>Kategori:</span> <span x-text='product.category || product.labels || &quot;General&quot;' /></p>
+          <p><span class='font-medium text-theme-text'>SKU:</span> <span x-text='product.sku || product.id || &quot;-&quot;' /></p>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <!-- Related Products -->
+  <div class='mt-12' x-data='{
+    relatedProducts: [
+      { id: &quot;rp1&quot;, name: &quot;Knalpot Racing Carbon&quot;, price: 2850000, image: &quot;KR&quot; },
+      { id: &quot;rp2&quot;, name: &quot;Kampas Rem Brembo&quot;, price: 875000, image: &quot;BR&quot; },
+      { id: &quot;rp3&quot;, name: &quot;Filter Udara K&amp;N&quot;, price: 450000, image: &quot;KN&quot; },
+      { id: &quot;rp4&quot;, name: &quot;Lampu LED Philips&quot;, price: 350000, image: &quot;LP&quot; }
+    ],
+    formatPrice(num) { return `Rp ${Number(num).toLocaleString(&quot;id-ID&quot;)}`; }
+  }'>
+    <h2 class='text-lg font-bold text-theme-text mb-4'>Produk Terkait</h2>
+    <div class='grid grid-cols-2 md:grid-cols-4 gap-4'>
+      <template x-for='p in relatedProducts' :key='p.id'>
+        <div class='bg-theme-secondary border border-theme-border rounded-xl p-4 hover:shadow-md hover:border-brand-200 dark:hover:border-brand-700 transition-all group cursor-pointer'>
+          <div class='flex items-center justify-center h-28 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-lg mb-3'>
+            <span class='text-xl font-extrabold text-gray-300 dark:text-gray-600' x-text='p.image' />
+          </div>
+          <h4 class='text-sm font-semibold text-theme-text mb-1 truncate' x-text='p.name' />
+          <p class='text-sm font-bold text-brand-600 dark:text-brand-400' x-text='formatPrice(p.price)' />
+        </div>
+      </template>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,192 @@
+<div id='payment-page-container' x-data='{
+  step: 1,
+  form: {
+    name: &quot;&quot;,
+    email: &quot;&quot;,
+    phone: &quot;&quot;,
+    address: &quot;&quot;,
+    city: &quot;&quot;,
+    postalCode: &quot;&quot;,
+    notes: &quot;&quot;,
+    paymentMethod: &quot;transfer&quot;
+  },
+  get shippingCost() {
+    return this.$store.cart.total >= 500000 ? 0 : 25000;
+  },
+  get grandTotal() {
+    return this.$store.cart.total + this.shippingCost;
+  },
+  nextStep() {
+    if (this.step === 1 &amp;&amp; this.$store.cart.items.length === 0) return;
+    this.step++;
+    this.$nextTick(() => window.scrollTo({ top: 0, behavior: &quot;smooth&quot; }));
+  },
+  prevStep() {
+    this.step--;
+    this.$nextTick(() => window.scrollTo({ top: 0, behavior: &quot;smooth&quot; }));
+  },
+  submitOrder() {
+    if (typeof window.sendDataToGoogle === &quot;function&quot;) {
+      window.sendDataToGoogle(&quot;placeOrder&quot;, { form: this.form, items: this.$store.cart.items }, (res) => {
+        if (res.status === &quot;success&quot;) {
+          this.$store.cart.clear();
+          this.step = 4;
+        } else {
+          alert(&quot;Gagal memproses pesanan. Silakan coba lagi.&quot;);
+        }
+      }, () => {
+        alert(&quot;Koneksi terputus. Silakan coba lagi.&quot;);
+      });
+    } else {
+      this.$store.cart.clear();
+      this.step = 4;
+    }
+  }
+}'>
+  <!-- Empty Cart Warning -->
+  <div x-show='$store.cart.items.length === 0 &amp;&amp; step !== 4' class='text-center py-16'>
+    <svg class='w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5'><path d='M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z'/><line x1='3' y1='6' x2='21' y2='6'/><path d='M16 10a4 4 0 0 1-8 0'/></svg>
+    <h3 class='text-lg font-semibold text-theme-text mb-2'>Keranjang Kosong</h3>
+    <p class='text-sm text-theme-text-sub mb-6'>Tambahkan produk terlebih dahulu sebelum checkout.</p>
+    <a class='inline-block bg-brand-600 hover:bg-brand-700 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors text-sm' href='/p/shop.html'>Mulai Belanja</a>
+  </div>
+
+  <!-- Progress Steps -->
+  <div x-show='$store.cart.items.length > 0' class='mb-8'>
+    <div class='flex items-center justify-between max-w-2xl mx-auto'>
+      <template x-for='(s, idx) in [&quot;Keranjang&quot;, &quot;Pengiriman&quot;, &quot;Pembayaran&quot;, &quot;Selesai&quot;]' :key='idx'>
+        <div class='flex items-center'>
+          <div class='flex flex-col items-center'>
+            <div class='w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300' :class='step > idx + 1 ? &quot;bg-green-500 text-white&quot; : step === idx + 1 ? &quot;bg-brand-500 text-white ring-4 ring-brand-500/20&quot; : &quot;bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400&quot;'>
+              <span x-show='step > idx + 1'>
+                <svg class='w-4 h-4' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>
+              </span>
+              <span x-show='step <= idx + 1' x-text='idx + 1' />
+            </div>
+            <span class='text-xs mt-1.5' :class='step === idx + 1 ? &quot;text-brand-600 dark:text-brand-400 font-semibold&quot; : &quot;text-theme-text-sub&quot;' x-text='s' />
+          </div>
+          <div class='w-12 md:w-20 h-0.5 mx-2' :class='step > idx + 1 ? &quot;bg-green-500&quot; : &quot;bg-gray-200 dark:bg-gray-700&quot;' x-show='idx < 3' />
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <!-- Step 1: Cart Review -->
+  <div x-show='step === 1 &amp;&amp; $store.cart.items.length > 0' class='space-y-4'>
+    <h2 class='text-lg font-bold text-theme-text'>Review Pesanan</h2>
+    <template x-for='(item, idx) in $store.cart.items' :key='item.id'>
+      <div class='bg-theme-secondary border border-theme-border rounded-xl p-4 flex items-center gap-4'>
+        <div class='w-14 h-14 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-lg flex items-center justify-center flex-shrink-0'>
+          <span class='text-xs font-bold text-gray-300 dark:text-gray-600' x-text='(item.name || &quot;?&quot;).substring(0, 2).toUpperCase()' />
+        </div>
+        <div class='flex-1 min-w-0'>
+          <h4 class='text-sm font-semibold text-theme-text truncate' x-text='item.name' />
+          <p class='text-xs text-theme-text-sub' x-text='`${item.qty} x Rp ${Number(item.price).toLocaleString(&quot;id-ID&quot;)}`' />
+        </div>
+        <p class='text-sm font-bold text-theme-text' x-text='`Rp ${(item.price * item.qty).toLocaleString(&quot;id-ID&quot;)}`' />
+      </div>
+    </template>
+    <div class='flex justify-end'>
+      <button class='bg-brand-600 hover:bg-brand-700 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors text-sm' x-on:click='nextStep()'>Lanjut ke Pengiriman</button>
+    </div>
+  </div>
+
+  <!-- Step 2: Shipping Form -->
+  <div x-show='step === 2' class='max-w-2xl mx-auto bg-theme-secondary border border-theme-border rounded-xl p-6 md:p-8'>
+    <h2 class='text-lg font-bold text-theme-text mb-6'>Informasi Pengiriman</h2>
+    <form class='space-y-4' x-on:submit.prevent='nextStep()'>
+      <div class='grid grid-cols-1 md:grid-cols-2 gap-4'>
+        <div>
+          <label class='block text-sm font-medium text-theme-text mb-1.5'>Nama Lengkap</label>
+          <input class='w-full px-4 py-2.5 rounded-lg border border-theme-border bg-theme-primary text-theme-text focus:ring-2 focus:ring-brand-500 outline-none transition-all text-sm' type='text' x-model='form.name' required />
+        </div>
+        <div>
+          <label class='block text-sm font-medium text-theme-text mb-1.5'>Email</label>
+          <input class='w-full px-4 py-2.5 rounded-lg border border-theme-border bg-theme-primary text-theme-text focus:ring-2 focus:ring-brand-500 outline-none transition-all text-sm' type='email' x-model='form.email' required />
+        </div>
+      </div>
+      <div>
+        <label class='block text-sm font-medium text-theme-text mb-1.5'>Nomor Telepon</label>
+        <input class='w-full px-4 py-2.5 rounded-lg border border-theme-border bg-theme-primary text-theme-text focus:ring-2 focus:ring-brand-500 outline-none transition-all text-sm' type='tel' x-model='form.phone' required />
+      </div>
+      <div>
+        <label class='block text-sm font-medium text-theme-text mb-1.5'>Alamat Lengkap</label>
+        <textarea class='w-full px-4 py-2.5 rounded-lg border border-theme-border bg-theme-primary text-theme-text focus:ring-2 focus:ring-brand-500 outline-none transition-all text-sm' rows='3' x-model='form.address' required></textarea>
+      </div>
+      <div class='grid grid-cols-2 gap-4'>
+        <div>
+          <label class='block text-sm font-medium text-theme-text mb-1.5'>Kota</label>
+          <input class='w-full px-4 py-2.5 rounded-lg border border-theme-border bg-theme-primary text-theme-text focus:ring-2 focus:ring-brand-500 outline-none transition-all text-sm' type='text' x-model='form.city' required />
+        </div>
+        <div>
+          <label class='block text-sm font-medium text-theme-text mb-1.5'>Kode Pos</label>
+          <input class='w-full px-4 py-2.5 rounded-lg border border-theme-border bg-theme-primary text-theme-text focus:ring-2 focus:ring-brand-500 outline-none transition-all text-sm' type='text' x-model='form.postalCode' />
+        </div>
+      </div>
+      <div>
+        <label class='block text-sm font-medium text-theme-text mb-1.5'>Catatan (opsional)</label>
+        <textarea class='w-full px-4 py-2.5 rounded-lg border border-theme-border bg-theme-primary text-theme-text focus:ring-2 focus:ring-brand-500 outline-none transition-all text-sm' rows='2' x-model='form.notes' placeholder='Catatan untuk kurir...'></textarea>
+      </div>
+      <div class='flex justify-between pt-2'>
+        <button class='px-4 py-2.5 text-sm text-theme-text-sub hover:text-theme-text transition-colors' type='button' x-on:click='prevStep()'>Kembali</button>
+        <button class='bg-brand-600 hover:bg-brand-700 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors text-sm' type='submit'>Lanjut ke Pembayaran</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Step 3: Payment Confirmation -->
+  <div x-show='step === 3' class='max-w-2xl mx-auto space-y-6'>
+    <div class='bg-theme-secondary border border-theme-border rounded-xl p-6 md:p-8'>
+      <h2 class='text-lg font-bold text-theme-text mb-4'>Metode Pembayaran</h2>
+      <div class='space-y-3'>
+        <label class='flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all' :class='form.paymentMethod === &quot;transfer&quot; ? &quot;border-brand-500 bg-brand-50 dark:bg-brand-900/20&quot; : &quot;border-theme-border hover:border-brand-300&quot;'>
+          <input class='text-brand-600 focus:ring-brand-500' type='radio' value='transfer' x-model='form.paymentMethod' />
+          <div>
+            <span class='text-sm font-semibold text-theme-text'>Transfer Bank</span>
+            <p class='text-xs text-theme-text-sub'>BCA / Mandiri / BNI / BRI</p>
+          </div>
+        </label>
+        <label class='flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all' :class='form.paymentMethod === &quot;cod&quot; ? &quot;border-brand-500 bg-brand-50 dark:bg-brand-900/20&quot; : &quot;border-theme-border hover:border-brand-300&quot;'>
+          <input class='text-brand-600 focus:ring-brand-500' type='radio' value='cod' x-model='form.paymentMethod' />
+          <div>
+            <span class='text-sm font-semibold text-theme-text'>COD (Bayar di Tempat)</span>
+            <p class='text-xs text-theme-text-sub'>Tersedia untuk wilayah tertentu</p>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <div class='bg-theme-secondary border border-theme-border rounded-xl p-6 md:p-8'>
+      <h3 class='font-semibold text-theme-text mb-4'>Ringkasan Pesanan</h3>
+      <div class='space-y-2 text-sm'>
+        <div class='flex justify-between text-theme-text-sub'>
+          <span>Subtotal</span>
+          <span class='font-medium text-theme-text' x-text='`Rp ${$store.cart.total.toLocaleString(&quot;id-ID&quot;)}`' />
+        </div>
+        <div class='flex justify-between text-theme-text-sub'>
+          <span>Ongkos Kirim</span>
+          <span class='font-medium' :class='shippingCost === 0 ? &quot;text-green-600&quot; : &quot;text-theme-text&quot;' x-text='shippingCost === 0 ? &quot;GRATIS&quot; : `Rp ${shippingCost.toLocaleString(&quot;id-ID&quot;)}`' />
+        </div>
+        <div class='border-t border-theme-border pt-2 mt-2 flex justify-between font-bold text-lg text-theme-text'>
+          <span>Total</span>
+          <span x-text='`Rp ${grandTotal.toLocaleString(&quot;id-ID&quot;)}`' />
+        </div>
+      </div>
+      <div class='flex justify-between pt-6'>
+        <button class='px-4 py-2.5 text-sm text-theme-text-sub hover:text-theme-text transition-colors' x-on:click='prevStep()'>Kembali</button>
+        <button class='bg-green-600 hover:bg-green-700 text-white font-semibold px-8 py-2.5 rounded-lg transition-colors text-sm' x-on:click='submitOrder()'>Konfirmasi Pesanan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 4: Success -->
+  <div x-show='step === 4' class='max-w-lg mx-auto text-center py-12'>
+    <div class='w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6'>
+      <svg class='w-10 h-10 text-green-600 dark:text-green-400' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>
+    </div>
+    <h2 class='text-2xl font-bold text-theme-text mb-2'>Pesanan Berhasil!</h2>
+    <p class='text-theme-text-sub mb-2'>Terima kasih, pesanan Anda telah diterima.</p>
+    <p class='text-sm text-theme-text-sub mb-8'>Kami akan menghubungi Anda melalui WhatsApp untuk konfirmasi.</p>
+    <a class='inline-block bg-brand-600 hover:bg-brand-700 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors text-sm' href='/'>Kembali ke Beranda</a>
+  </div>
+</div>

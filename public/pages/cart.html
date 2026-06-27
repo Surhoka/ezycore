@@ -1,0 +1,83 @@
+<div id='cart-page-container' x-data='{ showDeleteConfirm: false, itemToRemove: null }'>
+  <div class='flex items-center justify-between mb-6'>
+    <div>
+      <h1 class='text-2xl font-bold text-theme-text'>Keranjang Belanja</h1>
+      <p class='text-sm text-theme-text-sub' x-text='`${$store.cart.items.length} item${$store.cart.items.length !== 1 ? &quot;s&quot; : &quot;&quot;}`' />
+    </div>
+    <template x-if='$store.cart.items.length > 0'>
+      <button class='text-sm text-red-500 hover:text-red-600 transition-colors flex items-center gap-1' x-on:click='$store.cart.clear()'>
+        <svg class='w-4 h-4' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='3 6 5 6 21 6'/><path d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'/></svg>
+        Hapus Semua
+      </button>
+    </template>
+  </div>
+
+  <!-- Empty State -->
+  <div x-show='$store.cart.items.length === 0' class='text-center py-16'>
+    <svg class='w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5'><path d='M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z'/><line x1='3' y1='6' x2='21' y2='6'/><path d='M16 10a4 4 0 0 1-8 0'/></svg>
+    <h3 class='text-lg font-semibold text-theme-text mb-2'>Keranjang Kosong</h3>
+    <p class='text-sm text-theme-text-sub mb-6'>Belum ada produk yang ditambahkan ke keranjang.</p>
+    <a class='inline-block bg-brand-600 hover:bg-brand-700 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors text-sm' href='/p/shop.html'>Mulai Belanja</a>
+  </div>
+
+  <!-- Cart Items -->
+  <div x-show='$store.cart.items.length > 0' class='space-y-6'>
+    <div class='space-y-3'>
+      <template x-for='(item, idx) in $store.cart.items' :key='item.id'>
+        <div class='bg-theme-secondary border border-theme-border rounded-xl p-4 flex items-center gap-4 hover:shadow-sm transition-shadow'>
+          <div class='w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-lg flex items-center justify-center flex-shrink-0'>
+            <span class='text-sm font-bold text-gray-300 dark:text-gray-600' x-text='(item.name || &quot;?&quot;).substring(0, 2).toUpperCase()' />
+          </div>
+          <div class='flex-1 min-w-0'>
+            <h4 class='text-sm font-semibold text-theme-text truncate' x-text='item.name' />
+            <p class='text-sm font-bold text-brand-600 dark:text-brand-400 mt-0.5' x-text='`Rp ${Number(item.price).toLocaleString(&quot;id-ID&quot;)}`' />
+          </div>
+          <div class='flex items-center gap-2'>
+            <button class='w-8 h-8 rounded-lg border border-theme-border bg-theme-primary text-theme-text hover:bg-brand-50 hover:border-brand-300 hover:text-brand-600 transition-colors flex items-center justify-center' x-on:click='$store.cart.updateQty(item.id, item.qty - 1)'>
+              <svg class='w-4 h-4' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><line x1='5' y1='12' x2='19' y2='12'/></svg>
+            </button>
+            <span class='w-8 text-center text-sm font-semibold text-theme-text' x-text='item.qty' />
+            <button class='w-8 h-8 rounded-lg border border-theme-border bg-theme-primary text-theme-text hover:bg-brand-50 hover:border-brand-300 hover:text-brand-600 transition-colors flex items-center justify-center' x-on:click='$store.cart.updateQty(item.id, item.qty + 1)'>
+              <svg class='w-4 h-4' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><line x1='12' y1='5' x2='12' y2='19'/><line x1='5' y1='12' x2='19' y2='12'/></svg>
+            </button>
+          </div>
+          <div class='text-right min-w-[100px]'>
+            <p class='text-sm font-bold text-theme-text' x-text='`Rp ${(item.price * item.qty).toLocaleString(&quot;id-ID&quot;)}`' />
+            <button class='text-xs text-red-500 hover:text-red-600 transition-colors mt-0.5' x-on:click='$store.cart.remove(item.id)'>Hapus</button>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- Summary -->
+    <div class='bg-theme-secondary border border-theme-border rounded-xl p-6 md:p-8'>
+      <h3 class='font-semibold text-theme-text mb-4'>Ringkasan Belanja</h3>
+      <div class='space-y-2 text-sm'>
+        <div class='flex justify-between text-theme-text-sub'>
+          <span>Subtotal</span>
+          <span class='font-medium text-theme-text' x-text='`Rp ${$store.cart.total.toLocaleString(&quot;id-ID&quot;)}`' />
+        </div>
+        <div class='flex justify-between text-theme-text-sub'>
+          <span>Ongkos Kirim</span>
+          <span x-text='$store.cart.total >= 500000 ? &quot;GRATIS&quot; : &quot;Dihitung saat checkout&quot;' :class='$store.cart.total >= 500000 ? &quot;text-green-600 font-semibold&quot; : &quot;text-theme-text-sub&quot;' />
+        </div>
+        <div class='border-t border-theme-border pt-2 mt-2 flex justify-between font-bold text-theme-text'>
+          <span>Total</span>
+          <span x-text='`Rp ${$store.cart.total.toLocaleString(&quot;id-ID&quot;)}`' />
+        </div>
+      </div>
+      <div class='mt-4' x-show='$store.cart.total < 500000'>
+        <p class='text-xs text-theme-text-sub mb-2 flex items-center gap-1'>
+          <svg class='w-3.5 h-3.5 text-brand-500' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'/><line x1='12' y1='16' x2='12' y2='12'/><line x1='12' y1='8' x2='12.01' y2='8'/></svg>
+          Tambah <span class='font-semibold' x-text='`Rp ${(500000 - $store.cart.total).toLocaleString(&quot;id-ID&quot;)}`' /> lagi untuk GRATIS ongkir!
+        </p>
+        <div class='w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2'>
+          <div class='bg-brand-500 h-2 rounded-full transition-all duration-500' :style='`width: ${Math.min(100, ($store.cart.total / 500000) * 100)}%`' />
+        </div>
+      </div>
+      <a class='block w-full text-center bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3 rounded-lg transition-colors mt-6' href='/p/payment'>
+        Lanjut ke Pembayaran
+      </a>
+    </div>
+  </div>
+</div>
