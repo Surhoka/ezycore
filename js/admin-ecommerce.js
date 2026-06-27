@@ -750,7 +750,7 @@ Alpine.data('ecommerceDashboard', () => ({
       };
       try {
         const res = await Promise.race([
-          ecomApi('saveEcommerceSettings', { ecommerce: payload }),
+          ecomApi('saveEcommerceSettings', payload),
           new Promise(function (_, reject) { setTimeout(function () { reject(new Error('Timeout')); }, 25000); })
         ]);
         if (res.status === 'success') {
