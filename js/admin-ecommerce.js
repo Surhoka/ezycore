@@ -46,116 +46,151 @@ Alpine.data('ecommerceDashboard', () => ({
 // ECOMMERCE PRODUCTS
 // ================================================================
 Alpine.data('ecommerceProducts', () => ({
-  isLoading: true,
+  dbId: null,
   products: [],
   categories: [],
-  editingProduct: {},
-  showForm: false,
+  isLoading: false,
+  isSyncing: false,
+  isUploading: false,
+  showModal: false,
+  isEditing: false,
+  editingItem: {},
 
-  init() { this.loadData(); },
+  init() {
+    var storageKey = 'EzycoreConfig_' + (window.EZY_BLOG_ID || '');
+    var config = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    this.dbId = config.pluginContentDbId || config.sheetId || config.dbId || null;
+    if (!this.dbId && window.showToast) window.showToast('Database ID tidak ditemukan.', 'error');
+    this.loadData();
+  },
 
   async loadData() {
     this.isLoading = true;
     try {
-      const pRes = await ecomApi('getProducts');
-      const cRes = await ecomApi('getCategories');
+      var [pRes, cRes] = await Promise.all([
+        ecomApi('getProducts'),
+        ecomApi('getCategories')
+      ]);
       this.products = pRes.data || [];
       this.categories = cRes.data || [];
     } catch (e) {
-      if (window.showToast) window.showToast('Failed to load products', 'error');
+      if (window.showToast) window.showToast('Gagal memuat data', 'error');
     }
     this.isLoading = false;
   },
 
-  openAddForm() {
-    this.editingProduct = {
-      id: '', name: '', slug: '', category: '', price: 0, compareAtPrice: 0,
-      costPrice: 0, stock: 0, weight: 0, weightUnit: 'gram', description: '',
-      images: [], variants: [], status: 'draft'
-    };
-    this.showForm = true;
+  openAddModal() {
+    this.isEditing = false;
+    this.editingItem = { name: '', description: '', imageurl: '', price: 0, compareatprice: 0, stock: 0, weight: 0, category: '', status: 'draft', active: true };
+    this.showModal = true;
   },
 
-  openEditForm(product) {
-    this.editingProduct = { ...product };
-    try { this.editingProduct.images = typeof product.images === 'string' ? JSON.parse(product.images) : (product.images || []); } catch (e) { this.editingProduct.images = []; }
-    try { this.editingProduct.variants = typeof product.variants === 'string' ? JSON.parse(product.variants) : (product.variants || []); } catch (e) { this.editingProduct.variants = []; }
-    this.editingProduct.price = Number(product.price || 0);
-    this.editingProduct.compareAtPrice = Number(product.compareAtPrice || 0);
-    this.editingProduct.costPrice = Number(product.costPrice || 0);
-    this.editingProduct.stock = Number(product.stock || 0);
-    this.editingProduct.weight = Number(product.weight || 0);
-    this.showForm = true;
-  },
-
-  closeForm() {
-    this.showForm = false;
-    this.editingProduct = {};
+  editProduct(product) {
+    this.isEditing = true;
+    var item = { ...product };
+    item.price = Number(item.price || 0);
+    item.compareatprice = Number(item.compareatprice || 0);
+    item.stock = Number(item.stock || 0);
+    item.weight = Number(item.weight || 0);
+    item.imageurl = item.imageurl || '';
+    item.active = item.active === true || item.active === 'TRUE' || item.status === 'published' || item.status === 'active';
+    this.editingItem = item;
+    this.showModal = true;
   },
 
   async saveProduct() {
+    if (!this.editingItem.name) { if (window.showToast) window.showToast('Nama produk harus diisi', 'warning'); return; }
+    var btn = document.getElementById('save-product-btn');
+    if (window.setButtonLoading) window.setButtonLoading(btn, true);
     try {
-      var payload = { ...this.editingProduct };
-      payload.images = JSON.stringify(payload.images);
-      payload.variants = JSON.stringify(payload.variants);
-      const res = await ecomApi('saveProduct', payload);
+      var payload = {
+        ...this.editingItem,
+        dbId: this.dbId
+      };
+      if (!payload.slug) {
+        payload.slug = (payload.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now();
+      }
+      payload.status = payload.active ? 'published' : 'draft';
+      var res = await ecomApi('saveProduct', payload);
       if (res.status === 'success') {
-        if (window.showToast) window.showToast('Product saved', 'success');
-        this.closeForm();
+        if (window.showToast) window.showToast('Produk berhasil disimpan', 'success');
+        this.showModal = false;
         this.loadData();
       } else {
-        if (window.showToast) window.showToast(res.message, 'error');
+        if (window.showToast) window.showToast(res.message || 'Gagal menyimpan', 'error');
       }
     } catch (e) {
-      if (window.showToast) window.showToast('Failed to save product', 'error');
+      if (window.showToast) window.showToast('Terjadi kesalahan: ' + e, 'error');
+    } finally {
+      if (window.setButtonLoading) window.setButtonLoading(btn, false);
     }
   },
 
   async deleteProduct(id) {
-    if (!confirm('Delete this product?')) return;
+    if (!confirm('Hapus produk ini?')) return;
     try {
-      const res = await ecomApi('deleteProduct', { id: id });
+      var res = await ecomApi('deleteProduct', { id: id, dbId: this.dbId });
       if (res.status === 'success') {
-        if (window.showToast) window.showToast('Product deleted', 'success');
+        if (window.showToast) window.showToast('Produk dihapus', 'success');
         this.loadData();
-      }
-    } catch (e) {
-      if (window.showToast) window.showToast('Failed to delete product', 'error');
-    }
-  },
-
-  async publishProduct(id) {
-    try {
-      const res = await ecomApi('publishProductToBlogger', { productId: id });
-      if (res.status === 'success') {
-        if (window.showToast) window.showToast('Product published to Blogger', 'success');
       } else {
-        if (window.showToast) window.showToast(res.message, 'error');
+        if (window.showToast) window.showToast(res.message || 'Gagal menghapus', 'error');
       }
     } catch (e) {
-      if (window.showToast) window.showToast('Failed to publish product', 'error');
+      if (window.showToast) window.showToast('Gagal menghapus: ' + e, 'error');
     }
   },
 
-  async republishShop() {
+  async syncAllToBlogger() {
+    var activeCount = this.products.filter(function(p) { return p.status === 'published' || p.status === 'active'; }).length;
+    if (activeCount === 0) {
+      if (window.showToast) window.showToast('Tidak ada produk aktif yang perlu disinkronkan.', 'warning');
+      return;
+    }
+    if (!confirm('Apakah Anda yakin ingin menyinkronkan ' + activeCount + ' produk ke Blogger?')) return;
+    this.isSyncing = true;
+    if (window.showToast) window.showToast('Sedang menyinkronkan seluruh produk...', 'info');
     try {
-      const res = await ecomApi('republishShopListing');
+      var res = await ecomApi('syncAllProductsToBlogger', { dbId: this.dbId });
       if (res.status === 'success') {
-        if (window.showToast) window.showToast('Shop listing republished', 'success');
+        if (window.showToast) window.showToast(res.message, 'success');
+      } else {
+        if (window.showToast) window.showToast(res.message || 'Gagal sinkronisasi', 'error');
       }
     } catch (e) {
-      if (window.showToast) window.showToast('Failed to republish shop', 'error');
+      if (window.showToast) window.showToast('Terjadi kesalahan koneksi saat sinkronisasi.', 'error');
+    } finally {
+      this.isSyncing = false;
     }
   },
 
-  addImageUrl() {
-    if (!this.editingProduct) return;
-    const url = prompt('Enter image URL:');
-    if (url) this.editingProduct.images.push(url);
+  handleImageUpload(event) {
+    var file = event.target.files[0];
+    if (!file) return;
+    this.isUploading = true;
+    var reader = new FileReader();
+    var self = this;
+    reader.onload = function (e) {
+      self.editingItem.imageurl = e.target.result;
+      self.isUploading = false;
+    };
+    reader.onerror = function () {
+      if (window.showToast) window.showToast('Gagal membaca file', 'error');
+      self.isUploading = false;
+    };
+    reader.readAsDataURL(file);
   },
 
-  removeImage(index) {
-    if (this.editingProduct) this.editingProduct.images.splice(index, 1);
+  getFirstImage(product) {
+    if (product.imageurl) return product.imageurl;
+    try {
+      var images = typeof product.images === 'string' ? JSON.parse(product.images) : (product.images || []);
+      return images.length > 0 ? images[0] : null;
+    } catch (e) { return null; }
+  },
+
+  formatPrice(price) {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(price || 0);
   }
 }));
 
