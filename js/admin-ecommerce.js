@@ -471,8 +471,22 @@ Alpine.data('ecommerceAlbums', () => ({
     this.isSyncing = true;
     if (window.showToast) window.showToast('Menarik metadata dari Blogger...', 'info');
     try {
-      const cache = JSON.parse(localStorage.getItem('EzycoreConfig_' + (window.EZY_BLOG_ID || '')) || '{}');
-      const webUrl = cache.webUrl || '';
+      const storageKey = 'EzycoreConfig_' + (window.EZY_BLOG_ID || '');
+      var cache = JSON.parse(localStorage.getItem(storageKey) || '{}');
+      var webUrl = cache.webUrl || cache.blogUrl || '';
+      if (!webUrl) {
+        try {
+          const res = await ecomApi('getEcommerceSettings');
+          if (res.status === 'success' && res.data) {
+            webUrl = res.data.blogUrl || '';
+            cache.blogUrl = webUrl;
+            cache.webUrl = webUrl;
+            localStorage.setItem(storageKey, JSON.stringify(cache));
+          }
+        } catch (e) {
+          console.error('Failed to fetch settings:', e);
+        }
+      }
       if (!webUrl) { throw new Error('Web URL tidak ditemukan. Harap simpan konfigurasi di menu Settings.'); }
       const res = await ecomApi('syncAlbumMetadataFromBloggerUrl', { dbId: this.dbId, albumId: this.selectedAlbumId, webUrl: webUrl });
       if (res && res.status === 'success') {
@@ -813,7 +827,11 @@ Alpine.data('ecommerceSettings', () => ({
     var storageKey = 'EzycoreConfig_' + blogId;
     var config = JSON.parse(localStorage.getItem(storageKey) || '{}');
     config.pageIdAlbum = this.settings.pageIdAlbum;
+    config.pageIdHomeData = this.settings.pageIdHomeData;
     config.blogId = blogId;
+    config.blogUrl = this.settings.blogUrl;
+    config.webUrl = this.settings.blogUrl;
+    config.siteKey = this.settings.siteKey;
     localStorage.setItem(storageKey, JSON.stringify(config));
   },
 
