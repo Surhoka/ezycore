@@ -213,15 +213,25 @@ Alpine.data('ecommerceAlbums', () => ({
     return path;
   },
 
-  init() {
+  async init() {
     if (this.$watch) {
       this.$watch('fileSearchQuery', () => { this.currentPage = 1; });
       this.$watch('selectedAlbumId', () => { this.currentPage = 1; });
     }
     var storageKey = 'EzycoreConfig_' + (window.EZY_BLOG_ID || '');
-    const cache = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    var cache = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    if (!cache.pageIdAlbum) {
+      try {
+        const res = await ecomApi('getEcommerceSettings');
+        if (res.status === 'success' && res.data) {
+          cache.pageIdAlbum = res.data.pageIdAlbum || cache.pageIdAlbum;
+          cache.blogId = res.data.blogId || cache.blogId;
+          localStorage.setItem(storageKey, JSON.stringify(cache));
+        }
+      } catch (e) {}
+    }
     this.dbId = cache.pluginContentDbId || cache.sheetId || cache.dbId || null;
-    this.selectedAlbumId = cache.pageIdAlbum || cache.pageId || '';
+    this.selectedAlbumId = cache.pageIdAlbum || '';
     this.fetchAlbums();
     if (this.selectedAlbumId) {
       this.fetchAlbumFiles(this.selectedAlbumId);
@@ -368,10 +378,28 @@ Alpine.data('ecommerceAlbums', () => ({
   },
 
   async openBloggerEditor() {
+    if (!this.selectedAlbumId) {
+      if (window.showToast) window.showToast('Pilih album terlebih dahulu!', 'warning');
+      return;
+    }
     var storageKey = 'EzycoreConfig_' + (window.EZY_BLOG_ID || '');
-    const cache = JSON.parse(localStorage.getItem(storageKey) || '{}');
-    const blogId = cache.blogId || '';
-    const pageId = cache.pageIdAlbum;
+    var cache = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    var blogId = cache.blogId || '';
+    var pageId = cache.pageIdAlbum;
+    if (!blogId || !pageId) {
+      try {
+        const res = await ecomApi('getEcommerceSettings');
+        if (res.status === 'success' && res.data) {
+          blogId = res.data.blogId || blogId;
+          pageId = res.data.pageIdAlbum || pageId;
+          cache.blogId = blogId;
+          cache.pageIdAlbum = pageId;
+          localStorage.setItem(storageKey, JSON.stringify(cache));
+        }
+      } catch (e) {
+        console.error('Failed to fetch settings:', e);
+      }
+    }
     if (!blogId || !pageId) {
       if (window.showToast) window.showToast('Harap isi Blog ID dan Album Page ID di menu Settings.', 'warning');
       return;
