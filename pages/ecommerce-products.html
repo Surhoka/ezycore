@@ -192,10 +192,12 @@
                         </div>
                     </div>
 
-                    <footer class="modal-footer-actions">
-                        <button @click="showModal = false" class="btn btn-outline flex-1">Cancel</button>
-                        <button id="save-product-btn" @click="saveProduct()" class="btn btn-primary flex-1">Save Product</button>
-                    </footer>
+                    <div class="modal-footer-actions">
+                        <div class="flex w-full sm:w-auto gap-3 ml-auto items-center">
+                            <button @click="showModal = false" class="btn btn-outline w-full sm:w-auto">Cancel</button>
+                            <button id="save-product-btn" @click="saveProduct()" class="btn btn-primary w-full sm:w-auto">Save Product</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
