@@ -35,6 +35,7 @@
                 modalOpen: false,
                 editMode: false,
                 submitting: false,
+                syncing: false,
                 availablePlugins: [],
                 draggingId: null,
                 dragOverId: null,
@@ -375,6 +376,25 @@
                         plugin.pingResult = { status: 'error' };
                         window.showToast("Ping connection error", "error");
                     }
+                },
+
+                async syncFromRegistry() {
+                    this.syncing = true;
+                    try {
+                        const res = await window.app.fetchJsonp(this.apiUrl, {
+                            action: 'sync_plugins_from_registry'
+                        });
+                        if (res.status === 'success') {
+                            window.showToast(res.message || 'Plugins synced from registry', 'success');
+                            await this.fetchPlugins();
+                            window.dispatchEvent(new CustomEvent('ezy:menu-update'));
+                        } else {
+                            window.showToast(res.message || 'Sync failed', 'error');
+                        }
+                    } catch (e) {
+                        window.showToast('Error syncing plugins', 'error');
+                    }
+                    this.syncing = false;
                 },
 
                 async refreshStats() {
