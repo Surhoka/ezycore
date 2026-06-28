@@ -1,35 +1,39 @@
-<div x-data="ecommerceProducts" class="w-full animate-fade-in">
-    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Products</h1>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage your ecommerce products.</p>
+<div x-data="ecommerceProducts" class="w-full px-1 sm:px-0">
+    <div class="rounded-2xl border border-primary bg-secondary relative min-h-[500px] shadow-sm overflow-hidden">
+        <!-- Loading Overlay -->
+        <div x-show="isLoading" x-cloak
+            class="absolute inset-0 z-10 flex items-center justify-center bg-secondary/80 backdrop-blur-sm rounded-lg">
+            <svg class="h-8 w-8 animate-spin text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
         </div>
-        <div class="flex gap-2">
-            <button @click="syncAllToBlogger()" :disabled="isSyncing"
-                class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 dark:border-gray-700 dark:bg-gray-800 dark:text-blue-400 transition-colors disabled:opacity-50">
-                <span class="w-4 h-4" :class="isSyncing ? 'animate-spin' : ''" x-icon="'refresh'"></span>
-                <span x-text="isSyncing ? 'Syncing...' : 'Sync to Blogger'"></span>
-            </button>
-            <button @click="openAddModal()"
-                class="flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-brand-600 transition-all active:scale-95">
-                <span class="w-4 h-4" x-icon="'plus'"></span> Add Product
-            </button>
-        </div>
-    </div>
 
-    <div class="mb-6 flex items-center justify-between">
-        <p class="text-sm text-gray-500 dark:text-gray-400">
-            <span class="font-bold text-brand-600 dark:text-brand-400" x-text="products.length"></span> products registered
-        </p>
-    </div>
+        <div x-show="!isLoading" class="p-4 md:p-6 transition-opacity duration-500">
+            <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Products</h1>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage your ecommerce products.</p>
+                </div>
+                <div class="flex gap-2">
+                    <button @click="syncAllToBlogger()" :disabled="isSyncing"
+                        class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 dark:border-gray-700 dark:bg-gray-800 dark:text-blue-400 transition-colors disabled:opacity-50">
+                        <span class="w-4 h-4" :class="isSyncing ? 'animate-spin' : ''" x-icon="'refresh'"></span>
+                        <span x-text="isSyncing ? 'Syncing...' : 'Sync to Blogger'"></span>
+                    </button>
+                    <button @click="openAddModal()"
+                        class="flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-brand-600 transition-all active:scale-95">
+                        <span class="w-4 h-4" x-icon="'plus'"></span> Add Product
+                    </button>
+                </div>
+            </div>
 
-    <template x-if="isLoading">
-        <div class="flex items-center justify-center py-16">
-            <span class="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent"></span>
-        </div>
-    </template>
+            <div class="mb-6 flex items-center justify-between">
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <span class="font-bold text-brand-600 dark:text-brand-400" x-text="products.length"></span> products registered
+                </p>
+            </div>
 
-    <template x-if="!isLoading">
         <div class="overflow-x-auto rounded-lg border border-gray-100 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <table class="w-full text-left text-sm">
                 <thead class="bg-gray-50/50 dark:bg-gray-800/50 text-[10px] font-black uppercase tracking-widest text-gray-500">
@@ -108,7 +112,8 @@
                 </div>
             </template>
         </div>
-    </template>
+        </div>
+    </div>
 
     <template x-teleport="body">
         <div :class="{ 'show': showModal }" x-trap="showModal" x-cloak
@@ -208,7 +213,16 @@
                     <div class="modal-footer-actions">
                         <div class="flex w-full sm:w-auto gap-3 ml-auto items-center">
                             <button @click="showModal = false" class="btn btn-outline w-full sm:w-auto">Cancel</button>
-                            <button id="save-product-btn" @click="saveProduct()" class="btn btn-primary w-full sm:w-auto">Save Product</button>
+                            <button id="save-product-btn" @click="saveProduct()" :disabled="isSaving"
+                                class="btn btn-primary w-full sm:w-auto">
+                                <template x-if="!isSaving">
+                                    <span class="w-4 h-4 mr-1" x-icon="'check'"></span>
+                                </template>
+                                <template x-if="isSaving">
+                                    <span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-1"></span>
+                                </template>
+                                <span x-text="isSaving ? 'Saving...' : 'Save Product'"></span>
+                            </button>
                         </div>
                     </div>
                 </div>
