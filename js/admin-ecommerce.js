@@ -51,6 +51,7 @@ Alpine.data('ecommerceProducts', () => ({
   categories: [],
   isLoading: false,
   isSyncing: false,
+  isSaving: false,
   newImageUrl: '',
   showModal: false,
   isEditing: false,
@@ -103,8 +104,7 @@ Alpine.data('ecommerceProducts', () => ({
 
   async saveProduct() {
     if (!this.editingItem.name) { if (window.showToast) window.showToast('Nama produk harus diisi', 'warning'); return; }
-    var btn = document.getElementById('save-product-btn');
-    if (window.setButtonLoading) window.setButtonLoading(btn, true);
+    this.isSaving = true;
     try {
       var images = this.editingItem.images || [];
       var payload = {
@@ -128,7 +128,7 @@ Alpine.data('ecommerceProducts', () => ({
     } catch (e) {
       if (window.showToast) window.showToast('Terjadi kesalahan: ' + e, 'error');
     } finally {
-      if (window.setButtonLoading) window.setButtonLoading(btn, false);
+      this.isSaving = false;
     }
   },
 
