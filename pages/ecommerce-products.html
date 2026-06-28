@@ -61,6 +61,7 @@
                                     </div>
                                     <div class="flex flex-col min-w-0">
                                         <div class="font-bold text-gray-900 dark:text-white truncate max-w-[200px]" x-text="product.name"></div>
+                                        <div x-show="product.sku" class="text-[10px] font-mono text-gray-400 truncate max-w-[200px]" x-text="product.sku"></div>
                                     </div>
                                 </div>
                             </td>
@@ -155,6 +156,10 @@
                         <div>
                             <label class="form-label">Product Name *</label>
                             <input type="text" x-model="editingItem.name" class="form-input" placeholder="Product name">
+                        </div>
+                        <div>
+                            <label class="form-label">SKU</label>
+                            <input type="text" x-model="editingItem.sku" class="form-input" placeholder="e.g. PROD-001">
                         </div>
                         <div>
                             <label class="form-label">Description</label>
