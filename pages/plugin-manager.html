@@ -71,6 +71,12 @@
 
                 <!-- Quick Actions -->
                 <div class="flex items-center gap-3 sm:ml-auto">
+                    <button @click="syncFromRegistry()" :disabled="syncing"
+                        class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 transition-colors disabled:opacity-50">
+                        <span x-show="!syncing" class="w-4 h-4" x-icon="'refresh'"></span>
+                        <span x-show="syncing" class="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></span>
+                        <span x-text="syncing ? 'Syncing...' : 'Sync from Registry'"></span>
+                    </button>
                     <button @click="refreshStats()"
                         class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 transition-colors">
                         <span class="w-4 h-4" x-icon="'refresh'"></span>
