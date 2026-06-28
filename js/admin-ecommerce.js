@@ -488,7 +488,7 @@ Alpine.data('ecommerceAlbums', () => ({
         }
       }
       if (!webUrl) { throw new Error('Web URL tidak ditemukan. Harap simpan konfigurasi di menu Settings.'); }
-      const res = await ecomApi('syncAlbumMetadataFromBloggerUrl', { dbId: this.dbId, albumId: this.selectedAlbumId, webUrl: webUrl });
+      const res = await ecomApi('syncAlbumMetadata', { dbId: this.dbId, albumId: this.selectedAlbumId });
       if (res && res.status === 'success') {
         if (window.showToast) window.showToast(res.message, 'success');
         await this.fetchAlbumFiles(this.selectedAlbumId);
