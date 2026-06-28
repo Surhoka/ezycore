@@ -1,0 +1,407 @@
+<div x-data="ecommercePromotions" class="w-full px-1 sm:px-0">
+
+  <!-- Tabs -->
+  <div class="tab-nav-container tab-nav-borderless mb-6">
+    <button @click="activeTab = 'hero'" :class="{ 'active': activeTab === 'hero' }" class="tab-nav-btn">Hero Slides</button>
+    <button @click="activeTab = 'banners'" :class="{ 'active': activeTab === 'banners' }" class="tab-nav-btn">Promo Banners</button>
+    <button @click="activeTab = 'discount'" :class="{ 'active': activeTab === 'discount' }" class="tab-nav-btn">Diskon &amp; Gratis Ongkir</button>
+    <button @click="activeTab = 'featured'" :class="{ 'active': activeTab === 'featured' }" class="tab-nav-btn">Featured &amp; Special</button>
+  </div>
+
+  <div class="rounded-2xl border border-primary bg-secondary relative min-h-[500px] shadow-sm overflow-hidden">
+    <!-- Loading Overlay -->
+    <div x-show="isLoading" x-cloak class="absolute inset-0 z-10 flex items-center justify-center bg-secondary/80 backdrop-blur-sm rounded-lg">
+      <svg class="h-8 w-8 animate-spin text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+      </svg>
+    </div>
+
+    <div x-show="!isLoading" class="p-4 md:p-6 transition-opacity duration-500">
+
+      <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] p-5 lg:p-6">
+
+        <!-- ============================================================ -->
+        <!-- TAB 1: HERO SLIDES -->
+        <!-- ============================================================ -->
+        <div x-show="activeTab === 'hero'" x-cloak>
+          <div class="flex items-center justify-between mb-6">
+            <h4 class="text-lg font-semibold text-gray-800 dark:text-white/90">Hero Slides</h4>
+            <button @click="addHeroSlide()" class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600 transition-all">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              Add Slide
+            </button>
+          </div>
+
+          <!-- Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm text-gray-700 dark:text-gray-300">
+              <thead>
+                <tr class="border-b bg-gray-50 dark:border-gray-700 dark:bg-gray-800/50">
+                  <th class="text-left py-3 px-4 font-medium">#</th>
+                  <th class="text-left py-3 px-4 font-medium">Title</th>
+                  <th class="text-left py-3 px-4 font-medium">Image</th>
+                  <th class="text-left py-3 px-4 font-medium">Button</th>
+                  <th class="text-left py-3 px-4 font-medium">Active</th>
+                  <th class="text-left py-3 px-4 font-medium">Sort</th>
+                  <th class="text-left py-3 px-4 font-medium w-24">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template x-for="(slide, i) in heroSlides" :key="i">
+                  <tr class="border-b border-gray-100 dark:border-gray-700">
+                    <td class="py-3 px-4" x-text="i + 1"></td>
+                    <td class="py-3 px-4">
+                      <div x-text="slide.title" class="font-medium"></div>
+                      <div x-text="slide.subtitle" class="text-xs text-gray-400 truncate max-w-[200px]"></div>
+                    </td>
+                    <td class="py-3 px-4">
+                      <img x-show="slide.imageUrl" :src="slide.imageUrl" class="w-16 h-10 object-cover rounded" @error="$el.style.display='none'">
+                      <span x-show="!slide.imageUrl" class="text-xs text-gray-400">No image</span>
+                    </td>
+                    <td class="py-3 px-4 text-xs" x-text="slide.buttonText || '-'"></td>
+                    <td class="py-3 px-4">
+                      <span x-show="slide.active" class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-700">Active</span>
+                      <span x-show="!slide.active" class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-red-100 text-red-700">Inactive</span>
+                    </td>
+                    <td class="py-3 px-4" x-text="slide.sortOrder ?? i"></td>
+                    <td class="py-3 px-4">
+                      <div class="flex items-center gap-2">
+                        <button @click="editHeroSlide(i)" class="text-gray-400 hover:text-brand-500 transition-colors" title="Edit">
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                        </button>
+                        <button @click="deleteHeroSlide(i)" class="text-gray-400 hover:text-red-500 transition-colors" title="Delete">
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </template>
+                <tr x-show="heroSlides.length === 0">
+                  <td colspan="7" class="py-8 text-center text-gray-400">No hero slides yet. Click "Add Slide" to create one.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Modal for Add/Edit Hero -->
+          <div x-show="showHeroModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="showHeroModal = false">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-lg mx-4 shadow-xl">
+              <h5 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-4" x-text="heroEditingIndex !== null ? 'Edit Slide' : 'Add Slide'"></h5>
+              <div class="space-y-4">
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Title *</label>
+                  <input type="text" x-model="heroForm.title" class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Subtitle</label>
+                  <input type="text" x-model="heroForm.subtitle" class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Image URL *</label>
+                  <input type="text" x-model="heroForm.imageUrl" placeholder="https://..." class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Button Text</label>
+                    <input type="text" x-model="heroForm.buttonText" class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                  </div>
+                  <div>
+                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Button Link</label>
+                    <input type="text" x-model="heroForm.buttonLink" class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Sort Order</label>
+                    <input type="number" x-model="heroForm.sortOrder" class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                  </div>
+                  <div>
+                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Active</label>
+                    <label class="relative inline-flex items-center cursor-pointer mt-2">
+                      <input type="checkbox" x-model="heroForm.active" class="sr-only peer">
+                      <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-brand-500 dark:peer-focus:ring-brand-500 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-brand-500"></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <div class="flex justify-end gap-3 mt-6">
+                <button @click="showHeroModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">Cancel</button>
+                <button @click="saveHeroModal()" class="px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600 transition-all">Save</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TAB 2: PROMO BANNERS -->
+        <!-- ============================================================ -->
+        <div x-show="activeTab === 'banners'" x-cloak>
+          <div class="flex items-center justify-between mb-6">
+            <h4 class="text-lg font-semibold text-gray-800 dark:text-white/90">Promo Banners</h4>
+            <button @click="addBanner()" class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600 transition-all">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              Add Banner
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm text-gray-700 dark:text-gray-300">
+              <thead>
+                <tr class="border-b bg-gray-50 dark:border-gray-700 dark:bg-gray-800/50">
+                  <th class="text-left py-3 px-4 font-medium">#</th>
+                  <th class="text-left py-3 px-4 font-medium">Title</th>
+                  <th class="text-left py-3 px-4 font-medium">Image</th>
+                  <th class="text-left py-3 px-4 font-medium">Link</th>
+                  <th class="text-left py-3 px-4 font-medium">Active</th>
+                  <th class="text-left py-3 px-4 font-medium">Sort</th>
+                  <th class="text-left py-3 px-4 font-medium w-24">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template x-for="(banner, i) in promoBanners" :key="i">
+                  <tr class="border-b border-gray-100 dark:border-gray-700">
+                    <td class="py-3 px-4" x-text="i + 1"></td>
+                    <td class="py-3 px-4 font-medium" x-text="banner.title"></td>
+                    <td class="py-3 px-4">
+                      <img x-show="banner.imageUrl" :src="banner.imageUrl" class="w-16 h-10 object-cover rounded" @error="$el.style.display='none'">
+                      <span x-show="!banner.imageUrl" class="text-xs text-gray-400">No image</span>
+                    </td>
+                    <td class="py-3 px-4 text-xs truncate max-w-[150px]" x-text="banner.link || '-'"></td>
+                    <td class="py-3 px-4">
+                      <span x-show="banner.active" class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-700">Active</span>
+                      <span x-show="!banner.active" class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-red-100 text-red-700">Inactive</span>
+                    </td>
+                    <td class="py-3 px-4" x-text="banner.sortOrder ?? i"></td>
+                    <td class="py-3 px-4">
+                      <div class="flex items-center gap-2">
+                        <button @click="editBanner(i)" class="text-gray-400 hover:text-brand-500 transition-colors" title="Edit">
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                        </button>
+                        <button @click="deleteBanner(i)" class="text-gray-400 hover:text-red-500 transition-colors" title="Delete">
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </template>
+                <tr x-show="promoBanners.length === 0">
+                  <td colspan="7" class="py-8 text-center text-gray-400">No banners yet. Click "Add Banner" to create one.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Modal for Add/Edit Banner -->
+          <div x-show="showBannerModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="showBannerModal = false">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-lg mx-4 shadow-xl">
+              <h5 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-4" x-text="bannerEditingIndex !== null ? 'Edit Banner' : 'Add Banner'"></h5>
+              <div class="space-y-4">
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Title *</label>
+                  <input type="text" x-model="bannerForm.title" class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Image URL *</label>
+                  <input type="text" x-model="bannerForm.imageUrl" placeholder="https://..." class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Link URL</label>
+                  <input type="text" x-model="bannerForm.link" class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Sort Order</label>
+                    <input type="number" x-model="bannerForm.sortOrder" class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                  </div>
+                  <div>
+                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Active</label>
+                    <label class="relative inline-flex items-center cursor-pointer mt-2">
+                      <input type="checkbox" x-model="bannerForm.active" class="sr-only peer">
+                      <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-brand-500 dark:peer-focus:ring-brand-500 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-brand-500"></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <div class="flex justify-end gap-3 mt-6">
+                <button @click="showBannerModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">Cancel</button>
+                <button @click="saveBannerModal()" class="px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600 transition-all">Save</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TAB 3: DISKON & GRATIS ONGKIR -->
+        <!-- ============================================================ -->
+        <div x-show="activeTab === 'discount'" x-cloak>
+          <h4 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-6">Diskon &amp; Gratis Ongkir</h4>
+          <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+              <h5 class="text-base font-semibold text-gray-800 dark:text-white/90 mb-4">Discount Settings</h5>
+              <div class="space-y-4">
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Discount Percentage (%)</label>
+                  <input type="number" x-model="discountSettings.percentage" min="0" max="100" class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Discount Code</label>
+                  <input type="text" x-model="discountSettings.code" placeholder="HEMAT10" class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Min Purchase Amount</label>
+                  <input type="number" x-model="discountSettings.minPurchase" class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                </div>
+                <div class="flex items-center justify-between pt-2">
+                  <label class="text-sm font-medium text-gray-700 dark:text-gray-400">Active</label>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" x-model="discountSettings.active" class="sr-only peer">
+                    <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-brand-500 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-brand-500"></div>
+                  </label>
+                </div>
+              </div>
+              <button @click="saveDiscountSettings()" :disabled="isSaving" class="mt-4 w-full px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600 transition-all disabled:opacity-50">
+                <span x-text="isSaving ? 'Saving...' : 'Save Discount'"></span>
+              </button>
+            </div>
+            <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+              <h5 class="text-base font-semibold text-gray-800 dark:text-white/90 mb-4">Free Shipping Settings</h5>
+              <div class="space-y-4">
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Min Purchase for Free Shipping</label>
+                  <input type="number" x-model="freeShipping.minAmount" class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Label</label>
+                  <input type="text" x-model="freeShipping.label" placeholder="Free Shipping" class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                </div>
+                <div class="flex items-center justify-between pt-2">
+                  <label class="text-sm font-medium text-gray-700 dark:text-gray-400">Active</label>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" x-model="freeShipping.active" class="sr-only peer">
+                    <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-brand-500 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-brand-500"></div>
+                  </label>
+                </div>
+              </div>
+              <button @click="saveFreeShipping()" :disabled="isSaving" class="mt-4 w-full px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600 transition-all disabled:opacity-50">
+                <span x-text="isSaving ? 'Saving...' : 'Save Free Shipping'"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TAB 4: FEATURED & SPECIAL -->
+        <!-- ============================================================ -->
+        <div x-show="activeTab === 'featured'" x-cloak>
+          <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+              <div class="flex items-center justify-between mb-4">
+                <h5 class="text-base font-semibold text-gray-800 dark:text-white/90">Featured Products</h5>
+                <button @click="addFeaturedProduct()" class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600 transition-all">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                  Add
+                </button>
+              </div>
+              <div class="space-y-2 max-h-80 overflow-y-auto">
+                <template x-for="(fp, i) in featuredProducts" :key="i">
+                  <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 rounded-lg px-3 py-2">
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium truncate" x-text="fp.name || fp.title || 'Product ' + (i+1)"></p>
+                      <p x-show="fp.price" class="text-xs text-gray-400" x-text="'Rp ' + Number(fp.price).toLocaleString()"></p>
+                    </div>
+                    <button @click="removeFeaturedProduct(i)" class="text-gray-400 hover:text-red-500 ml-2 flex-shrink-0" title="Remove">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>
+                  </div>
+                </template>
+                <p x-show="featuredProducts.length === 0" class="text-sm text-gray-400 text-center py-4">No featured products yet.</p>
+              </div>
+              <button @click="saveFeaturedProducts()" :disabled="isSaving" class="mt-4 w-full px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600 transition-all disabled:opacity-50">
+                <span x-text="isSaving ? 'Saving...' : 'Save Featured Products'"></span>
+              </button>
+            </div>
+            <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+              <h5 class="text-base font-semibold text-gray-800 dark:text-white/90 mb-4">Special Product</h5>
+              <div class="space-y-4">
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Product Name *</label>
+                  <input type="text" x-model="specialProduct.name" class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Price</label>
+                  <input type="number" x-model="specialProduct.price" class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Original Price (for compare)</label>
+                  <input type="number" x-model="specialProduct.originalPrice" class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Image URL</label>
+                  <input type="text" x-model="specialProduct.imageUrl" placeholder="https://..." class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Link URL</label>
+                  <input type="text" x-model="specialProduct.link" class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">Badge</label>
+                  <input type="text" x-model="specialProduct.badge" placeholder="Sale! / Limited / Hot" class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                </div>
+                <div class="flex items-center justify-between pt-2">
+                  <label class="text-sm font-medium text-gray-700 dark:text-gray-400">Active</label>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" x-model="specialProduct.active" class="sr-only peer">
+                    <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-brand-500 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-brand-500"></div>
+                  </label>
+                </div>
+              </div>
+              <button @click="saveSpecialProduct()" :disabled="isSaving" class="mt-4 w-full px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600 transition-all disabled:opacity-50">
+                <span x-text="isSaving ? 'Saving...' : 'Save Special Product'"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- PUBLISH BUTTON (bottom, always visible) -->
+        <!-- ============================================================ -->
+        <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <button @click="publishBundle()" :disabled="isPublishing"
+            class="px-6 py-2.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2">
+            <svg x-show="isPublishing" x-cloak class="w-4 h-4 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            <span x-text="isPublishing ? 'Publishing...' : 'Publish to Blogger'"></span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Featured Product Picker Modal -->
+  <div x-show="showFeaturedPicker" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="showFeaturedPicker = false">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-lg mx-4 shadow-xl max-h-[70vh] flex flex-col">
+      <h5 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-4">Select Product</h5>
+      <div class="mb-4">
+        <input type="text" x-model="featuredSearch" placeholder="Search product name..." class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+      </div>
+      <div class="flex-1 overflow-y-auto space-y-2">
+        <template x-for="(p, i) in filteredProducts" :key="i">
+          <div @click="selectFeaturedProduct(p)" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors">
+            <img x-show="p.ImageURL" :src="p.ImageURL" class="w-10 h-10 object-cover rounded" @error="$el.style.display='none'">
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium truncate" x-text="p.Name"></p>
+              <p class="text-xs text-gray-400" x-text="'Rp ' + Number(p.Price).toLocaleString()"></p>
+            </div>
+          </div>
+        </template>
+        <p x-show="filteredProducts.length === 0" class="text-sm text-gray-400 text-center py-4">No products found.</p>
+      </div>
+      <button @click="showFeaturedPicker = false" class="mt-4 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">Close</button>
+    </div>
+  </div>
+
+</div>
