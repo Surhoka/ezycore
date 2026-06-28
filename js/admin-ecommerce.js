@@ -386,14 +386,36 @@ Alpine.data('ecommerceAlbums', () => ({
       if (window.showToast) window.showToast('Harap isi Blog ID dan Album Page ID di menu Settings.', 'warning');
       return;
     }
-    const template = `<div class="ezy-album-entry" data-album-id="${this.selectedAlbumId}" style="background-color: white; border-radius: 20px; border: 2px solid rgb(226, 232, 240); box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 6px -1px; font-family: Inter, sans-serif; margin-bottom: 30px; padding: 25px;">\n  <h3 style="border-bottom: 1px solid rgb(241, 245, 249); color: #0f172a; font-size: 18px; margin-top: 0px; padding-bottom: 10px;"><span style="color: #475569; font-size: 13px;">Area Gambar :</span></h3><div style="text-align: center;"><br /></div>\n  \n  <div style="align-items: center; border-top: 1px solid rgb(241, 245, 249); display: flex; justify-content: space-between; margin-top: 20px; padding-top: 15px;">\n    <span style="color: #94a3b8; font-size: 11px;">EzyStore Metadata System v2.0</span>\n    <span style="background: rgb(59, 130, 246); border-radius: 4px; color: white; font-size: 10px; font-weight: bold; padding: 2px 8px;">SYNC READY</span>\n  </div>\n</div><br />`;
-    try {
-      await navigator.clipboard.writeText(template);
-      if (window.showToast) window.showToast('Template disalin! Silakan paste di Editor Blogger.', 'success');
-    } catch (err) {
-      console.error('Gagal menyalin template:', err);
+    var template = '<div class="ezy-album-entry" data-album-id="' + this.selectedAlbumId + '" style="background-color: white; border-radius: 20px; border: 2px solid rgb(226, 232, 240); box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 6px -1px; font-family: Inter, sans-serif; margin-bottom: 30px; padding: 25px;">\n  <h3 style="border-bottom: 1px solid rgb(241, 245, 249); color: #0f172a; font-size: 18px; margin-top: 0px; padding-bottom: 10px;"><span style="color: #475569; font-size: 13px;">Area Gambar :</span></h3><div style="text-align: center;"><br /></div>\n  \n  <div style="align-items: center; border-top: 1px solid rgb(241, 245, 249); display: flex; justify-content: space-between; margin-top: 20px; padding-top: 15px;">\n    <span style="color: #94a3b8; font-size: 11px;">EzyStore Metadata System v2.0</span>\n    <span style="background: rgb(59, 130, 246); border-radius: 4px; color: white; font-size: 10px; font-weight: bold; padding: 2px 8px;">SYNC READY</span>\n  </div>\n</div><br />';
+
+    // Copy template ke clipboard dengan fallback
+    var copySuccess = false;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(template);
+        copySuccess = true;
+      } catch (e) { /* fallback */ }
     }
-    const url = `https://draft.blogger.com/blog/page/edit/${blogId}/${pageId}`;
+    if (!copySuccess) {
+      var ta = document.createElement('textarea');
+      ta.value = template;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        copySuccess = true;
+      } catch (e) { /* final fallback */ }
+      document.body.removeChild(ta);
+    }
+    if (copySuccess) {
+      if (window.showToast) window.showToast('Template disalin! Silakan paste di Editor Blogger.', 'success');
+    } else {
+      if (window.showToast) window.showToast('Gagal menyalin otomatis. Silakan copy manual dari console.', 'warning');
+      console.log('Template album:\n' + template);
+    }
+    var url = 'https://draft.blogger.com/blog/page/edit/' + blogId + '/' + pageId;
     window.open(url, 'BloggerEditor', 'width=1100,height=800,scrollbars=yes,resizable=yes');
   },
 
