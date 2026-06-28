@@ -52,9 +52,6 @@ Alpine.data('ecommerceProducts', () => ({
   isLoading: false,
   isSyncing: false,
   isSaving: false,
-  isAddingCategory: false,
-  showCategoryModal: false,
-  newCategoryName: '',
   newImageUrl: '',
   showModal: false,
   isEditing: false,
@@ -170,34 +167,6 @@ Alpine.data('ecommerceProducts', () => ({
       if (window.showToast) window.showToast('Terjadi kesalahan koneksi saat sinkronisasi.', 'error');
     } finally {
       this.isSyncing = false;
-    }
-  },
-
-  openCategoryModal() {
-    this.newCategoryName = '';
-    this.showCategoryModal = true;
-  },
-
-  async addCategory() {
-    var name = (this.newCategoryName || '').trim();
-    if (!name) { if (window.showToast) window.showToast('Nama kategori harus diisi', 'warning'); return; }
-    this.isAddingCategory = true;
-    try {
-      var res = await ecomApi('saveCategory', { name: name, dbId: this.dbId });
-      if (res.status === 'success') {
-        if (window.showToast) window.showToast('Kategori berhasil ditambahkan', 'success');
-        this.showCategoryModal = false;
-        this.newCategoryName = '';
-        var cRes = await ecomApi('getCategories');
-        this.categories = cRes.data || [];
-        this.editingItem.category = name;
-      } else {
-        if (window.showToast) window.showToast(res.message || 'Gagal menambah kategori', 'error');
-      }
-    } catch (e) {
-      if (window.showToast) window.showToast('Terjadi kesalahan: ' + e, 'error');
-    } finally {
-      this.isAddingCategory = false;
     }
   },
 
@@ -756,6 +725,96 @@ Alpine.data('ecommerceReports', () => ({
       if (window.showToast) window.showToast('Failed to load report', 'error');
     }
     this.isLoading = false;
+  }
+}));
+
+// ================================================================
+// ECOMMERCE CATEGORIES
+// ================================================================
+Alpine.data('ecommerceCategories', () => ({
+  dbId: null,
+  isLoading: true,
+  categories: [],
+  editingCat: {},
+  showForm: false,
+
+  init() {
+    var storageKey = 'EzycoreConfig_' + (window.EZY_BLOG_ID || '');
+    var config = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    this.dbId = config.pluginContentDbId || config.sheetId || config.dbId || null;
+    this.loadCategories();
+  },
+
+  async loadCategories() {
+    this.isLoading = true;
+    try {
+      const res = await ecomApi('getCategories');
+      this.categories = res.data || [];
+    } catch (e) {
+      if (window.showToast) window.showToast('Failed to load categories', 'error');
+    }
+    this.isLoading = false;
+  },
+
+  getParentName(parentId) {
+    if (!parentId) return '';
+    const parent = this.categories.find(c => c.id === parentId);
+    return parent ? parent.name : '';
+  },
+
+  openAddForm() {
+    this.editingCat = { name: '', slug: '', description: '', parentId: '', sortOrder: 0, active: true };
+    this.showForm = true;
+  },
+
+  openEditForm(cat) {
+    this.editingCat = {
+      id: cat.id,
+      name: cat.name || '',
+      slug: cat.slug || '',
+      description: cat.description || '',
+      parentId: cat.parentid || '',
+      sortOrder: Number(cat.sortorder || 0),
+      active: cat.active === 'TRUE' || cat.active === true
+    };
+    this.showForm = true;
+  },
+
+  closeForm() {
+    this.showForm = false;
+    this.editingCat = {};
+  },
+
+  async saveCategory() {
+    if (!this.editingCat.name) { if (window.showToast) window.showToast('Category name is required', 'warning'); return; }
+    try {
+      const payload = { ...this.editingCat, dbId: this.dbId };
+      const res = await ecomApi('saveCategory', payload);
+      if (res.status === 'success') {
+        if (window.showToast) window.showToast('Category saved', 'success');
+        this.closeForm();
+        this.loadCategories();
+      } else {
+        if (window.showToast) window.showToast(res.message || 'Failed to save', 'error');
+      }
+    } catch (e) {
+      if (window.showToast) window.showToast('Error: ' + e.message, 'error');
+    }
+  },
+
+  async deleteCategory(id) {
+    if (!confirm('Delete this category?')) return;
+    try {
+      const res = await ecomApi('deleteCategory', { id: id, dbId: this.dbId });
+      if (res.status === 'success') {
+        if (window.showToast) window.showToast('Category deleted', 'success');
+        this.loadCategories();
+      } else {
+        if (window.showToast) window.showToast(res.message || 'Failed to delete', 'error');
+      }
+    } catch (e) {
+      if (window.showToast) window.showToast('Error: ' + e.message, 'error');
+    }
   }
 }));
 
