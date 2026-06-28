@@ -23,8 +23,6 @@
         </p>
     </div>
 
-    <input type="file" x-ref="productImageInput" class="hidden" accept="image/*" @change="handleImageUpload($event)">
-
     <template x-if="isLoading">
         <div class="flex items-center justify-center py-16">
             <span class="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent"></span>
@@ -125,24 +123,30 @@
 
                     <div class="modal-body-content custom-scrollbar">
                         <div>
-                            <label class="form-label">Product Image</label>
-                            <div class="relative group aspect-square w-32 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 cursor-pointer"
-                                @click="$refs.productImageInput.click()">
-                                <template x-if="editingItem.imageurl">
-                                    <img :src="editingItem.imageurl" class="h-full w-full object-cover">
-                                </template>
-                                <template x-if="!editingItem.imageurl">
-                                    <div class="flex h-full flex-col items-center justify-center text-gray-300 gap-1">
-                                        <span class="w-6 h-6" x-icon="'upload'"></span>
-                                        <span class="text-[10px] font-bold">Upload</span>
-                                    </div>
-                                </template>
-                                <div x-show="isUploading"
-                                    class="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-black/80">
-                                    <span class="h-5 w-5 animate-spin rounded-full border-2 border-brand-500 border-t-transparent"></span>
-                                </div>
+                            <label class="form-label">Product Images</label>
+                            <div class="flex gap-2">
+                                <input type="url" x-model="newImageUrl" @keyup.enter="addImageUrl()" class="form-input" placeholder="https://example.com/image.jpg">
+                                <button @click="addImageUrl()" class="btn btn-primary btn-sm shrink-0">Add</button>
                             </div>
-                            <input type="text" x-model="editingItem.imageurl" class="form-input mt-2" placeholder="Or enter image URL">
+                            <template x-if="editingItem.images && editingItem.images.length > 0">
+                                <div class="grid grid-cols-3 gap-2 mt-3">
+                                    <template x-for="(url, idx) in editingItem.images" :key="idx">
+                                        <div class="relative group aspect-square overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
+                                            <img :src="url" class="h-full w-full object-cover" @error="$el.classList.add('hidden'); $el.nextElementSibling.classList.remove('hidden')">
+                                            <div class="hidden absolute inset-0 flex items-center justify-center text-gray-400 text-[10px] font-bold">Broken</div>
+                                            <div class="absolute inset-0 flex items-start justify-end gap-1 p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button @click="copyImageUrl(url)" class="rounded bg-white/90 p-1.5 text-gray-600 hover:text-brand-600 shadow-sm" title="Copy URL">
+                                                    <span class="w-3.5 h-3.5 block" x-icon="'copy'"></span>
+                                                </button>
+                                                <button @click="removeImage(idx)" class="rounded bg-white/90 p-1.5 text-red-500 hover:bg-red-500 hover:text-white shadow-sm" title="Remove">
+                                                    <span class="w-3.5 h-3.5 block" x-icon="'close'"></span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                            <p class="mt-1 text-[10px] text-gray-400">First image will be used as the primary thumbnail.</p>
                         </div>
                         <div>
                             <label class="form-label">Product Name *</label>
