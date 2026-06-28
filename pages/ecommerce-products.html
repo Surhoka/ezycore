@@ -1,143 +1,204 @@
-<div x-data="ecommerceProducts" class="w-full px-1 sm:px-0">
-
-  <div class="rounded-2xl border border-primary bg-secondary relative min-h-[500px] shadow-sm overflow-hidden">
-    <!-- Loading Overlay -->
-    <div x-show="isLoading" x-cloak
-      class="absolute inset-0 z-10 flex items-center justify-center bg-secondary/80 backdrop-blur-sm rounded-lg">
-      <svg class="h-8 w-8 animate-spin text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-      </svg>
-    </div>
-
-    <div x-show="!isLoading" class="p-4 md:p-6 transition-opacity duration-500">
-      <div class="flex items-center justify-between mb-6">
-        <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Products</h3>
+<div x-data="ecommerceProducts" class="w-full animate-fade-in">
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Products</h1>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage your ecommerce products.</p>
+        </div>
         <div class="flex gap-2">
-          <button @click="republishShop()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90 dark:hover:bg-gray-700">Republish Shop</button>
-          <button @click="openAddForm()" class="px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600">Add Product</button>
+            <button @click="syncAllToBlogger()" :disabled="isSyncing"
+                class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 dark:border-gray-700 dark:bg-gray-800 dark:text-blue-400 transition-colors disabled:opacity-50">
+                <span class="w-4 h-4" :class="isSyncing ? 'animate-spin' : ''" x-icon="'refresh'"></span>
+                <span x-text="isSyncing ? 'Syncing...' : 'Sync to Blogger'"></span>
+            </button>
+            <button @click="openAddModal()"
+                class="flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-brand-600 transition-all active:scale-95">
+                <span class="w-4 h-4" x-icon="'plus'"></span> Add Product
+            </button>
         </div>
-      </div>
-
-      <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
-                <th class="text-left py-3 px-4 font-medium text-gray-500">Name</th>
-                <th class="text-left py-3 px-4 font-medium text-gray-500">Price</th>
-                <th class="text-left py-3 px-4 font-medium text-gray-500">Stock</th>
-                <th class="text-left py-3 px-4 font-medium text-gray-500">Category</th>
-                <th class="text-left py-3 px-4 font-medium text-gray-500">Status</th>
-                <th class="text-right py-3 px-4 font-medium text-gray-500">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <template x-if="products.length === 0">
-                <tr><td colspan="6" class="py-8 text-center text-gray-500">No products yet. Click "Add Product" to create one.</td></tr>
-              </template>
-              <template x-for="product in products" :key="product.id">
-                <tr class="border-b border-gray-50 dark:border-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800/30">
-                  <td class="py-3 px-4 font-medium text-gray-800 dark:text-white/90" x-text="product.name || product.slug"></td>
-                  <td class="py-3 px-4" x-text="'Rp ' + Number(product.price || 0).toLocaleString()"></td>
-                  <td class="py-3 px-4" x-text="product.stock || 0"></td>
-                  <td class="py-3 px-4" x-text="product.category || '-'"></td>
-                  <td class="py-3 px-4">
-                    <span class="px-2 py-1 text-xs rounded-full"
-                      :class="product.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'"
-                      x-text="product.status || 'draft'"></span>
-                  </td>
-                  <td class="py-3 px-4 text-right">
-                    <button @click="openEditForm(product)" class="text-brand-500 hover:text-brand-600 text-xs font-medium mr-2">Edit</button>
-                    <button @click="publishProduct(product.id)" class="text-blue-500 hover:text-blue-600 text-xs font-medium mr-2">Publish</button>
-                    <button @click="deleteProduct(product.id)" class="text-red-500 hover:text-red-600 text-xs font-medium">Delete</button>
-                  </td>
-                </tr>
-              </template>
-            </tbody>
-          </table>
-        </div>
-      </div>
     </div>
-  </div>
 
-  <!-- BEGIN MODAL: PRODUCT FORM -->
-  <div :class="{ 'show': showForm }" x-cloak
-    class="modal fixed inset-0 p-4 md:p-5 overflow-hidden flex justify-center items-center isolate z-[99999]">
-    <div @click="closeForm()" class="fixed inset-0 h-full w-full bg-gray-900/40 transition-opacity duration-300"></div>
-    <div class="modal-dialog">
-      <button @click="closeForm()" class="modal-close-btn">
-        <span class="w-6 h-6 block" x-icon="'close'"></span>
-      </button>
-      <div class="modal-content">
-        <div class="modal-header-sticky">
-          <h3 class="h3" x-text="editingProduct && editingProduct.id ? 'Edit Product' : 'Add Product'"></h3>
-          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Manage your product details.</p>
-        </div>
-        <div class="modal-body-content custom-scrollbar">
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div class="sm:col-span-2">
-              <label class="form-label">Name</label>
-              <input type="text" x-model="editingProduct.name" class="form-input" placeholder="Product name" />
-            </div>
-            <div>
-              <label class="form-label">Price</label>
-              <input type="number" x-model="editingProduct.price" class="form-input" />
-            </div>
-            <div>
-              <label class="form-label">Compare At Price</label>
-              <input type="number" x-model="editingProduct.compareAtPrice" class="form-input" />
-            </div>
-            <div>
-              <label class="form-label">Stock</label>
-              <input type="number" x-model="editingProduct.stock" class="form-input" />
-            </div>
-            <div>
-              <label class="form-label">Category</label>
-              <select x-model="editingProduct.category" class="form-input">
-                <option value="">None</option>
-                <template x-for="cat in categories" :key="cat.id">
-                  <option x-text="cat.name" :value="cat.name"></option>
-                </template>
-              </select>
-            </div>
-            <div>
-              <label class="form-label">Weight (gram)</label>
-              <input type="number" x-model="editingProduct.weight" class="form-input" />
-            </div>
-            <div>
-              <label class="form-label">Status</label>
-              <select x-model="editingProduct.status" class="form-input">
-                <option value="draft">Draft</option>
-                <option value="published">Published</option>
-              </select>
-            </div>
-            <div class="sm:col-span-2">
-              <label class="form-label">Images</label>
-              <div class="flex flex-wrap gap-2 mb-2">
-                <template x-for="(img, i) in editingProduct.images" :key="i">
-                  <div class="relative group">
-                    <img :src="img" class="w-16 h-16 object-cover rounded-lg border">
-                    <button @click="removeImage(i)" class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs hidden group-hover:flex items-center justify-center">&times;</button>
-                  </div>
-                </template>
-              </div>
-              <button @click="addImageUrl()" type="button" class="text-xs text-brand-500 font-medium">+ Add Image URL</button>
-            </div>
-            <div class="sm:col-span-2">
-              <label class="form-label">Description</label>
-              <textarea x-model="editingProduct.description" rows="3" class="form-input"></textarea>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer-actions">
-          <div class="flex w-full sm:w-auto gap-3 ml-auto">
-            <button type="button" @click="closeForm()" class="btn btn-outline w-full sm:w-auto">Cancel</button>
-            <button type="button" @click="saveProduct()" class="btn btn-primary w-full sm:w-auto">Save</button>
-          </div>
-        </div>
-      </div>
+    <div class="mb-6 flex items-center justify-between">
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+            <span class="font-bold text-brand-600 dark:text-brand-400" x-text="products.length"></span> products registered
+        </p>
     </div>
-  </div>
-  <!-- END MODAL: PRODUCT FORM -->
+
+    <input type="file" x-ref="productImageInput" class="hidden" accept="image/*" @change="handleImageUpload($event)">
+
+    <template x-if="isLoading">
+        <div class="flex items-center justify-center py-16">
+            <span class="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent"></span>
+        </div>
+    </template>
+
+    <template x-if="!isLoading">
+        <div class="overflow-x-auto rounded-lg border border-gray-100 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-gray-50/50 dark:bg-gray-800/50 text-[10px] font-black uppercase tracking-widest text-gray-500">
+                    <tr>
+                        <th class="px-6 py-4">Product</th>
+                        <th class="px-6 py-4">Category</th>
+                        <th class="px-6 py-4">Price</th>
+                        <th class="px-6 py-4">Stock</th>
+                        <th class="px-6 py-4">Status</th>
+                        <th class="px-6 py-4 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50 dark:divide-gray-800/50">
+                    <template x-for="product in products" :key="product.id">
+                        <tr class="group hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-4">
+                                    <div class="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
+                                        <template x-if="getFirstImage(product)">
+                                            <img :src="getFirstImage(product)" class="h-full w-full object-cover">
+                                        </template>
+                                        <template x-if="!getFirstImage(product)">
+                                            <div class="flex h-full items-center justify-center text-gray-300">
+                                                <span class="w-5 h-5 block" x-icon="'shopping-bag'"></span>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <div class="flex flex-col min-w-0">
+                                        <div class="font-bold text-gray-900 dark:text-white truncate max-w-[200px]" x-text="product.name"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-gray-500 dark:text-gray-400" x-text="product.category || '—'"></td>
+                            <td class="px-6 py-4">
+                                <div class="flex flex-col">
+                                    <span class="font-black text-brand-600" x-text="formatPrice(product.price)"></span>
+                                    <template x-if="product.compareatprice && Number(product.compareatprice) > Number(product.price)">
+                                        <span class="text-[10px] text-gray-400 line-through" x-text="formatPrice(product.compareatprice)"></span>
+                                    </template>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-gray-500 dark:text-gray-400" x-text="product.stock || '0'"></td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold"
+                                    :class="(product.status === 'published' || product.status === 'active') ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'"
+                                    x-text="(product.status === 'published' || product.status === 'active') ? 'Active' : 'Draft'"></span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center justify-center gap-2">
+                                    <button @click="editProduct(product)"
+                                        class="rounded-lg border border-gray-200 p-2 text-gray-500 hover:bg-gray-50 hover:text-brand-600 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors">
+                                        <span class="w-4 h-4 block" x-icon="'pencil'"></span>
+                                    </button>
+                                    <button @click="deleteProduct(product.id)"
+                                        class="rounded-lg border border-red-500/10 p-2 text-red-500/60 hover:bg-red-500 hover:text-white dark:border-red-500/20 dark:hover:bg-red-500 transition-all">
+                                        <span class="w-4 h-4 block" x-icon="'trash'"></span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+
+            <template x-if="products.length === 0">
+                <div class="flex flex-col items-center justify-center py-16">
+                    <span class="w-12 h-12 text-gray-300" x-icon="'shopping-bag'"></span>
+                    <p class="mt-4 font-bold text-gray-500">No products yet</p>
+                    <button @click="openAddModal()"
+                        class="mt-4 rounded-lg bg-brand-500 px-5 py-2 text-sm font-bold text-white hover:bg-brand-600 shadow-lg shadow-brand-500/20 transition-all active:scale-95">Add First Product</button>
+                </div>
+            </template>
+        </div>
+    </template>
+
+    <template x-teleport="body">
+        <div x-show="showModal" :class="{ 'show': showModal }" x-trap="showModal" x-transition
+            class="fixed inset-0 flex justify-center items-center p-4 overflow-hidden z-[99999] modal" x-cloak>
+            <div class="fixed inset-0 h-full w-full bg-gray-900/40 backdrop-blur-xl transition-opacity duration-300"
+                @click="showModal = false"></div>
+
+            <div class="modal-dialog">
+                <button @click="showModal = false" class="modal-close-btn">
+                    <span class="w-6 h-6 block" x-icon="'close'"></span>
+                </button>
+
+                <div class="modal-content custom-scrollbar">
+                    <div class="modal-header-sticky">
+                        <h3 class="h3" x-text="isEditing ? 'Edit Product' : 'Add Product'"></h3>
+                        <p class="mt-2 text-sm text-theme-secondary">Configure your product details.</p>
+                    </div>
+
+                    <div class="modal-body-content">
+                        <div>
+                            <label class="form-label">Product Image</label>
+                            <div class="relative group aspect-square w-32 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 cursor-pointer"
+                                @click="$refs.productImageInput.click()">
+                                <template x-if="editingItem.imageurl">
+                                    <img :src="editingItem.imageurl" class="h-full w-full object-cover">
+                                </template>
+                                <template x-if="!editingItem.imageurl">
+                                    <div class="flex h-full flex-col items-center justify-center text-gray-300 gap-1">
+                                        <span class="w-6 h-6" x-icon="'upload'"></span>
+                                        <span class="text-[10px] font-bold">Upload</span>
+                                    </div>
+                                </template>
+                                <div x-show="isUploading"
+                                    class="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-black/80">
+                                    <span class="h-5 w-5 animate-spin rounded-full border-2 border-brand-500 border-t-transparent"></span>
+                                </div>
+                            </div>
+                            <input type="text" x-model="editingItem.imageurl" class="form-input mt-2" placeholder="Or enter image URL">
+                        </div>
+                        <div>
+                            <label class="form-label">Product Name *</label>
+                            <input type="text" x-model="editingItem.name" class="form-input" placeholder="Product name">
+                        </div>
+                        <div>
+                            <label class="form-label">Description</label>
+                            <textarea x-model="editingItem.description" rows="2" class="form-input" placeholder="Short product description"></textarea>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="form-label">Sale Price (IDR)</label>
+                                <input type="number" x-model.number="editingItem.price" class="form-input">
+                            </div>
+                            <div>
+                                <label class="form-label">Compare at Price (IDR)</label>
+                                <input type="number" x-model.number="editingItem.compareatprice" class="form-input">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="form-label">Category</label>
+                                <select x-model="editingItem.category" class="form-input">
+                                    <option value="">— Uncategorized —</option>
+                                    <template x-for="cat in categories" :key="cat.id">
+                                        <option :value="cat.name" x-text="cat.name"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">Stock</label>
+                                <input type="number" x-model.number="editingItem.stock" class="form-input">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="form-label">Weight (gram)</label>
+                                <input type="number" x-model.number="editingItem.weight" class="form-input">
+                            </div>
+                            <div class="flex items-end pb-1">
+                                <label class="flex cursor-pointer items-center gap-2">
+                                    <input type="checkbox" x-model="editingItem.active" class="peer sr-only">
+                                    <div class="relative h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all peer-checked:bg-brand-600 peer-checked:after:translate-x-full dark:bg-gray-700"></div>
+                                    <span class="text-sm font-bold text-gray-700 dark:text-gray-300">Active</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <footer class="modal-footer-actions">
+                        <button @click="showModal = false" class="btn btn-outline flex-1">Cancel</button>
+                        <button id="save-product-btn" @click="saveProduct()" class="btn btn-primary flex-1">Save Product</button>
+                    </footer>
+                </div>
+            </div>
+        </div>
+    </template>
 </div>
