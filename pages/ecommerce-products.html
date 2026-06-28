@@ -39,6 +39,8 @@
                         <th class="px-6 py-4">Price</th>
                         <th class="px-6 py-4">Stock</th>
                         <th class="px-6 py-4">Status</th>
+                        <th class="px-6 py-4">Created</th>
+                        <th class="px-6 py-4">Updated</th>
                         <th class="px-6 py-4 text-center">Actions</th>
                     </tr>
                 </thead>
@@ -77,6 +79,8 @@
                                     :class="(product.status === 'published' || product.status === 'active') ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'"
                                     x-text="(product.status === 'published' || product.status === 'active') ? 'Active' : 'Draft'"></span>
                             </td>
+                            <td class="px-6 py-4 text-[11px] text-gray-400 whitespace-nowrap" x-text="formatDate(product.createdat)"></td>
+                            <td class="px-6 py-4 text-[11px] text-gray-400 whitespace-nowrap" x-text="formatDate(product.updatedat)"></td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center justify-center gap-2">
                                     <button @click="editProduct(product)"
