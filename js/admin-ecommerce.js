@@ -220,22 +220,8 @@ Alpine.data('ecommerceAlbums', () => ({
     }
     var storageKey = 'EzycoreConfig_' + (window.EZY_BLOG_ID || '');
     var cache = JSON.parse(localStorage.getItem(storageKey) || '{}');
-    if (!cache.pageIdAlbum) {
-      try {
-        const res = await ecomApi('getEcommerceSettings');
-        if (res.status === 'success' && res.data) {
-          cache.pageIdAlbum = res.data.pageIdAlbum || cache.pageIdAlbum;
-          cache.blogId = res.data.blogId || cache.blogId;
-          localStorage.setItem(storageKey, JSON.stringify(cache));
-        }
-      } catch (e) {}
-    }
     this.dbId = cache.pluginContentDbId || cache.sheetId || cache.dbId || null;
-    this.selectedAlbumId = cache.pageIdAlbum || '';
     this.fetchAlbums();
-    if (this.selectedAlbumId) {
-      this.fetchAlbumFiles(this.selectedAlbumId);
-    }
   },
 
   openAddAlbum() {
@@ -296,10 +282,6 @@ Alpine.data('ecommerceAlbums', () => ({
       const res = await ecomApi('getAlbums', { dbId: this.dbId });
       if (res && res.status === 'success') {
         this.albums = res.data || [];
-        const cache = JSON.parse(localStorage.getItem('EzycoreConfig_' + (window.EZY_BLOG_ID || '')) || '{}');
-        if (cache.pageIdAlbum && !this.albums.find(a => a.id === cache.pageIdAlbum)) {
-          this.albums.unshift({ id: cache.pageIdAlbum, name: 'Blogger Database', description: 'Main album from Blogger Page', active: true, parentid: '' });
-        }
         if (!this.selectedAlbumId && this.albums.length) {
           this.selectAlbum(this.albums[0].id);
         }
