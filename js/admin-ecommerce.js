@@ -218,9 +218,10 @@ Alpine.data('ecommerceAlbums', () => ({
       this.$watch('fileSearchQuery', () => { this.currentPage = 1; });
       this.$watch('selectedAlbumId', () => { this.currentPage = 1; });
     }
-    const cache = JSON.parse(localStorage.getItem('EzypartsConfig') || '{}');
+    var storageKey = 'EzycoreConfig_' + (window.EZY_BLOG_ID || '');
+    const cache = JSON.parse(localStorage.getItem(storageKey) || '{}');
     this.dbId = cache.pluginContentDbId || cache.sheetId || cache.dbId || null;
-    this.selectedAlbumId = cache.pageId || '';
+    this.selectedAlbumId = cache.pageIdAlbum || cache.pageId || '';
     this.fetchAlbums();
     if (this.selectedAlbumId) {
       this.fetchAlbumFiles(this.selectedAlbumId);
@@ -285,9 +286,9 @@ Alpine.data('ecommerceAlbums', () => ({
       const res = await ecomApi('getAlbums', { dbId: this.dbId });
       if (res && res.status === 'success') {
         this.albums = res.data || [];
-        const cache = JSON.parse(localStorage.getItem('EzypartsConfig') || '{}');
-        if (cache.pageId && !this.albums.find(a => a.id === cache.pageId)) {
-          this.albums.unshift({ id: cache.pageId, name: 'Blogger Database', description: 'Main album from Blogger Page', active: true, parentid: '' });
+        const cache = JSON.parse(localStorage.getItem('EzycoreConfig_' + (window.EZY_BLOG_ID || '')) || '{}');
+        if (cache.pageIdAlbum && !this.albums.find(a => a.id === cache.pageIdAlbum)) {
+          this.albums.unshift({ id: cache.pageIdAlbum, name: 'Blogger Database', description: 'Main album from Blogger Page', active: true, parentid: '' });
         }
         if (!this.selectedAlbumId && this.albums.length) {
           this.selectAlbum(this.albums[0].id);
@@ -367,11 +368,12 @@ Alpine.data('ecommerceAlbums', () => ({
   },
 
   async openBloggerEditor() {
-    const cache = JSON.parse(localStorage.getItem('EzypartsConfig') || '{}');
+    var storageKey = 'EzycoreConfig_' + (window.EZY_BLOG_ID || '');
+    const cache = JSON.parse(localStorage.getItem(storageKey) || '{}');
     const blogId = cache.blogId || '';
-    const pageId = cache.pageId;
-    if (!blogId || !this.selectedAlbumId) {
-      if (window.showToast) window.showToast('Harap isi Blog ID dan Page ID di menu Settings.', 'warning');
+    const pageId = cache.pageIdAlbum;
+    if (!blogId || !pageId) {
+      if (window.showToast) window.showToast('Harap isi Blog ID dan Album Page ID di menu Settings.', 'warning');
       return;
     }
     const template = `<div class="ezy-album-entry" data-album-id="${this.selectedAlbumId}" style="background-color: white; border-radius: 20px; border: 2px solid rgb(226, 232, 240); box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 6px -1px; font-family: Inter, sans-serif; margin-bottom: 30px; padding: 25px;">\n  <h3 style="border-bottom: 1px solid rgb(241, 245, 249); color: #0f172a; font-size: 18px; margin-top: 0px; padding-bottom: 10px;"><span style="color: #475569; font-size: 13px;">Area Gambar :</span></h3><div style="text-align: center;"><br /></div>\n  \n  <div style="align-items: center; border-top: 1px solid rgb(241, 245, 249); display: flex; justify-content: space-between; margin-top: 20px; padding-top: 15px;">\n    <span style="color: #94a3b8; font-size: 11px;">EzyStore Metadata System v2.0</span>\n    <span style="background: rgb(59, 130, 246); border-radius: 4px; color: white; font-size: 10px; font-weight: bold; padding: 2px 8px;">SYNC READY</span>\n  </div>\n</div><br />`;
@@ -459,7 +461,7 @@ Alpine.data('ecommerceAlbums', () => ({
     this.isSyncing = true;
     if (window.showToast) window.showToast('Menarik metadata dari Blogger...', 'info');
     try {
-      const cache = JSON.parse(localStorage.getItem('EzypartsConfig') || '{}');
+      const cache = JSON.parse(localStorage.getItem('EzycoreConfig_' + (window.EZY_BLOG_ID || '')) || '{}');
       const webUrl = cache.webUrl || '';
       if (!webUrl) { throw new Error('Web URL tidak ditemukan. Harap simpan konfigurasi di menu Settings.'); }
       const res = await ecomApi('syncAlbumMetadataFromBloggerUrl', { dbId: this.dbId, albumId: this.selectedAlbumId, webUrl: webUrl });
@@ -709,7 +711,7 @@ Alpine.data('ecommerceSettings', () => ({
   isPublishing: false,
   activeTab: 'general',
   settings: {
-    blogId: '', blogUrl: '', webAppUrl: '', pageIdShop: '', pageIdHomeData: '',
+    blogId: '', blogUrl: '', webAppUrl: '', pageIdShop: '', pageIdAlbum: '', pageIdHomeData: '',
     currency: 'IDR', taxRate: '11', midtransClientKey: '', siteKey: ''
   },
   homeData: {
@@ -729,6 +731,7 @@ Alpine.data('ecommerceSettings', () => ({
       const res = await ecomApi('getEcommerceSettings');
       if (res.status === 'success' && res.data) {
         this.settings = { ...this.settings, ...res.data };
+        this.syncToConfig();
       }
     } catch (e) {
       if (window.showToast) window.showToast('Failed to load settings', 'error');
@@ -742,6 +745,7 @@ Alpine.data('ecommerceSettings', () => ({
       blogId: this.settings.blogId,
       blogUrl: this.settings.blogUrl,
       pageIdShop: this.settings.pageIdShop,
+      pageIdAlbum: this.settings.pageIdAlbum,
       pageIdHomeData: this.settings.pageIdHomeData,
       currency: this.settings.currency,
       taxRate: this.settings.taxRate,
@@ -756,6 +760,7 @@ Alpine.data('ecommerceSettings', () => ({
       if (res.status === 'success') {
         var syncMsg = res.syncInfo ? (typeof res.syncInfo === 'object' ? res.syncInfo.message || JSON.stringify(res.syncInfo) : res.syncInfo) : '';
         if (window.showToast) window.showToast('Settings saved. Sync: ' + syncMsg, 'success');
+        this.syncToConfig();
         await this.loadSettings();
       } else {
         if (window.showToast) window.showToast(res.message, 'error');
@@ -790,6 +795,16 @@ Alpine.data('ecommerceSettings', () => ({
       if (window.showToast) window.showToast('Failed to save home data', 'error');
     }
     this.isSaving = false;
+  },
+
+  syncToConfig() {
+    var blogId = this.settings.blogId || window.EZY_BLOG_ID || '';
+    if (!blogId) return;
+    var storageKey = 'EzycoreConfig_' + blogId;
+    var config = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    config.pageIdAlbum = this.settings.pageIdAlbum;
+    config.blogId = blogId;
+    localStorage.setItem(storageKey, JSON.stringify(config));
   },
 
   handleSave() {
