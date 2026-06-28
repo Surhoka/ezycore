@@ -51,7 +51,7 @@ Alpine.data('ecommerceProducts', () => ({
   categories: [],
   isLoading: false,
   isSyncing: false,
-  isUploading: false,
+  newImageUrl: '',
   showModal: false,
   isEditing: false,
   editingItem: {},
@@ -81,18 +81,21 @@ Alpine.data('ecommerceProducts', () => ({
 
   openAddModal() {
     this.isEditing = false;
-    this.editingItem = { name: '', description: '', imageurl: '', price: 0, compareatprice: 0, stock: 0, weight: 0, category: '', status: 'draft', active: true };
+    this.newImageUrl = '';
+    this.editingItem = { name: '', description: '', imageurl: '', images: [], price: 0, compareatprice: 0, stock: 0, weight: 0, category: '', status: 'draft', active: true };
     this.showModal = true;
   },
 
   editProduct(product) {
     this.isEditing = true;
+    this.newImageUrl = '';
     var item = { ...product };
     item.price = Number(item.price || 0);
     item.compareatprice = Number(item.compareatprice || 0);
     item.stock = Number(item.stock || 0);
     item.weight = Number(item.weight || 0);
     item.imageurl = item.imageurl || '';
+    try { item.images = typeof item.images === 'string' ? JSON.parse(item.images) : (item.images || []); } catch(e) { item.images = []; }
     item.active = item.active === true || item.active === 'TRUE' || item.status === 'published' || item.status === 'active';
     this.editingItem = item;
     this.showModal = true;
@@ -103,8 +106,11 @@ Alpine.data('ecommerceProducts', () => ({
     var btn = document.getElementById('save-product-btn');
     if (window.setButtonLoading) window.setButtonLoading(btn, true);
     try {
+      var images = this.editingItem.images || [];
       var payload = {
         ...this.editingItem,
+        images: JSON.stringify(images),
+        imageurl: images.length > 0 ? images[0] : (this.editingItem.imageurl || ''),
         dbId: this.dbId
       };
       if (!payload.slug) {
@@ -164,21 +170,26 @@ Alpine.data('ecommerceProducts', () => ({
     }
   },
 
-  handleImageUpload(event) {
-    var file = event.target.files[0];
-    if (!file) return;
-    this.isUploading = true;
-    var reader = new FileReader();
-    var self = this;
-    reader.onload = function (e) {
-      self.editingItem.imageurl = e.target.result;
-      self.isUploading = false;
-    };
-    reader.onerror = function () {
-      if (window.showToast) window.showToast('Gagal membaca file', 'error');
-      self.isUploading = false;
-    };
-    reader.readAsDataURL(file);
+  addImageUrl() {
+    var url = (this.newImageUrl || '').trim();
+    if (!url) { if (window.showToast) window.showToast('Masukkan URL gambar', 'warning'); return; }
+    if (!this.editingItem.images) this.editingItem.images = [];
+    this.editingItem.images.push(url);
+    this.newImageUrl = '';
+  },
+
+  removeImage(idx) {
+    if (!this.editingItem.images) return;
+    this.editingItem.images.splice(idx, 1);
+  },
+
+  copyImageUrl(url) {
+    if (!navigator.clipboard) { if (window.showToast) window.showToast('Clipboard tidak tersedia', 'error'); return; }
+    navigator.clipboard.writeText(url).then(function() {
+      if (window.showToast) window.showToast('URL disalin', 'success');
+    }).catch(function() {
+      if (window.showToast) window.showToast('Gagal menyalin URL', 'error');
+    });
   },
 
   getFirstImage(product) {
