@@ -1,0 +1,123 @@
+<div x-data="ecommerceCategories" class="w-full px-1 sm:px-0">
+
+  <div class="rounded-2xl border border-primary bg-secondary relative min-h-[500px] shadow-sm overflow-hidden">
+    <!-- Loading Overlay -->
+    <div x-show="isLoading" x-cloak
+      class="absolute inset-0 z-10 flex items-center justify-center bg-secondary/80 backdrop-blur-sm rounded-lg">
+      <svg class="h-8 w-8 animate-spin text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+      </svg>
+    </div>
+
+    <div x-show="!isLoading" class="p-4 md:p-6 transition-opacity duration-500">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Categories</h3>
+        <button @click="openAddForm()" class="px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600">Add Category</button>
+      </div>
+
+      <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+                <th class="text-left py-3 px-4 font-medium text-gray-500">Name</th>
+                <th class="text-left py-3 px-4 font-medium text-gray-500">Slug</th>
+                <th class="text-left py-3 px-4 font-medium text-gray-500">Description</th>
+                <th class="text-left py-3 px-4 font-medium text-gray-500">Parent</th>
+                <th class="text-left py-3 px-4 font-medium text-gray-500">Order</th>
+                <th class="text-left py-3 px-4 font-medium text-gray-500">Status</th>
+                <th class="text-right py-3 px-4 font-medium text-gray-500">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template x-if="categories.length === 0">
+                <tr><td colspan="7" class="py-8 text-center text-gray-500">No categories yet.</td></tr>
+              </template>
+              <template x-for="cat in categories" :key="cat.id">
+                <tr class="border-b border-gray-50 dark:border-gray-800/50">
+                  <td class="py-3 px-4 font-medium" x-text="cat.name || '-'"></td>
+                  <td class="py-3 px-4 text-gray-500" x-text="cat.slug || '-'"></td>
+                  <td class="py-3 px-4 text-gray-500 max-w-[200px] truncate" x-text="cat.description || '-'"></td>
+                  <td class="py-3 px-4 text-gray-500" x-text="getParentName(cat.parentid) || '-'"></td>
+                  <td class="py-3 px-4 text-gray-500" x-text="cat.sortorder || '0'"></td>
+                  <td class="py-3 px-4">
+                    <span class="px-2 py-1 text-xs rounded-full"
+                      :class="cat.active === 'TRUE' || cat.active === true ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'"
+                      x-text="cat.active === 'TRUE' || cat.active === true ? 'Active' : 'Inactive'"></span>
+                  </td>
+                  <td class="py-3 px-4 text-right">
+                    <button @click="openEditForm(cat)" class="text-brand-500 hover:text-brand-600 text-xs font-medium mr-2">Edit</button>
+                    <button @click="deleteCategory(cat.id)" class="text-red-500 hover:text-red-600 text-xs font-medium">Delete</button>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BEGIN MODAL: CATEGORY FORM -->
+  <div :class="{ 'show': showForm }" x-cloak
+    class="modal fixed inset-0 p-4 md:p-5 overflow-hidden flex justify-center items-center isolate z-[99999]">
+    <div @click="closeForm()" class="fixed inset-0 h-full w-full bg-gray-900/40 transition-opacity duration-300"></div>
+    <div class="modal-dialog max-w-md">
+      <button @click="closeForm()" class="modal-close-btn">
+        <span class="w-6 h-6 block" x-icon="'close'"></span>
+      </button>
+      <div class="modal-content">
+        <div class="modal-header-sticky">
+          <h3 class="h3" x-text="editingCat && editingCat.id ? 'Edit Category' : 'Add Category'"></h3>
+          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Manage product categories.</p>
+        </div>
+        <div class="modal-body-content custom-scrollbar">
+          <div class="grid grid-cols-1 gap-4">
+            <div>
+              <label class="form-label">Name *</label>
+              <input type="text" x-model="editingCat.name" class="form-input" placeholder="Category name">
+            </div>
+            <div>
+              <label class="form-label">Slug</label>
+              <input type="text" x-model="editingCat.slug" class="form-input" placeholder="Auto-generated if empty">
+            </div>
+            <div>
+              <label class="form-label">Description</label>
+              <textarea x-model="editingCat.description" rows="2" class="form-input" placeholder="Short description"></textarea>
+            </div>
+            <div>
+              <label class="form-label">Parent Category</label>
+              <select x-model="editingCat.parentId" class="form-input">
+                <option value="">— None (Top Level) —</option>
+                <template x-for="pcat in categories" :key="pcat.id">
+                  <option :value="pcat.id" x-text="pcat.name" :disabled="pcat.id === editingCat.id"></option>
+                </template>
+              </select>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="form-label">Sort Order</label>
+                <input type="number" x-model.number="editingCat.sortOrder" class="form-input" placeholder="0">
+              </div>
+              <div class="flex items-end pb-1">
+                <label class="flex cursor-pointer items-center gap-2">
+                  <input type="checkbox" x-model="editingCat.active" class="peer sr-only">
+                  <div class="relative h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all peer-checked:bg-brand-600 peer-checked:after:translate-x-full dark:bg-gray-700"></div>
+                  <span class="text-sm font-bold text-gray-700 dark:text-gray-300">Active</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer-actions">
+          <div class="flex w-full sm:w-auto gap-3 ml-auto">
+            <button type="button" @click="closeForm()" class="btn btn-outline w-full sm:w-auto">Cancel</button>
+            <button type="button" @click="saveCategory()" class="btn btn-primary w-full sm:w-auto">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- END MODAL: CATEGORY FORM -->
+</div>
