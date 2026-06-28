@@ -52,6 +52,9 @@ Alpine.data('ecommerceProducts', () => ({
   isLoading: false,
   isSyncing: false,
   isSaving: false,
+  isAddingCategory: false,
+  showCategoryModal: false,
+  newCategoryName: '',
   newImageUrl: '',
   showModal: false,
   isEditing: false,
@@ -167,6 +170,34 @@ Alpine.data('ecommerceProducts', () => ({
       if (window.showToast) window.showToast('Terjadi kesalahan koneksi saat sinkronisasi.', 'error');
     } finally {
       this.isSyncing = false;
+    }
+  },
+
+  openCategoryModal() {
+    this.newCategoryName = '';
+    this.showCategoryModal = true;
+  },
+
+  async addCategory() {
+    var name = (this.newCategoryName || '').trim();
+    if (!name) { if (window.showToast) window.showToast('Nama kategori harus diisi', 'warning'); return; }
+    this.isAddingCategory = true;
+    try {
+      var res = await ecomApi('saveCategory', { name: name, dbId: this.dbId });
+      if (res.status === 'success') {
+        if (window.showToast) window.showToast('Kategori berhasil ditambahkan', 'success');
+        this.showCategoryModal = false;
+        this.newCategoryName = '';
+        var cRes = await ecomApi('getCategories');
+        this.categories = cRes.data || [];
+        this.editingItem.category = name;
+      } else {
+        if (window.showToast) window.showToast(res.message || 'Gagal menambah kategori', 'error');
+      }
+    } catch (e) {
+      if (window.showToast) window.showToast('Terjadi kesalahan: ' + e, 'error');
+    } finally {
+      this.isAddingCategory = false;
     }
   },
 
