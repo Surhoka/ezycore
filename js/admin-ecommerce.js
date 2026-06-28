@@ -1003,3 +1003,201 @@ Alpine.data('ecommerceSettings', () => ({
     }
   }
 }));
+
+// ================================================================
+// ECOMMERCE PROMOTIONS
+// ================================================================
+Alpine.data('ecommercePromotions', () => ({
+  isLoading: true,
+  isSaving: false,
+  isPublishing: false,
+  activeTab: 'hero',
+
+  heroSlides: [],
+  promoBanners: [],
+  discountSettings: { percentage: 0, code: '', minPurchase: 0, active: false },
+  freeShipping: { minAmount: 0, label: 'Free Shipping', active: false },
+  featuredProducts: [],
+  specialProduct: { name: '', price: 0, originalPrice: 0, imageUrl: '', link: '', badge: '', active: false },
+
+  showHeroModal: false,
+  heroEditingIndex: null,
+  heroForm: { title: '', subtitle: '', imageUrl: '', buttonText: '', buttonLink: '', sortOrder: 0, active: true },
+
+  showBannerModal: false,
+  bannerEditingIndex: null,
+  bannerForm: { title: '', imageUrl: '', link: '', sortOrder: 0, active: true },
+
+  showFeaturedPicker: false,
+  featuredSearch: '',
+  allProducts: [],
+
+  init() { this.loadAll(); },
+
+  async loadAll() {
+    this.isLoading = true;
+    try {
+      var res = await ecomApi('getPromotionData');
+      if (res.status === 'success' && res.data) {
+        this.heroSlides = res.data.hero_slides || [];
+        this.promoBanners = res.data.promo_banners || [];
+        this.discountSettings = res.data.discount_settings || { percentage: 0, code: '', minPurchase: 0, active: false };
+        this.freeShipping = res.data.free_shipping || { minAmount: 0, label: 'Free Shipping', active: false };
+        this.featuredProducts = res.data.featured_products || [];
+        this.specialProduct = res.data.special_product || { name: '', price: 0, originalPrice: 0, imageUrl: '', link: '', badge: '', active: false };
+      }
+    } catch (e) {
+      if (window.showToast) window.showToast('Failed to load promotions', 'error');
+    }
+    this.isLoading = false;
+  },
+
+  addHeroSlide() {
+    this.heroEditingIndex = null;
+    this.heroForm = { title: '', subtitle: '', imageUrl: '', buttonText: '', buttonLink: '', sortOrder: this.heroSlides.length, active: true };
+    this.showHeroModal = true;
+  },
+
+  editHeroSlide(index) {
+    this.heroEditingIndex = index;
+    this.heroForm = Object.assign({}, this.heroSlides[index]);
+    this.showHeroModal = true;
+  },
+
+  async saveHeroModal() {
+    if (!this.heroForm.title) { if (window.showToast) window.showToast('Title is required', 'error'); return; }
+    if (!this.heroForm.imageUrl) { if (window.showToast) window.showToast('Image URL is required', 'error'); return; }
+    if (this.heroEditingIndex !== null) {
+      this.heroSlides[this.heroEditingIndex] = Object.assign({}, this.heroForm);
+    } else {
+      this.heroSlides.push(Object.assign({}, this.heroForm));
+    }
+    this.showHeroModal = false;
+    await this.saveSection('hero_slides', this.heroSlides);
+  },
+
+  async deleteHeroSlide(index) {
+    this.heroSlides.splice(index, 1);
+    await this.saveSection('hero_slides', this.heroSlides);
+  },
+
+  addBanner() {
+    this.bannerEditingIndex = null;
+    this.bannerForm = { title: '', imageUrl: '', link: '', sortOrder: this.promoBanners.length, active: true };
+    this.showBannerModal = true;
+  },
+
+  editBanner(index) {
+    this.bannerEditingIndex = index;
+    this.bannerForm = Object.assign({}, this.promoBanners[index]);
+    this.showBannerModal = true;
+  },
+
+  async saveBannerModal() {
+    if (!this.bannerForm.title) { if (window.showToast) window.showToast('Title is required', 'error'); return; }
+    if (!this.bannerForm.imageUrl) { if (window.showToast) window.showToast('Image URL is required', 'error'); return; }
+    if (this.bannerEditingIndex !== null) {
+      this.promoBanners[this.bannerEditingIndex] = Object.assign({}, this.bannerForm);
+    } else {
+      this.promoBanners.push(Object.assign({}, this.bannerForm));
+    }
+    this.showBannerModal = false;
+    await this.saveSection('promo_banners', this.promoBanners);
+  },
+
+  async deleteBanner(index) {
+    this.promoBanners.splice(index, 1);
+    await this.saveSection('promo_banners', this.promoBanners);
+  },
+
+  async saveDiscountSettings() {
+    this.isSaving = true;
+    await this.saveSection('discount_settings', this.discountSettings);
+    this.isSaving = false;
+  },
+
+  async saveFreeShipping() {
+    this.isSaving = true;
+    await this.saveSection('free_shipping', this.freeShipping);
+    this.isSaving = false;
+  },
+
+  async addFeaturedProduct() {
+    this.featuredSearch = '';
+    this.showFeaturedPicker = true;
+    try {
+      var res = await ecomApi('getProducts');
+      this.allProducts = (res.data || []).filter(function(p) { return p.Status === 'Published' || p.Status === 'published' || p.Active; });
+    } catch (e) {
+      if (window.showToast) window.showToast('Failed to load products', 'error');
+    }
+  },
+
+  selectFeaturedProduct(product) {
+    var exists = this.featuredProducts.some(function(fp) { return fp.sku === product.SKU || fp.id === product.ID; });
+    if (exists) {
+      if (window.showToast) window.showToast('Product already in featured list', 'error');
+      return;
+    }
+    this.featuredProducts.push({
+      id: product.ID,
+      sku: product.SKU,
+      name: product.Name,
+      price: product.Price,
+      imageUrl: product.ImageURL,
+      link: product.Slug
+    });
+  },
+
+  removeFeaturedProduct(index) {
+    this.featuredProducts.splice(index, 1);
+  },
+
+  async saveFeaturedProducts() {
+    this.isSaving = true;
+    await this.saveSection('featured_products', this.featuredProducts);
+    this.isSaving = false;
+  },
+
+  async saveSpecialProduct() {
+    if (!this.specialProduct.name) { if (window.showToast) window.showToast('Product name is required', 'error'); return; }
+    this.isSaving = true;
+    await this.saveSection('special_product', this.specialProduct);
+    this.isSaving = false;
+  },
+
+  async saveSection(key, value) {
+    try {
+      var res = await ecomApi('savePromotionSection', { section: key, value: value });
+      if (res.status === 'success') {
+        if (window.showToast) window.showToast(key.replace(/_/g, ' ') + ' saved', 'success');
+      } else {
+        if (window.showToast) window.showToast(res.message, 'error');
+      }
+    } catch (e) {
+      if (window.showToast) window.showToast('Failed to save', 'error');
+    }
+  },
+
+  async publishBundle() {
+    this.isPublishing = true;
+    try {
+      var res = await ecomApi('publishHomeBundle', {});
+      if (res.status === 'success') {
+        if (window.showToast) window.showToast(res.message, 'success');
+      } else {
+        if (window.showToast) window.showToast(res.message, 'error');
+      }
+    } catch (e) {
+      if (window.showToast) window.showToast('Failed to publish', 'error');
+    }
+    this.isPublishing = false;
+  },
+
+  get filteredProducts() {
+    var self = this;
+    if (!this.featuredSearch) return this.allProducts;
+    var q = this.featuredSearch.toLowerCase();
+    return this.allProducts.filter(function(p) { return (p.Name || '').toLowerCase().indexOf(q) !== -1; });
+  }
+}));
