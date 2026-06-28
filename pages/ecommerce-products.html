@@ -115,6 +115,47 @@
         </div>
     </div>
 
+    <!-- Category Quick-Add Modal -->
+    <template x-teleport="body">
+        <div :class="{ 'show': showCategoryModal }" x-trap="showCategoryModal" x-cloak
+            class="modal fixed inset-0 p-4 md:p-5 overflow-hidden flex justify-center items-center isolate z-[99999]">
+            <div @click="showCategoryModal = false" class="fixed inset-0 h-full w-full bg-gray-900/40 transition-opacity duration-300"></div>
+            <div class="modal-dialog max-w-md">
+                <button @click="showCategoryModal = false" class="modal-close-btn">
+                    <span class="w-6 h-6 block" x-icon="'close'"></span>
+                </button>
+                <div class="modal-content">
+                    <div class="modal-header-sticky">
+                        <h3 class="h3">Add Category</h3>
+                        <p class="mt-2 text-sm text-theme-secondary">Create a new category for products.</p>
+                    </div>
+                    <div class="modal-body-content custom-scrollbar">
+                        <div>
+                            <label class="form-label">Category Name</label>
+                            <input type="text" x-model="newCategoryName" @keyup.enter="addCategory()" class="form-input" placeholder="e.g. Electronics">
+                        </div>
+                    </div>
+                    <div class="modal-footer-actions">
+                        <div class="flex w-full sm:w-auto gap-3 ml-auto items-center">
+                            <button @click="showCategoryModal = false" class="btn btn-outline w-full sm:w-auto">Cancel</button>
+                            <button @click="addCategory()" :disabled="isAddingCategory"
+                                class="btn btn-primary w-full sm:w-auto">
+                                <template x-if="!isAddingCategory">
+                                    <span class="w-4 h-4 mr-1" x-icon="'plus'"></span>
+                                </template>
+                                <template x-if="isAddingCategory">
+                                    <span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-1"></span>
+                                </template>
+                                <span x-text="isAddingCategory ? 'Adding...' : 'Add Category'"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Product Modal -->
     <template x-teleport="body">
         <div :class="{ 'show': showModal }" x-trap="showModal" x-cloak
             class="modal fixed inset-0 p-4 md:p-5 overflow-hidden flex justify-center items-center isolate z-[99999]">
@@ -183,12 +224,16 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="form-label">Category</label>
-                                <select x-model="editingItem.category" class="form-input">
+                                <div class="flex gap-2">
+                                <select x-model="editingItem.category" class="form-input flex-1">
                                     <option value="">— Uncategorized —</option>
                                     <template x-for="cat in categories" :key="cat.id">
                                         <option :value="cat.name" x-text="cat.name"></option>
                                     </template>
                                 </select>
+                                <button @click="openCategoryModal()" type="button"
+                                    class="shrink-0 rounded-lg border border-gray-200 bg-white px-3 text-gray-500 hover:text-brand-500 hover:border-brand-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 transition-colors text-sm font-bold">+</button>
+                                </div>
                             </div>
                             <div>
                                 <label class="form-label">Stock</label>
