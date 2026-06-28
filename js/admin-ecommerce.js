@@ -82,7 +82,7 @@ Alpine.data('ecommerceProducts', () => ({
   openAddModal() {
     this.isEditing = false;
     this.newImageUrl = '';
-    this.editingItem = { name: '', description: '', imageurl: '', images: [], price: 0, compareatprice: 0, stock: 0, weight: 0, category: '', status: 'draft', active: true };
+    this.editingItem = { name: '', description: '', sku: '', imageurl: '', images: [], price: 0, compareatprice: 0, stock: 0, weight: 0, category: '', status: 'draft', active: true };
     this.showModal = true;
   },
 
@@ -202,6 +202,15 @@ Alpine.data('ecommerceProducts', () => ({
 
   formatPrice(price) {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(price || 0);
+  },
+
+  formatDate(dateStr) {
+    if (!dateStr) return '—';
+    try {
+      var d = new Date(dateStr);
+      if (isNaN(d.getTime())) return '—';
+      return d.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    } catch(e) { return '—'; }
   }
 }));
 
