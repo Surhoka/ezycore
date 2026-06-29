@@ -1008,6 +1008,7 @@ Alpine.data('ecommerceSettings', () => ({
 // ECOMMERCE PROMOTIONS
 // ================================================================
 Alpine.data('ecommercePromotions', () => ({
+  dbId: null,
   isLoading: true,
   isSaving: false,
   isPublishing: false,
@@ -1032,12 +1033,17 @@ Alpine.data('ecommercePromotions', () => ({
   featuredSearch: '',
   allProducts: [],
 
-  init() { this.loadAll(); },
+  init() {
+    var storageKey = 'EzycoreConfig_' + (window.EZY_BLOG_ID || '');
+    var config = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    this.dbId = config.pluginContentDbId || config.sheetId || config.dbId || null;
+    this.loadAll();
+  },
 
   async loadAll() {
     this.isLoading = true;
     try {
-      var res = await ecomApi('getPromotionData');
+      var res = await ecomApi('getPromotionData', { dbId: this.dbId });
       if (res.status === 'success' && res.data) {
         this.heroSlides = res.data.hero_slides || [];
         this.promoBanners = res.data.promo_banners || [];
@@ -1126,7 +1132,7 @@ Alpine.data('ecommercePromotions', () => ({
     this.featuredSearch = '';
     this.showFeaturedPicker = true;
     try {
-      var res = await ecomApi('getProducts');
+      var res = await ecomApi('getProducts', { dbId: this.dbId });
       this.allProducts = (res.data || []).filter(function(p) { return p.Status === 'Published' || p.Status === 'published' || p.Active; });
     } catch (e) {
       if (window.showToast) window.showToast('Failed to load products', 'error');
@@ -1168,7 +1174,7 @@ Alpine.data('ecommercePromotions', () => ({
 
   async saveSection(key, value) {
     try {
-      var res = await ecomApi('savePromotionSection', { section: key, value: value });
+      var res = await ecomApi('savePromotionSection', { section: key, value: value, dbId: this.dbId });
       if (res.status === 'success') {
         if (window.showToast) window.showToast(key.replace(/_/g, ' ') + ' saved', 'success');
       } else {
@@ -1182,14 +1188,17 @@ Alpine.data('ecommercePromotions', () => ({
   async publishBundle() {
     this.isPublishing = true;
     try {
-      var res = await ecomApi('publishHomeBundle', {});
+      var res = await Promise.race([
+        ecomApi('publishHomeBundle', { dbId: this.dbId }),
+        new Promise(function (_, reject) { setTimeout(function () { reject(new Error('Server timeout')); }, 55000); })
+      ]);
       if (res.status === 'success') {
         if (window.showToast) window.showToast(res.message, 'success');
       } else {
         if (window.showToast) window.showToast(res.message, 'error');
       }
     } catch (e) {
-      if (window.showToast) window.showToast('Failed to publish', 'error');
+      if (window.showToast) window.showToast(e.message === 'Server timeout' ? 'Server tidak merespon, coba lagi' : 'Failed to publish', 'error');
     }
     this.isPublishing = false;
   },
