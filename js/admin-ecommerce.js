@@ -1189,16 +1189,33 @@ Alpine.data('ecommercePromotions', () => ({
   async publishHomeData() {
     this.isPublishing = true;
     try {
+      var promos = {
+        hero_slides: this.heroSlides,
+        promo_banners: this.promoBanners,
+        discount_settings: this.discountSettings,
+        free_shipping: this.freeShipping,
+        featured_products: this.featuredProducts,
+        special_product: this.specialProduct
+      };
+      var defaults = {
+        hero_slides: [],
+        promo_banners: [],
+        discount_settings: { percentage: 0, code: '', minPurchase: 0, active: false },
+        free_shipping: { minAmount: 0, label: 'Free Shipping', active: false },
+        featured_products: [],
+        special_product: { name: '', price: 0, originalPrice: 0, imageUrl: '', link: '', badge: '', active: false }
+      };
+      var cleanPromos = {};
+      Object.keys(promos).forEach(function(k) {
+        var v = promos[k];
+        var d = defaults[k];
+        if (JSON.stringify(v) !== JSON.stringify(d)) {
+          cleanPromos[k] = v;
+        }
+      });
       var payload = JSON.parse(JSON.stringify({
         dbId: this.dbId,
-        promotions: {
-          hero_slides: this.heroSlides,
-          promo_banners: this.promoBanners,
-          discount_settings: this.discountSettings,
-          free_shipping: this.freeShipping,
-          featured_products: this.featuredProducts,
-          special_product: this.specialProduct
-        }
+        promotions: cleanPromos
       }));
       var res = await Promise.race([
         ecomApi('publishHomeData', payload),
