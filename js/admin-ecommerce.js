@@ -119,7 +119,11 @@ Alpine.data('ecommerceProducts', () => ({
       payload.status = payload.active ? 'published' : 'draft';
       var res = await ecomApi('saveProduct', payload);
       if (res.status === 'success') {
-        if (window.showToast) window.showToast('Produk berhasil disimpan, sedang publish ke Blogger...', 'success');
+        var pubMsg = '';
+        if (res.publish) {
+          pubMsg = res.publish.status === 'success' ? ' SSR berhasil' : ' SSR: ' + (res.publish.message || 'gagal');
+        }
+        if (window.showToast) window.showToast('Produk berhasil disimpan.' + pubMsg, 'success');
         this.showModal = false;
         this.loadData();
       } else {
@@ -148,7 +152,7 @@ Alpine.data('ecommerceProducts', () => ({
   },
 
   async syncAllToBlogger() {
-    var activeCount = this.products.filter(function(p) { return p.status === 'published' || p.status === 'active'; }).length;
+    var activeCount = this.products.filter(function(p) { return p.active === true || p.active === 'TRUE' || p.status === 'published' || p.status === 'active'; }).length;
     if (activeCount === 0) {
       if (window.showToast) window.showToast('Tidak ada produk aktif yang perlu disinkronkan.', 'warning');
       return;
