@@ -1188,8 +1188,19 @@ Alpine.data('ecommercePromotions', () => ({
   async publishHomeData() {
     this.isPublishing = true;
     try {
+      var payload = {
+        dbId: this.dbId,
+        promotions: {
+          hero_slides: this.heroSlides,
+          promo_banners: this.promoBanners,
+          discount_settings: this.discountSettings,
+          free_shipping: this.freeShipping,
+          featured_products: this.featuredProducts,
+          special_product: this.specialProduct
+        }
+      };
       var res = await Promise.race([
-        ecomApi('publishHomeData', { dbId: this.dbId }),
+        ecomApi('publishHomeData', payload),
         new Promise(function (_, reject) { setTimeout(function () { reject(new Error('Server timeout')); }, 55000); })
       ]);
       if (res.status === 'success') {
