@@ -901,7 +901,8 @@ Alpine.data('ecommerceSettings', () => ({
   homeData: {
     companyName: '', supportPhone: '', supportEmail: '', storeAddress: '',
     operatingHours: '', operatingDays: '',
-    socialFacebook: '', socialTwitter: '', socialInstagram: '', socialLinkedin: ''
+    socialFacebook: '', socialTwitter: '', socialInstagram: '', socialLinkedin: '',
+    storeMapUrl: ''
   },
 
   init() {
