@@ -1174,7 +1174,8 @@ Alpine.data('ecommercePromotions', () => ({
 
   async saveSection(key, value) {
     try {
-      var res = await ecomApi('savePromotionSection', { section: key, value: value, dbId: this.dbId });
+      var cleanValue = JSON.parse(JSON.stringify(value));
+      var res = await ecomApi('savePromotionSection', { section: key, value: cleanValue, dbId: this.dbId });
       if (res.status === 'success') {
         if (window.showToast) window.showToast(key.replace(/_/g, ' ') + ' saved', 'success');
       } else {
@@ -1188,7 +1189,7 @@ Alpine.data('ecommercePromotions', () => ({
   async publishHomeData() {
     this.isPublishing = true;
     try {
-      var payload = {
+      var payload = JSON.parse(JSON.stringify({
         dbId: this.dbId,
         promotions: {
           hero_slides: this.heroSlides,
@@ -1198,7 +1199,7 @@ Alpine.data('ecommercePromotions', () => ({
           featured_products: this.featuredProducts,
           special_product: this.specialProduct
         }
-      };
+      }));
       var res = await Promise.race([
         ecomApi('publishHomeData', payload),
         new Promise(function (_, reject) { setTimeout(function () { reject(new Error('Server timeout')); }, 55000); })
