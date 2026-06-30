@@ -119,7 +119,7 @@ Alpine.data('ecommerceProducts', () => ({
       payload.status = payload.active ? 'published' : 'draft';
       var res = await ecomApi('saveProduct', payload);
       if (res.status === 'success') {
-        if (window.showToast) window.showToast('Produk berhasil disimpan', 'success');
+        if (window.showToast) window.showToast('Produk berhasil disimpan, sedang publish ke Blogger...', 'success');
         this.showModal = false;
         this.loadData();
       } else {
