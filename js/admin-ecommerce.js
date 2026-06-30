@@ -1185,11 +1185,11 @@ Alpine.data('ecommercePromotions', () => ({
     }
   },
 
-  async publishBundle() {
+  async publishHomeData() {
     this.isPublishing = true;
     try {
       var res = await Promise.race([
-        ecomApi('publishHomeBundle', { dbId: this.dbId }),
+        ecomApi('publishHomeData', { dbId: this.dbId }),
         new Promise(function (_, reject) { setTimeout(function () { reject(new Error('Server timeout')); }, 55000); })
       ]);
       if (res.status === 'success') {
