@@ -1,73 +1,4 @@
-<div id='shop-page-container' x-data='{
-  search: "",
-  activeCategory: "Semua",
-  categories: ["Semua"],
-  products: [],
-  isLoadingProducts: true,
-  loadError: false,
-  async init() {
-    this.isLoadingProducts = true;
-    try {
-      const res = await fetch("/feeds/posts/default/-/product?alt=json&maxResults=500");
-      const json = await res.json();
-      if (json.feed && json.feed.entry) {
-        const parsed = [];
-        for (const entry of json.feed.entry) {
-          try {
-            const content = entry.content?.$t || "";
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(content, "text/html");
-            const el = doc.querySelector(".ezy-meta");
-            if (!el) continue;
-            const raw = el.getAttribute("data-meta") || "{}";
-            const meta = JSON.parse(raw.replace(/&apos;/g, "\x27"));
-            if (meta._type !== "product") continue;
-            parsed.push({
-              id: meta.id || "",
-              name: meta.name || entry.title?.$t || "",
-              slug: meta.slug || "",
-              price: Number(meta.price) || 0,
-              category: meta.category || "",
-              image: meta.image || "",
-              stock: Number(meta.stock) || 0
-            });
-          } catch(e) {}
-        }
-        this.products = parsed;
-        const cats = [...new Set(parsed.map(p => p.category).filter(Boolean))];
-        this.categories = ["Semua", ...cats];
-      }
-      this.loadError = false;
-    } catch(e) {
-      console.warn("Shop fetch failed:", e);
-      this.loadError = true;
-    } finally {
-      this.isLoadingProducts = false;
-    }
-  },
-  get filteredProducts() {
-    let result = this.products;
-    if (this.activeCategory !== "Semua") {
-      result = result.filter(p => p.category === this.activeCategory);
-    }
-    if (this.search.trim()) {
-      const q = this.search.toLowerCase();
-      result = result.filter(p => p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q));
-    }
-    return result;
-  },
-  formatPrice(num) { return "Rp " + Number(num).toLocaleString("id-ID"); },
-  currentPage: 1,
-  perPage: 12,
-  get paginatedProducts() {
-    const start = (this.currentPage - 1) * this.perPage;
-    return this.filteredProducts.slice(start, start + this.perPage);
-  },
-  get totalPages() {
-    return Math.ceil(this.filteredProducts.length / this.perPage);
-  }
-}'>
-  <!-- Header -->
+<!-- Header -->
   <div class='flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6'>
     <div>
       <h1 class='text-2xl font-bold text-theme-text'>Katalog Produk</h1>
@@ -143,4 +74,3 @@
       <svg class='w-4 h-4' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><polyline points='9 18 15 12 9 6'/></svg>
     </button>
   </div>
-</div>
