@@ -7,171 +7,294 @@
     const meta = window._lastResolvedMeta;
     if (meta) {
       this.product = meta;
-      if (meta.images &amp;&amp; meta.images.length > 0) {
+      if (meta.images && meta.images.length > 0) {
         this.images = meta.images;
       } else {
-        const initial = (meta.title || meta.name || &quot;?&quot;).substring(0, 2).toUpperCase();
+        const initial = (meta.title || meta.name || "?").substring(0, 2).toUpperCase();
         this.images = [initial, initial, initial];
       }
     } else {
       this.product = {
-        title: &quot;Produk Tidak Ditemukan&quot;,
-        name: &quot;Produk Tidak Ditemukan&quot;,
+        title: "Produk Tidak Ditemukan",
+        name: "Produk Tidak Ditemukan",
         price: 0,
-        description: &quot;Maaf, produk yang Anda cari tidak tersedia.&quot;
+        description: "Maaf, produk yang Anda cari tidak tersedia."
       };
     }
   },
   formatPrice(num) {
-    return `Rp ${Number(num).toLocaleString(&quot;id-ID&quot;)}`;
+    return `Rp ${Number(num).toLocaleString("id-ID")}`;
   },
   addToCart() {
     if (!this.product || !this.product.title) return;
     this.$store.cart.add({
-      id: this.product.slug || this.product.id || &quot;unknown&quot;,
+      id: this.product.slug || this.product.id || "unknown",
       name: this.product.title || this.product.name,
       price: this.product.price || 0,
-      imageurl: this.product.image || &quot;&quot;
+      imageurl: this.product.image || ""
     }, this.qty);
     this.qty = 1;
+  },
+  get discountPct() {
+    const cp = Number(this.product.compareatprice) || 0;
+    const p = Number(this.product.price) || 0;
+    if (cp > 0 && cp > p) return Math.round((1 - p / cp) * 100);
+    return 0;
+  },
+  get hasDiscount() { return this.discountPct > 0; },
+  get stockLabel() {
+    const s = Number(this.product.stock) || 0;
+    return s > 0 ? "Tersedia" : "Stok Habis";
+  },
+  get stockColor() {
+    return Number(this.product.stock) > 0 ? "text-green-600" : "text-red-600";
   }
 }'>
   <template x-if='product'>
-    <div class='grid lg:grid-cols-2 gap-8'>
-      <!-- Images -->
-      <div>
-        <div class='bg-theme-secondary border border-theme-border rounded-xl p-8 flex items-center justify-center h-80 mb-4 overflow-hidden'>
-          <template x-if='images[activeImage] &amp;&amp; images[activeImage].startsWith(&quot;http&quot;)'>
-            <img :src='images[activeImage]' :alt='product.title || product.name' class='w-full h-full object-contain' />
-          </template>
-          <template x-if='!images[activeImage] || !images[activeImage].startsWith(&quot;http&quot;)'>
-            <span class='text-6xl font-extrabold text-gray-200 dark:text-gray-700' x-text='(product.title || product.name || &quot;?&quot;).substring(0, 2).toUpperCase()' />
-          </template>
+    <div>
+      <!-- Two-column layout: 75% left, 25% right -->
+      <div class='grid lg:grid-cols-[3fr_1fr] gap-6'>
+
+        <!-- ===== LEFT COLUMN (75%) ===== -->
+        <div class='space-y-6'>
+
+          <!-- A. Product Overview -->
+          <div class='grid md:grid-cols-[1fr_1.2fr] gap-6 bg-theme-secondary border border-theme-border rounded-xl p-4 md:p-6'>
+
+            <!-- LEFT: Images -->
+            <div>
+              <div class='bg-theme-primary border border-theme-border rounded-xl flex items-center justify-center h-64 md:h-80 mb-3 overflow-hidden'>
+                <template x-if='images[activeImage] && images[activeImage].startsWith("http")'>
+                  <img :src='images[activeImage]' :alt='product.title || product.name' class='w-full h-full object-contain' />
+                </template>
+                <template x-if='!images[activeImage] || !images[activeImage].startsWith("http")'>
+                  <span class='text-6xl font-extrabold text-gray-200 dark:text-gray-700' x-text='(product.title || product.name || "?").substring(0, 2).toUpperCase()' />
+                </template>
+              </div>
+              <div class='flex gap-2 overflow-x-auto pb-1 no-scrollbar'>
+                <template x-for='(img, idx) in images' :key='idx'>
+                  <button class='w-14 h-14 md:w-16 md:h-16 rounded-lg border-2 flex-shrink-0 flex items-center justify-center transition-all overflow-hidden'
+                    :class='activeImage === idx ? "border-brand-500" : "border-theme-border bg-theme-primary hover:border-brand-300"'
+                    x-on:click='activeImage = idx'>
+                    <template x-if='img && img.startsWith("http")'>
+                      <img :src='img' :alt='product.title || product.name' class='w-full h-full object-cover' />
+                    </template>
+                    <template x-if='!img || !img.startsWith("http")'>
+                      <span class='text-sm font-bold text-gray-400' x-text='(product.title || product.name || "?").substring(0, 1)' />
+                    </template>
+                  </button>
+                </template>
+              </div>
+            </div>
+
+            <!-- RIGHT: Info -->
+            <div class='space-y-3'>
+              <!-- Title -->
+              <h1 class='text-lg md:text-xl font-bold text-theme-text leading-snug' x-text='product.title || product.name' />
+
+              <!-- Rating + Sold -->
+              <div class='flex items-center gap-3 text-xs text-theme-text-sub'>
+                <div class='flex items-center gap-1'>
+                  <div class='flex text-yellow-400'>
+                    <svg class='w-3.5 h-3.5' viewBox='0 0 24 24' fill='currentColor'><polygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2'/></svg>
+                    <svg class='w-3.5 h-3.5' viewBox='0 0 24 24' fill='currentColor'><polygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2'/></svg>
+                    <svg class='w-3.5 h-3.5' viewBox='0 0 24 24' fill='currentColor'><polygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2'/></svg>
+                    <svg class='w-3.5 h-3.5' viewBox='0 0 24 24' fill='currentColor'><polygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2'/></svg>
+                    <svg class='w-3.5 h-3.5' viewBox='0 0 24 24' fill='currentColor' fill-opacity='0.3'><polygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2'/></svg>
+                  </div>
+                  <span>(4.0)</span>
+                </div>
+                <span x-show='product.stock !== undefined'>| Terjual: <span x-text='product.sold || "-"' /></span>
+              </div>
+
+              <!-- Price Highlight Box -->
+              <div class='bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 rounded-xl p-4 space-y-1'>
+                <div class='flex items-center gap-2'>
+                  <span class='text-2xl md:text-3xl font-extrabold text-red-600 dark:text-red-400' x-text='formatPrice(product.price)' />
+                  <span x-show='hasDiscount' class='text-xs font-bold bg-red-500 text-white px-1.5 py-0.5 rounded' x-text='`-${discountPct}%`' />
+                </div>
+                <div x-show='hasDiscount' class='flex items-center gap-2 text-xs text-theme-text-sub'>
+                  <span class='line-through' x-text='formatPrice(product.compareatprice)' />
+                  <span>Harga Retail</span>
+                </div>
+              </div>
+
+              <!-- Shipping Info -->
+              <div class='flex items-center gap-2 text-xs text-theme-text-sub bg-theme-primary rounded-lg px-3 py-2'>
+                <svg class='w-4 h-4 flex-shrink-0' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='1' y='3' width='15' height='13'/><polygon points='16 8 20 8 23 11 23 16 16 16 16 8'/><circle cx='5.5' cy='18.5' r='2.5'/><circle cx='18.5' cy='18.5' r='2.5'/></svg>
+                <span>Estimasi sampai dalam 3-7 hari</span>
+              </div>
+
+              <!-- Qty Selector -->
+              <div class='flex items-center gap-4'>
+                <div class='flex items-center border border-theme-border rounded-lg'>
+                  <button class='w-9 h-9 flex items-center justify-center text-theme-text hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors' x-on:click='qty = Math.max(1, qty - 1)'>
+                    <svg class='w-4 h-4' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><line x1='5' y1='12' x2='19' y2='12'/></svg>
+                  </button>
+                  <span class='w-11 text-center font-semibold text-theme-text text-sm' x-text='qty' />
+                  <button class='w-9 h-9 flex items-center justify-center text-theme-text hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors' x-on:click='qty = Math.min(99, qty + 1)'>
+                    <svg class='w-4 h-4' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><line x1='12' y1='5' x2='12' y2='19'/><line x1='5' y1='12' x2='19' y2='12'/></svg>
+                  </button>
+                </div>
+                <span class='text-xs text-theme-text-sub'><span class='font-medium' :class='stockColor' x-text='stockLabel' /></span>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class='flex items-center gap-2 pt-1'>
+                <button class='flex-1 border-2 border-brand-600 text-brand-600 dark:text-brand-400 dark:border-brand-400 font-semibold py-2.5 rounded-lg transition-colors text-sm flex items-center justify-center gap-2 hover:bg-brand-50 dark:hover:bg-brand-900/20'
+                  x-on:click='addToCart()'>
+                  <svg class='w-4 h-4' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z'/><line x1='3' y1='6' x2='21' y2='6'/><path d='M16 10a4 4 0 0 1-8 0'/></svg>
+                  Masukkan Keranjang
+                </button>
+                <button class='flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-2.5 rounded-lg transition-colors text-sm flex items-center justify-center gap-2'
+                  x-on:click='addToCart(); window.navigate("payment")'>
+                  <svg class='w-4 h-4' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z'/></svg>
+                  Beli Dengan Voucher
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- B. Spesifikasi Produk -->
+          <div class='bg-theme-secondary border border-theme-border rounded-xl p-4 md:p-6'>
+            <h2 class='text-base font-bold text-theme-text mb-4 flex items-center gap-2'>
+              <svg class='w-4 h-4 text-brand-500' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z'/></svg>
+              Spesifikasi Produk
+            </h2>
+            <div class='grid grid-cols-2 gap-x-6 gap-y-3 text-sm'>
+              <div class='flex items-center gap-2'>
+                <span class='text-theme-text-sub'>Kategori</span>
+                <span class='font-medium text-theme-text' x-text='product.category || "-"' />
+              </div>
+              <div class='flex items-center gap-2'>
+                <span class='text-theme-text-sub'>Stok</span>
+                <span class='font-medium' :class='stockColor' x-text='stockLabel' />
+              </div>
+              <template x-if='product.sku'>
+                <div class='flex items-center gap-2'>
+                  <span class='text-theme-text-sub'>SKU</span>
+                  <span class='font-medium text-theme-text' x-text='product.sku' />
+                </div>
+              </template>
+              <template x-if='product.weight > 0'>
+                <div class='flex items-center gap-2'>
+                  <span class='text-theme-text-sub'>Berat</span>
+                  <span class='font-medium text-theme-text' x-text='product.weight + " " + (product.weightunit || "gram")' />
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <!-- C. Deskripsi Produk -->
+          <div class='bg-theme-secondary border border-theme-border rounded-xl p-4 md:p-6'>
+            <h2 class='text-base font-bold text-theme-text mb-4 flex items-center gap-2'>
+              <svg class='w-4 h-4 text-brand-500' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/><polyline points='14 2 14 8 20 8'/><line x1='16' y1='13' x2='8' y2='13'/><line x1='16' y1='17' x2='8' y2='17'/><polyline points='10 9 9 9 8 9'/></svg>
+              Deskripsi Produk
+            </h2>
+            <p class='text-sm text-theme-text-sub leading-relaxed whitespace-pre-line' x-text='product.description || "Deskripsi produk belum tersedia."' />
+          </div>
         </div>
-        <div class='flex gap-3'>
-          <template x-for='(img, idx) in images' :key='idx'>
-            <button class='w-16 h-16 rounded-lg border-2 flex items-center justify-center transition-all overflow-hidden' :class='activeImage === idx ? &quot;border-brand-500 bg-brand-50 dark:bg-brand-900/20&quot; : &quot;border-theme-border bg-theme-secondary hover:border-brand-300&quot;' x-on:click='activeImage = idx'>
-              <template x-if='img &amp;&amp; img.startsWith(&quot;http&quot;)'>
-                <img :src='img' :alt='product.title || product.name' class='w-full h-full object-cover' />
-              </template>
-              <template x-if='!img || !img.startsWith(&quot;http&quot;)'>
-                <span class='text-sm font-bold text-gray-400' x-text='(product.title || product.name || &quot;?&quot;).substring(0, 1)' />
-              </template>
-            </button>
-          </template>
+
+        <!-- ===== RIGHT COLUMN (25%) ===== -->
+        <div class='space-y-4' x-data='{
+          vouchers: [
+            { id: "v1", label: "Flash Sale Sparepart", disc: "Rp25.000", min: "Min. belanja Rp150.000", bg: "bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-900/20" },
+            { id: "v2", label: "Diskon Member Baru", disc: "10%", min: "Min. belanja Rp100.000", bg: "bg-blue-50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-900/20" },
+            { id: "v3", label: "Gratis Ongkir", disc: "Rp0", min: "Min. belanja Rp200.000", bg: "bg-green-50 dark:bg-green-900/10 border-green-100 dark:border-green-900/20" }
+          ],
+          claimed: {}
+        }'>
+          <div class='sticky top-24 space-y-4'>
+            <h2 class='text-base font-bold text-theme-text flex items-center gap-2'>
+              <svg class='w-4 h-4 text-brand-500' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z'/></svg>
+              Voucher Toko
+            </h2>
+            <template x-for='v in vouchers' :key='v.id'>
+              <div class='rounded-xl border p-4 space-y-2' :class='v.bg'>
+                <p class='text-xs font-bold text-theme-text uppercase tracking-wide' x-text='v.label' />
+                <p class='text-lg font-extrabold text-red-600 dark:text-red-400' x-text='v.disc' />
+                <p class='text-[11px] text-theme-text-sub' x-text='v.min' />
+                <button class='w-full text-xs font-bold py-1.5 rounded-lg transition-colors'
+                  :class='claimed[v.id] ? "bg-gray-200 text-gray-500 cursor-default" : "bg-red-500 hover:bg-red-600 text-white"'
+                  x-on:click='claimed[v.id] = true'
+                  x-text='claimed[v.id] ? "Sudah Diklaim" : "Klaim"' />
+              </div>
+            </template>
+          </div>
         </div>
       </div>
 
-      <!-- Info -->
-      <div>
-        <span class='inline-block text-xs font-medium text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 px-2 py-0.5 rounded-full mb-3'>Produk</span>
-        <h1 class='text-2xl md:text-3xl font-bold text-theme-text mb-3' x-text='product.title || product.name' />
-        <div class='flex items-center gap-2 mb-4'>
-          <div class='flex text-yellow-400'>
-            <svg class='w-4 h-4' viewBox='0 0 24 24' fill='currentColor'><polygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2'/></svg>
-            <svg class='w-4 h-4' viewBox='0 0 24 24' fill='currentColor'><polygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2'/></svg>
-            <svg class='w-4 h-4' viewBox='0 0 24 24' fill='currentColor'><polygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2'/></svg>
-            <svg class='w-4 h-4' viewBox='0 0 24 24' fill='currentColor'><polygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2'/></svg>
-            <svg class='w-4 h-4' viewBox='0 0 24 24' fill='currentColor' fill-opacity='0.3'><polygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2'/></svg>
-          </div>
-          <span class='text-xs text-theme-text-sub'>(4.0)</span>
-        </div>
-        <p class='text-2xl font-extrabold text-brand-600 dark:text-brand-400 mb-6' x-text='formatPrice(product.price)' />
-
-        <p class='text-sm text-theme-text-sub leading-relaxed mb-6' x-text='product.description || product.content || &quot;Deskripsi produk belum tersedia.&quot;' />
-
-        <!-- Qty + Add to Cart -->
-        <div class='flex items-center gap-4 mb-6'>
-          <div class='flex items-center border border-theme-border rounded-lg'>
-            <button class='w-10 h-10 flex items-center justify-center text-theme-text hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors' x-on:click='qty = Math.max(1, qty - 1)'>
-              <svg class='w-4 h-4' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><line x1='5' y1='12' x2='19' y2='12'/></svg>
-            </button>
-            <span class='w-12 text-center font-semibold text-theme-text text-sm' x-text='qty' />
-            <button class='w-10 h-10 flex items-center justify-center text-theme-text hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors' x-on:click='qty = Math.min(99, qty + 1)'>
-              <svg class='w-4 h-4' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><line x1='12' y1='5' x2='12' y2='19'/><line x1='5' y1='12' x2='19' y2='12'/></svg>
-            </button>
-          </div>
-          <button class='flex-1 bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 rounded-lg transition-colors text-sm flex items-center justify-center gap-2' x-on:click='addToCart()'>
-            <svg class='w-4 h-4' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z'/><line x1='3' y1='6' x2='21' y2='6'/><path d='M16 10a4 4 0 0 1-8 0'/></svg>
-            Tambah ke Keranjang
-          </button>
-        </div>
-
-        <!-- Meta -->
-        <div class='border-t border-theme-border pt-4 space-y-2 text-sm text-theme-text-sub'>
-          <p><span class='font-medium text-theme-text'>Kategori:</span> <span x-text='product.category || product.labels || &quot;General&quot;' /></p>
-          <p><span class='font-medium text-theme-text'>SKU:</span> <span x-text='product.sku || product.id || &quot;-&quot;' /></p>
+      <!-- Related Products -->
+      <div class='mt-8' x-data='{
+        relatedProducts: [],
+        isLoadingRelated: true,
+        async init() {
+          const meta = window._lastResolvedMeta;
+          if (!meta || !meta.category) {
+            this.isLoadingRelated = false;
+            return;
+          }
+          const currentSlug = meta.slug || meta.id || "";
+          try {
+            const res = await fetch("/feeds/posts/default/-/product?alt=json&maxResults=500");
+            const json = await res.json();
+            if (json.feed && json.feed.entry) {
+              const parsed = [];
+              for (const entry of json.feed.entry) {
+                try {
+                  const content = entry.content?.$t || "";
+                  const parser = new DOMParser();
+                  const doc = parser.parseFromString(content, "text/html");
+                  const el = doc.querySelector(".ezy-meta");
+                  if (!el) continue;
+                  const raw = el.getAttribute("data-meta") || "{}";
+                  const d = JSON.parse(raw.replace(/&apos;/g, "'"));
+                  if (d._type !== "product") continue;
+                  if (d.slug === currentSlug || d.id === currentSlug) continue;
+                  parsed.push({
+                    id: d.id || "",
+                    name: d.name || entry.title?.$t || "",
+                    slug: d.slug || "",
+                    price: Number(d.price) || 0,
+                    category: d.category || "",
+                    image: d.image || ""
+                  });
+                } catch(e) {}
+              }
+              this.relatedProducts = parsed.filter(p => p.category === meta.category).slice(0, 4);
+            }
+          } catch(e) {
+            console.warn("Related products fetch failed:", e);
+          } finally {
+            this.isLoadingRelated = false;
+          }
+        },
+        formatPrice(num) { return `Rp ${Number(num).toLocaleString("id-ID")}`; }
+      }'>
+        <h2 class='text-base font-bold text-theme-text mb-4 flex items-center gap-2'>
+          <svg class='w-4 h-4 text-brand-500' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 20h9'/><path d='M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z'/></svg>
+          Produk Terkait
+        </h2>
+        <div x-show='isLoadingRelated' class='text-sm text-theme-text-sub py-4'>Memuat produk terkait...</div>
+        <div x-show='!isLoadingRelated && relatedProducts.length === 0' class='text-sm text-theme-text-sub py-4'>Tidak ada produk terkait.</div>
+        <div x-show='!isLoadingRelated && relatedProducts.length > 0' class='grid grid-cols-2 md:grid-cols-4 gap-4'>
+          <template x-for='p in relatedProducts' :key='p.id'>
+            <div class='bg-theme-secondary border border-theme-border rounded-xl p-4 hover:shadow-md hover:border-brand-200 dark:hover:border-brand-700 transition-all group cursor-pointer'
+              x-on:click="window.navigate('product', { slug: p.slug })">
+              <div class='flex items-center justify-center h-28 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-lg mb-3 overflow-hidden'>
+                <template x-if='p.image && p.image.startsWith("http")'>
+                  <img :src='p.image' :alt='p.name' class='w-full h-full object-cover' />
+                </template>
+                <template x-if='!p.image || !p.image.startsWith("http")'>
+                  <span class='text-xl font-extrabold text-gray-300 dark:text-gray-600' x-text='(p.name || "?").substring(0, 2).toUpperCase()' />
+                </template>
+              </div>
+              <h4 class='text-sm font-semibold text-theme-text mb-1 truncate' x-text='p.name' />
+              <p class='text-sm font-bold text-brand-600 dark:text-brand-400' x-text='formatPrice(p.price)' />
+            </div>
+          </template>
         </div>
       </div>
     </div>
   </template>
-
-  <!-- Related Products -->
-  <div class='mt-12' x-data='{
-    relatedProducts: [],
-    isLoadingRelated: true,
-    async init() {
-      const meta = window._lastResolvedMeta;
-      if (!meta || !meta.category) {
-        this.isLoadingRelated = false;
-        return;
-      }
-      const currentSlug = meta.slug || meta.id || &quot;&quot;;
-      try {
-        const res = await fetch(&quot;/feeds/posts/default/-/product?alt=json&amp;maxResults=500&quot;);
-        const json = await res.json();
-        if (json.feed &amp;&amp; json.feed.entry) {
-          const parsed = [];
-          for (const entry of json.feed.entry) {
-            try {
-              const content = entry.content?.$t || &quot;&quot;;
-              const parser = new DOMParser();
-              const doc = parser.parseFromString(content, &quot;text/html&quot;);
-              const el = doc.querySelector(&quot;.ezy-meta&quot;);
-              if (!el) continue;
-              const raw = el.getAttribute(&quot;data-meta&quot;) || &quot;{}&quot;;
-              const d = JSON.parse(raw.replace(/&amp;apos;/g, &quot;'&quot;));
-              if (d._type !== &quot;product&quot;) continue;
-              if (d.slug === currentSlug || d.id === currentSlug) continue;
-              parsed.push({
-                id: d.id || &quot;&quot;,
-                name: d.name || entry.title?.$t || &quot;&quot;,
-                slug: d.slug || &quot;&quot;,
-                price: Number(d.price) || 0,
-                category: d.category || &quot;&quot;,
-                image: d.image || &quot;&quot;
-              });
-            } catch(e) {}
-          }
-          this.relatedProducts = parsed.filter(p =&gt; p.category === meta.category).slice(0, 4);
-        }
-      } catch(e) {
-        console.warn(&quot;Related products fetch failed:&quot;, e);
-      } finally {
-        this.isLoadingRelated = false;
-      }
-    },
-    formatPrice(num) { return `Rp ${Number(num).toLocaleString(&quot;id-ID&quot;)}`; }
-  }'>
-    <h2 class='text-lg font-bold text-theme-text mb-4'>Produk Terkait</h2>
-    <div x-show='isLoadingRelated' class='text-sm text-theme-text-sub py-4'>Memuat produk terkait...</div>
-    <div x-show='!isLoadingRelated &amp;&amp; relatedProducts.length === 0' class='text-sm text-theme-text-sub py-4'>Tidak ada produk terkait.</div>
-    <div x-show='!isLoadingRelated &amp;&amp; relatedProducts.length > 0' class='grid grid-cols-2 md:grid-cols-4 gap-4'>
-      <template x-for='p in relatedProducts' :key='p.id'>
-        <div class='bg-theme-secondary border border-theme-border rounded-xl p-4 hover:shadow-md hover:border-brand-200 dark:hover:border-brand-700 transition-all group cursor-pointer'
-          x-on:click="window.navigate('product', { slug: p.slug })">
-          <div class='flex items-center justify-center h-28 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-lg mb-3 overflow-hidden'>
-            <template x-if='p.image &amp;&amp; p.image.startsWith(&quot;http&quot;)'>
-              <img :src='p.image' :alt='p.name' class='w-full h-full object-cover' />
-            </template>
-            <template x-if='!p.image || !p.image.startsWith(&quot;http&quot;)'>
-              <span class='text-xl font-extrabold text-gray-300 dark:text-gray-600' x-text='(p.name || &quot;?&quot;).substring(0, 2).toUpperCase()' />
-            </template>
-          </div>
-          <h4 class='text-sm font-semibold text-theme-text mb-1 truncate' x-text='p.name' />
-          <p class='text-sm font-bold text-brand-600 dark:text-brand-400' x-text='formatPrice(p.price)' />
-        </div>
-      </template>
-    </div>
-  </div>
 </div>
