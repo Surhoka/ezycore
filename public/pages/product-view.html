@@ -256,7 +256,8 @@
                     slug: d.slug || "",
                     price: Number(d.price) || 0,
                     category: d.category || "",
-                    image: d.image || ""
+                    image: d.image || "",
+                    createdat: entry.published ? entry.published.$t : ""
                   });
                 } catch(e) {}
               }
@@ -279,7 +280,7 @@
         <div x-show='!isLoadingRelated && relatedProducts.length > 0' class='grid grid-cols-2 md:grid-cols-4 gap-4'>
           <template x-for='p in relatedProducts' :key='p.id'>
             <div class='bg-theme-secondary border border-theme-border rounded-xl p-4 hover:shadow-md hover:border-brand-200 dark:hover:border-brand-700 transition-all group cursor-pointer'
-              x-on:click="window.navigate('product', { slug: p.slug })">
+              x-on:click="window.navigate('product', { slug: p.slug, createdAt: p.createdat })">
               <div class='flex items-center justify-center h-28 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-lg mb-3 overflow-hidden'>
                 <template x-if='p.image && p.image.startsWith("http")'>
                   <img :src='p.image' :alt='p.name' class='w-full h-full object-cover' />

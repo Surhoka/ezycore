@@ -41,7 +41,7 @@
   <div x-show='!isLoadingProducts && !loadError' class='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'>
     <template x-for='product in paginatedProducts' :key='product.id'>
       <div class='bg-theme-secondary border border-theme-border rounded-xl p-4 hover:shadow-lg hover:border-brand-200 dark:hover:border-brand-700 transition-all duration-300 group cursor-pointer'
-        x-on:click="window.navigate('product', { slug: product.slug })">
+        x-on:click="window.navigate('product', { slug: product.slug, createdAt: product.createdat })">
         <div class='relative mb-3'>
           <div class='flex items-center justify-center h-28 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-lg overflow-hidden'>
             <template x-if='product.image && product.image.startsWith("http")'>
