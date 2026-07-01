@@ -1,37 +1,53 @@
 <div id='shop-page-container' x-data='{
-  search: &quot;&quot;,
-  activeCategory: &quot;Semua&quot;,
-  categories: [&quot;Semua&quot;, &quot;Knalpot&quot;, &quot;Bumper&quot;, &quot;Kaca Spion&quot;, &quot;Lampu&quot;, &quot;Kampas Rem&quot;, &quot;Filter Udara&quot;, &quot;Aki&quot;, &quot;Ban&quot;, &quot;Oli&quot;, &quot;Busi&quot;, &quot;Radiator&quot;, &quot;Shockbreaker&quot;, &quot;Kabel Body&quot;],
-  products: [
-    { id: &quot;p1&quot;, name: &quot;Knalpot Racing Carbon&quot;, category: &quot;Knalpot&quot;, price: 2850000, image: &quot;KR&quot;, badge: &quot;Best Seller&quot; },
-    { id: &quot;p2&quot;, name: &quot;Knalpot Yoshimura SS&quot;, category: &quot;Knalpot&quot;, price: 3200000, image: &quot;YS&quot;, badge: &quot;Premium&quot; },
-    { id: &quot;p3&quot;, name: &quot;Bumper Depan HRV&quot;, category: &quot;Bumper&quot;, price: 1850000, image: &quot;HR&quot;, badge: &quot;Original&quot; },
-    { id: &quot;p4&quot;, name: &quot;Bumper Belakang Rush&quot;, category: &quot;Bumper&quot;, price: 1650000, image: &quot;BR&quot; },
-    { id: &quot;p5&quot;, name: &quot;Kaca Spion Elektrik&quot;, category: &quot;Kaca Spion&quot;, price: 450000, image: &quot;KE&quot;, badge: &quot;Sale&quot; },
-    { id: &quot;p6&quot;, name: &quot;Kaca Spion Blind Spot&quot;, category: &quot;Kaca Spion&quot;, price: 275000, image: &quot;KB&quot; },
-    { id: &quot;p7&quot;, name: &quot;Lampu Depan LED&quot;, category: &quot;Lampu&quot;, price: 850000, image: &quot;LD&quot;, badge: &quot;Terlaris&quot; },
-    { id: &quot;p8&quot;, name: &quot;Lampu Kabut Hella&quot;, category: &quot;Lampu&quot;, price: 550000, image: &quot;LH&quot; },
-    { id: &quot;p9&quot;, name: &quot;Kampas Rem Brembo&quot;, category: &quot;Kampas Rem&quot;, price: 875000, image: &quot;BR&quot;, badge: &quot;Original&quot; },
-    { id: &quot;p10&quot;, name: &quot;Kampas Rem Ferodo&quot;, category: &quot;Kampas Rem&quot;, price: 425000, image: &quot;FE&quot; },
-    { id: &quot;p11&quot;, name: &quot;Filter Udara K&amp;N&quot;, category: &quot;Filter Udara&quot;, price: 450000, image: &quot;KN&quot;, badge: &quot;Promo&quot; },
-    { id: &quot;p12&quot;, name: &quot;Filter Udara Simota&quot;, category: &quot;Filter Udara&quot;, price: 380000, image: &quot;SI&quot; },
-    { id: &quot;p13&quot;, name: &quot;Aki GS Astra N40&quot;, category: &quot;Aki&quot;, price: 785000, image: &quot;GS&quot;, badge: &quot;Terlaris&quot; },
-    { id: &quot;p14&quot;, name: &quot;Aki Yuasa YTX9-BS&quot;, category: &quot;Aki&quot;, price: 520000, image: &quot;YU&quot; },
-    { id: &quot;p15&quot;, name: &quot;Ban Michelin PS5&quot;, category: &quot;Ban&quot;, price: 1850000, image: &quot;MI&quot;, badge: &quot;Premium&quot; },
-    { id: &quot;p16&quot;, name: &quot;Ban Bridgestone Turanza&quot;, category: &quot;Ban&quot;, price: 1620000, image: &quot;BS&quot; },
-    { id: &quot;p17&quot;, name: &quot;Oli Castrol 5W-30&quot;, category: &quot;Oli&quot;, price: 210000, image: &quot;OC&quot;, badge: &quot;Promo&quot; },
-    { id: &quot;p18&quot;, name: &quot;Oli Motul 5100 10W-40&quot;, category: &quot;Oli&quot;, price: 155000, image: &quot;MT&quot; },
-    { id: &quot;p19&quot;, name: &quot;Busi Iridium Denso&quot;, category: &quot;Busi&quot;, price: 125000, image: &quot;DI&quot;, badge: &quot;Premium&quot; },
-    { id: &quot;p20&quot;, name: &quot;Busi NGK Standard&quot;, category: &quot;Busi&quot;, price: 45000, image: &quot;NK&quot; },
-    { id: &quot;p21&quot;, name: &quot;Radiator Kijang&quot;, category: &quot;Radiator&quot;, price: 920000, image: &quot;RK&quot; },
-    { id: &quot;p22&quot;, name: &quot;Radiator Jazz&quot;, category: &quot;Radiator&quot;, price: 1100000, image: &quot;RJ&quot; },
-    { id: &quot;p23&quot;, name: &quot;Shockbreaker KYB&quot;, category: &quot;Shockbreaker&quot;, price: 680000, image: &quot;KY&quot; },
-    { id: &quot;p24&quot;, name: &quot;Shockbreaker Monroe&quot;, category: &quot;Shockbreaker&quot;, price: 750000, image: &quot;MO&quot; },
-    { id: &quot;p25&quot;, name: &quot;Kabel Body Set Jazz&quot;, category: &quot;Kabel Body&quot;, price: 350000, image: &quot;KB&quot; }
-  ],
+  search: "",
+  activeCategory: "Semua",
+  categories: ["Semua"],
+  products: [],
+  isLoadingProducts: true,
+  loadError: false,
+  async init() {
+    this.isLoadingProducts = true;
+    try {
+      const res = await fetch("/feeds/posts/default/-/product?alt=json&maxResults=500");
+      const json = await res.json();
+      if (json.feed && json.feed.entry) {
+        const parsed = [];
+        for (const entry of json.feed.entry) {
+          try {
+            const content = entry.content?.$t || "";
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(content, "text/html");
+            const el = doc.querySelector(".ezy-meta");
+            if (!el) continue;
+            const raw = el.getAttribute("data-meta") || "{}";
+            const meta = JSON.parse(raw.replace(/&apos;/g, "'"));
+            if (meta._type !== "product") continue;
+            parsed.push({
+              id: meta.id || "",
+              name: meta.name || entry.title?.$t || "",
+              slug: meta.slug || "",
+              price: Number(meta.price) || 0,
+              category: meta.category || "",
+              image: meta.image || "",
+              stock: Number(meta.stock) || 0
+            });
+          } catch(e) {}
+        }
+        this.products = parsed;
+        const cats = [...new Set(parsed.map(p => p.category).filter(Boolean))];
+        this.categories = ["Semua", ...cats];
+      }
+      this.loadError = false;
+    } catch(e) {
+      console.warn("Shop fetch failed:", e);
+      this.loadError = true;
+    } finally {
+      this.isLoadingProducts = false;
+    }
+  },
   get filteredProducts() {
     let result = this.products;
-    if (this.activeCategory !== &quot;Semua&quot;) {
+    if (this.activeCategory !== "Semua") {
       result = result.filter(p => p.category === this.activeCategory);
     }
     if (this.search.trim()) {
@@ -40,7 +56,7 @@
     }
     return result;
   },
-  formatPrice(num) { return `Rp ${Number(num).toLocaleString(&quot;id-ID&quot;)}`; },
+  formatPrice(num) { return `Rp ${Number(num).toLocaleString("id-ID")}`; },
   currentPage: 1,
   perPage: 12,
   get paginatedProducts() {
@@ -74,21 +90,37 @@
     </template>
   </div>
 
-  <!-- Product Grid -->
-  <div x-show='filteredProducts.length === 0' class='text-center py-16 text-theme-text-sub'>
+  <!-- Loading -->
+  <div x-show='isLoadingProducts' class='text-center py-16 text-theme-text-sub'>
+    <p>Memuat produk...</p>
+  </div>
+
+  <!-- Error -->
+  <div x-show='!isLoadingProducts && loadError' class='text-center py-16 text-theme-text-sub'>
+    <p>Gagal memuat produk. Silakan refresh halaman.</p>
+  </div>
+
+  <!-- Empty -->
+  <div x-show='!isLoadingProducts && !loadError && filteredProducts.length === 0' class='text-center py-16 text-theme-text-sub'>
     <p>Tidak ada produk yang sesuai dengan pencarian Anda.</p>
   </div>
 
-  <div class='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'>
+  <!-- Product Grid -->
+  <div x-show='!isLoadingProducts && !loadError' class='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'>
     <template x-for='product in paginatedProducts' :key='product.id'>
-      <div class='bg-theme-secondary border border-theme-border rounded-xl p-4 hover:shadow-lg hover:border-brand-200 dark:hover:border-brand-700 transition-all duration-300 group cursor-pointer'>
+      <div class='bg-theme-secondary border border-theme-border rounded-xl p-4 hover:shadow-lg hover:border-brand-200 dark:hover:border-brand-700 transition-all duration-300 group cursor-pointer'
+        x-on:click="window.navigate('product', { slug: product.slug })">
         <div class='relative mb-3'>
-          <div class='flex items-center justify-center h-28 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-lg'>
-            <span class='text-xl font-extrabold text-gray-300 dark:text-gray-600' x-text='product.image' />
+          <div class='flex items-center justify-center h-28 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-lg overflow-hidden'>
+            <template x-if='product.image && product.image.startsWith("http")'>
+              <img :src='product.image' :alt='product.name' class='w-full h-full object-cover' />
+            </template>
+            <template x-if='!product.image || !product.image.startsWith("http")'>
+              <span class='text-xl font-extrabold text-gray-300 dark:text-gray-600' x-text='(product.name || "?").substring(0, 2).toUpperCase()' />
+            </template>
           </div>
-          <span class='absolute top-2 left-2 text-[10px] font-bold bg-brand-500 text-white px-2 py-0.5 rounded-full' x-show='product.badge' x-text='product.badge' />
           <button class='absolute top-2 right-2 w-7 h-7 bg-white/90 dark:bg-gray-800/90 rounded-full flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-brand-500 hover:text-white'
-            x-on:click.stop='$store.cart.add({ id: product.id, name: product.name, price: product.price, imageurl: &quot;&quot; }, 1)'>
+            x-on:click.stop='$store.cart.add({ id: product.id, name: product.name, price: product.price, imageurl: product.image || &quot;&quot; }, 1)'>
             <svg class='w-3.5 h-3.5' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z'/><line x1='3' y1='6' x2='21' y2='6'/><path d='M16 10a4 4 0 0 1-8 0'/></svg>
           </button>
         </div>
