@@ -52,11 +52,8 @@
 }'>
   <template x-if='product'>
     <div>
-      <!-- Two-column layout: 75% left, 25% right -->
-      <div class='grid lg:grid-cols-[3fr_1fr] gap-6'>
-
-        <!-- ===== LEFT COLUMN (75%) ===== -->
-        <div class='space-y-6'>
+      <!-- Single-column layout with spesifikasi+voucher side by side -->
+      <div class='space-y-6'>
 
           <!-- A. Product Overview -->
           <div class='grid md:grid-cols-[1fr_1.2fr] gap-6 bg-theme-secondary border border-theme-border rounded-xl p-4 md:p-6'>
@@ -155,74 +152,76 @@
             </div>
           </div>
 
-          <!-- B. Spesifikasi Produk -->
-          <div class='bg-theme-secondary border border-theme-border rounded-xl p-4 md:p-6'>
-            <h2 class='text-base font-bold text-theme-text mb-4 flex items-center gap-2'>
-              <svg class='w-4 h-4 text-brand-500' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z'/></svg>
-              Spesifikasi Produk
-            </h2>
-            <div class='grid grid-cols-2 gap-x-6 gap-y-3 text-sm'>
-              <div class='flex items-center gap-2'>
-                <span class='text-theme-text-sub'>Kategori</span>
-                <span class='font-medium text-theme-text' x-text='product.category || "-"' />
-              </div>
-              <div class='flex items-center gap-2'>
-                <span class='text-theme-text-sub'>Stok</span>
-                <span class='font-medium' :class='stockColor' x-text='stockLabel' />
-              </div>
-              <template x-if='product.sku'>
-                <div class='flex items-center gap-2'>
-                  <span class='text-theme-text-sub'>SKU</span>
-                  <span class='font-medium text-theme-text' x-text='product.sku' />
+          <!-- B. Spesifikasi Produk + Voucher Toko (side by side) -->
+          <div class='grid md:grid-cols-[3fr_1fr] gap-6'>
+            <!-- LEFT: Spesifikasi + Deskripsi -->
+            <div class='space-y-6'>
+              <!-- Spesifikasi -->
+              <div class='bg-theme-secondary border border-theme-border rounded-xl p-4 md:p-6'>
+                <h2 class='text-base font-bold text-theme-text mb-4 flex items-center gap-2'>
+                  <svg class='w-4 h-4 text-brand-500' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z'/></svg>
+                  Spesifikasi Produk
+                </h2>
+                <div class='grid grid-cols-2 gap-x-6 gap-y-3 text-sm'>
+                  <div class='flex items-center gap-2'>
+                    <span class='text-theme-text-sub'>Kategori</span>
+                    <span class='font-medium text-theme-text' x-text='product.category || "-"' />
+                  </div>
+                  <div class='flex items-center gap-2'>
+                    <span class='text-theme-text-sub'>Stok</span>
+                    <span class='font-medium' :class='stockColor' x-text='stockLabel' />
+                  </div>
+                  <template x-if='product.sku'>
+                    <div class='flex items-center gap-2'>
+                      <span class='text-theme-text-sub'>SKU</span>
+                      <span class='font-medium text-theme-text' x-text='product.sku' />
+                    </div>
+                  </template>
+                  <template x-if='product.weight > 0'>
+                    <div class='flex items-center gap-2'>
+                      <span class='text-theme-text-sub'>Berat</span>
+                      <span class='font-medium text-theme-text' x-text='product.weight + " " + (product.weightunit || "gram")' />
+                    </div>
+                  </template>
                 </div>
-              </template>
-              <template x-if='product.weight > 0'>
-                <div class='flex items-center gap-2'>
-                  <span class='text-theme-text-sub'>Berat</span>
-                  <span class='font-medium text-theme-text' x-text='product.weight + " " + (product.weightunit || "gram")' />
+              </div>
+
+              <!-- Deskripsi -->
+              <div class='bg-theme-secondary border border-theme-border rounded-xl p-4 md:p-6'>
+                <h2 class='text-base font-bold text-theme-text mb-4 flex items-center gap-2'>
+                  <svg class='w-4 h-4 text-brand-500' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/><polyline points='14 2 14 8 20 8'/><line x1='16' y1='13' x2='8' y2='13'/><line x1='16' y1='17' x2='8' y2='17'/><polyline points='10 9 9 9 8 9'/></svg>
+                  Deskripsi Produk
+                </h2>
+                <p class='text-sm text-theme-text-sub leading-relaxed whitespace-pre-line' x-text='product.description || "Deskripsi produk belum tersedia."' />
+              </div>
+            </div>
+
+            <!-- RIGHT: Voucher Toko -->
+            <div class='space-y-3' x-data='{
+              vouchers: [
+                { id: "v1", label: "Flash Sale Sparepart", disc: "Rp25.000", min: "Min. belanja Rp150.000", bg: "bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-900/20" },
+                { id: "v2", label: "Diskon Member Baru", disc: "10%", min: "Min. belanja Rp100.000", bg: "bg-blue-50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-900/20" },
+                { id: "v3", label: "Gratis Ongkir", disc: "Rp0", min: "Min. belanja Rp200.000", bg: "bg-green-50 dark:bg-green-900/10 border-green-100 dark:border-green-900/20" }
+              ],
+              claimed: {}
+            }'>
+              <h2 class='text-base font-bold text-theme-text flex items-center gap-2'>
+                <svg class='w-4 h-4 text-brand-500' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z'/></svg>
+                Voucher Toko
+              </h2>
+              <template x-for='v in vouchers' :key='v.id'>
+                <div class='rounded-xl border p-3 space-y-1.5' :class='v.bg'>
+                  <p class='text-xs font-bold text-theme-text uppercase tracking-wide' x-text='v.label' />
+                  <p class='text-base font-extrabold text-red-600 dark:text-red-400' x-text='v.disc' />
+                  <p class='text-[10px] text-theme-text-sub' x-text='v.min' />
+                  <button class='w-full text-[11px] font-bold py-1 rounded-lg transition-colors'
+                    :class='claimed[v.id] ? "bg-gray-200 text-gray-500 cursor-default" : "bg-red-500 hover:bg-red-600 text-white"'
+                    x-on:click='claimed[v.id] = true'
+                    x-text='claimed[v.id] ? "Sudah Diklaim" : "Klaim"' />
                 </div>
               </template>
             </div>
           </div>
-
-          <!-- C. Deskripsi Produk -->
-          <div class='bg-theme-secondary border border-theme-border rounded-xl p-4 md:p-6'>
-            <h2 class='text-base font-bold text-theme-text mb-4 flex items-center gap-2'>
-              <svg class='w-4 h-4 text-brand-500' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/><polyline points='14 2 14 8 20 8'/><line x1='16' y1='13' x2='8' y2='13'/><line x1='16' y1='17' x2='8' y2='17'/><polyline points='10 9 9 9 8 9'/></svg>
-              Deskripsi Produk
-            </h2>
-            <p class='text-sm text-theme-text-sub leading-relaxed whitespace-pre-line' x-text='product.description || "Deskripsi produk belum tersedia."' />
-          </div>
-        </div>
-
-        <!-- ===== RIGHT COLUMN (25%) ===== -->
-        <div class='space-y-4' x-data='{
-          vouchers: [
-            { id: "v1", label: "Flash Sale Sparepart", disc: "Rp25.000", min: "Min. belanja Rp150.000", bg: "bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-900/20" },
-            { id: "v2", label: "Diskon Member Baru", disc: "10%", min: "Min. belanja Rp100.000", bg: "bg-blue-50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-900/20" },
-            { id: "v3", label: "Gratis Ongkir", disc: "Rp0", min: "Min. belanja Rp200.000", bg: "bg-green-50 dark:bg-green-900/10 border-green-100 dark:border-green-900/20" }
-          ],
-          claimed: {}
-        }'>
-          <div class='sticky top-24 space-y-4'>
-            <h2 class='text-base font-bold text-theme-text flex items-center gap-2'>
-              <svg class='w-4 h-4 text-brand-500' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z'/></svg>
-              Voucher Toko
-            </h2>
-            <template x-for='v in vouchers' :key='v.id'>
-              <div class='rounded-xl border p-4 space-y-2' :class='v.bg'>
-                <p class='text-xs font-bold text-theme-text uppercase tracking-wide' x-text='v.label' />
-                <p class='text-lg font-extrabold text-red-600 dark:text-red-400' x-text='v.disc' />
-                <p class='text-[11px] text-theme-text-sub' x-text='v.min' />
-                <button class='w-full text-xs font-bold py-1.5 rounded-lg transition-colors'
-                  :class='claimed[v.id] ? "bg-gray-200 text-gray-500 cursor-default" : "bg-red-500 hover:bg-red-600 text-white"'
-                  x-on:click='claimed[v.id] = true'
-                  x-text='claimed[v.id] ? "Sudah Diklaim" : "Klaim"' />
-              </div>
-            </template>
-          </div>
-        </div>
-      </div>
 
       <!-- Related Products -->
       <div class='mt-8' x-data='{
