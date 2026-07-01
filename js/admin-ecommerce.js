@@ -119,10 +119,20 @@ Alpine.data('ecommerceProducts', () => ({
       payload.status = payload.active ? 'published' : 'draft';
       var res = await ecomApi('saveProduct', payload);
       if (res.status === 'success') {
+        var d = res.data || {};
+        var savedStatus = d.status || payload.status;
         var pubMsg = '';
         if (res.publish) {
-          pubMsg = res.publish.status === 'success' ? ' SSR berhasil' : ' SSR: ' + (res.publish.message || 'gagal');
+          if (res.publish.status === 'success') {
+            var ts = res.publish.published;
+            pubMsg = ts ? ' SSR berhasil (' + new Date(ts).toLocaleString('id-ID') + ')' : ' SSR berhasil';
+          } else {
+            pubMsg = ' SSR: ' + (res.publish.message || 'gagal');
+          }
         }
+        this.editingItem.status = savedStatus;
+        this.editingItem.id = d.id || this.editingItem.id;
+        if (d.publishedAt) this.editingItem.publishedat = d.publishedAt;
         if (window.showToast) window.showToast('Produk berhasil disimpan.' + pubMsg, 'success');
         this.showModal = false;
         this.loadData();
