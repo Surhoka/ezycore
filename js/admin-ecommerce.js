@@ -107,14 +107,14 @@ Alpine.data('ecommerceProducts', () => ({
     this.isSaving = true;
     try {
       var images = this.editingItem.images || [];
-      var storageKey = 'EzycoreConfig_' + (window.EZY_BLOG_ID || '');
-      var config = JSON.parse(localStorage.getItem(storageKey) || '{}');
+      var settingsRes = await ecomApi('getEcommerceSettings');
+      var blogId = (settingsRes.status === 'success' && settingsRes.data) ? settingsRes.data.blogId || '' : '';
       var payload = {
         ...this.editingItem,
         images: JSON.stringify(images),
         imageurl: images.length > 0 ? images[0] : (this.editingItem.imageurl || ''),
         dbId: this.dbId,
-        blogId: config.blogId || ''
+        blogId: blogId
       };
       if (!payload.slug) {
         payload.slug = (payload.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now();
