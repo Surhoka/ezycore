@@ -6,8 +6,14 @@
       <p class='text-sm text-theme-text-sub' x-text='filteredProducts.length + " produk ditemukan"' />
     </div>
     <div class='relative'>
-      <svg class='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='8'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>
-      <input class='w-full md:w-64 pl-9 pr-4 py-2 rounded-lg border border-theme-border bg-theme-primary text-theme-text text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-all placeholder:text-theme-text-sub/50' type='text' placeholder='Cari produk...' x-model='search' />
+      <svg class='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400' viewBox='0 0 24 24' fill='none'
+        stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+        <circle cx='11' cy='11' r='8' />
+        <line x1='21' y1='21' x2='16.65' y2='16.65' />
+      </svg>
+      <input
+        class='w-full md:w-64 pl-9 pr-4 py-2 rounded-lg border border-theme-border bg-theme-primary text-theme-text text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-all placeholder:text-theme-text-sub/50'
+        type='text' placeholder='Cari produk...' x-model='search' />
     </div>
   </div>
 
@@ -33,27 +39,37 @@
   </div>
 
   <!-- Empty -->
-  <div x-show='!isLoadingProducts && !loadError && filteredProducts.length === 0' class='text-center py-16 text-theme-text-sub'>
+  <div x-show='!isLoadingProducts && !loadError && filteredProducts.length === 0'
+    class='text-center py-16 text-theme-text-sub'>
     <p>Tidak ada produk yang sesuai dengan pencarian Anda.</p>
   </div>
 
   <!-- Product Grid -->
   <div x-show='!isLoadingProducts && !loadError' class='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'>
     <template x-for='product in paginatedProducts' :key='product.id'>
-      <div class='bg-theme-secondary border border-theme-border rounded-xl p-4 hover:shadow-lg hover:border-brand-200 dark:hover:border-brand-700 transition-all duration-300 group cursor-pointer'
-        x-on:click="window.navigate('product', { slug: product.slug, createdAt: product.createdat })">
+      <div
+        class='bg-theme-secondary border border-theme-border rounded-xl p-4 hover:shadow-lg hover:border-brand-200 dark:hover:border-brand-700 transition-all duration-300 group cursor-pointer'
+        x-on:click="window.navigate('product', { slug: product.slug })">
         <div class='relative mb-3'>
-          <div class='flex items-center justify-center h-28 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-lg overflow-hidden'>
+          <div
+            class='flex items-center justify-center h-28 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-lg overflow-hidden'>
             <template x-if='product.image && product.image.startsWith("http")'>
               <img :src='product.image' :alt='product.name' class='w-full h-full object-cover' />
             </template>
             <template x-if='!product.image || !product.image.startsWith("http")'>
-              <span class='text-xl font-extrabold text-gray-300 dark:text-gray-600' x-text='(product.name || "?").substring(0, 2).toUpperCase()' />
+              <span class='text-xl font-extrabold text-gray-300 dark:text-gray-600'
+                x-text='(product.name || "?").substring(0, 2).toUpperCase()' />
             </template>
           </div>
-          <button class='absolute top-2 right-2 w-7 h-7 bg-white/90 dark:bg-gray-800/90 rounded-full flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-brand-500 hover:text-white'
+          <button
+            class='absolute top-2 right-2 w-7 h-7 bg-white/90 dark:bg-gray-800/90 rounded-full flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-brand-500 hover:text-white'
             x-on:click.stop='$store.cart.add({ id: product.id, name: product.name, price: product.price, imageurl: product.image || &quot;&quot; }, 1)'>
-            <svg class='w-3.5 h-3.5' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z'/><line x1='3' y1='6' x2='21' y2='6'/><path d='M16 10a4 4 0 0 1-8 0'/></svg>
+            <svg class='w-3.5 h-3.5' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'
+              stroke-linecap='round' stroke-linejoin='round'>
+              <path d='M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z' />
+              <line x1='3' y1='6' x2='21' y2='6' />
+              <path d='M16 10a4 4 0 0 1-8 0' />
+            </svg>
           </button>
         </div>
         <p class='text-xs text-theme-text-sub mb-0.5' x-text='product.category' />
@@ -65,14 +81,24 @@
 
   <!-- Pagination -->
   <div x-show='totalPages > 1' class='flex justify-center items-center gap-2 mt-8'>
-    <button class='w-9 h-9 rounded-lg border border-theme-border flex items-center justify-center text-sm text-theme-text-sub hover:border-brand-300 hover:text-brand-600 transition-colors' x-on:click='currentPage = Math.max(1, currentPage - 1)' :disabled='currentPage === 1'>
-      <svg class='w-4 h-4' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><polyline points='15 18 9 12 15 6'/></svg>
+    <button
+      class='w-9 h-9 rounded-lg border border-theme-border flex items-center justify-center text-sm text-theme-text-sub hover:border-brand-300 hover:text-brand-600 transition-colors'
+      x-on:click='currentPage = Math.max(1, currentPage - 1)' :disabled='currentPage === 1'>
+      <svg class='w-4 h-4' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'>
+        <polyline points='15 18 9 12 15 6' />
+      </svg>
     </button>
     <template x-for='page in totalPages' :key='page'>
-      <button class='w-9 h-9 rounded-lg text-sm font-medium transition-all' :class='currentPage === page ? &quot;bg-brand-500 text-white&quot; : &quot;border border-theme-border text-theme-text-sub hover:border-brand-300 hover:text-brand-600&quot;' x-on:click='currentPage = page' x-text='page' />
+      <button class='w-9 h-9 rounded-lg text-sm font-medium transition-all'
+        :class='currentPage === page ? &quot;bg-brand-500 text-white&quot; : &quot;border border-theme-border text-theme-text-sub hover:border-brand-300 hover:text-brand-600&quot;'
+        x-on:click='currentPage = page' x-text='page' />
     </template>
-    <button class='w-9 h-9 rounded-lg border border-theme-border flex items-center justify-center text-sm text-theme-text-sub hover:border-brand-300 hover:text-brand-600 transition-colors' x-on:click='currentPage = Math.min(totalPages, currentPage + 1)' :disabled='currentPage === totalPages'>
-      <svg class='w-4 h-4' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><polyline points='9 18 15 12 9 6'/></svg>
+    <button
+      class='w-9 h-9 rounded-lg border border-theme-border flex items-center justify-center text-sm text-theme-text-sub hover:border-brand-300 hover:text-brand-600 transition-colors'
+      x-on:click='currentPage = Math.min(totalPages, currentPage + 1)' :disabled='currentPage === totalPages'>
+      <svg class='w-4 h-4' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'>
+        <polyline points='9 18 15 12 9 6' />
+      </svg>
     </button>
   </div>
 </div>
