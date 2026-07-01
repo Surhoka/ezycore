@@ -114,7 +114,7 @@ Alpine.data('ecommerceProducts', () => ({
         dbId: this.dbId
       };
       if (!payload.slug) {
-        payload.slug = (payload.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now();
+        payload.slug = (payload.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
       }
       payload.status = payload.active ? 'published' : 'draft';
       var res = await ecomApi('saveProduct', payload);
