@@ -20,7 +20,7 @@
             const el = doc.querySelector(".ezy-meta");
             if (!el) continue;
             const raw = el.getAttribute("data-meta") || "{}";
-            const meta = JSON.parse(raw.replace(/&apos;/g, "'"));
+            const meta = JSON.parse(raw.replace(/&apos;/g, "\x27"));
             if (meta._type !== "product") continue;
             parsed.push({
               id: meta.id || "",
