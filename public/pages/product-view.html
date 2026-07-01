@@ -31,7 +31,7 @@
       id: this.product.slug || this.product.id || &quot;unknown&quot;,
       name: this.product.title || this.product.name,
       price: this.product.price || 0,
-      imageurl: &quot;&quot;
+      imageurl: this.product.image || &quot;&quot;
     }, this.qty);
     this.qty = 1;
   }
@@ -40,13 +40,23 @@
     <div class='grid lg:grid-cols-2 gap-8'>
       <!-- Images -->
       <div>
-        <div class='bg-theme-secondary border border-theme-border rounded-xl p-8 flex items-center justify-center h-80 mb-4'>
-          <span class='text-6xl font-extrabold text-gray-200 dark:text-gray-700' x-text='typeof images[activeImage] === &quot;string&quot; &amp;&amp; images[activeImage].length === 2 ? images[activeImage] : product.title.substring(0, 2).toUpperCase()' />
+        <div class='bg-theme-secondary border border-theme-border rounded-xl p-8 flex items-center justify-center h-80 mb-4 overflow-hidden'>
+          <template x-if='images[activeImage] &amp;&amp; images[activeImage].startsWith(&quot;http&quot;)'>
+            <img :src='images[activeImage]' :alt='product.title || product.name' class='w-full h-full object-contain' />
+          </template>
+          <template x-if='!images[activeImage] || !images[activeImage].startsWith(&quot;http&quot;)'>
+            <span class='text-6xl font-extrabold text-gray-200 dark:text-gray-700' x-text='(product.title || product.name || &quot;?&quot;).substring(0, 2).toUpperCase()' />
+          </template>
         </div>
         <div class='flex gap-3'>
           <template x-for='(img, idx) in images' :key='idx'>
-            <button class='w-16 h-16 rounded-lg border-2 flex items-center justify-center transition-all' :class='activeImage === idx ? &quot;border-brand-500 bg-brand-50 dark:bg-brand-900/20&quot; : &quot;border-theme-border bg-theme-secondary hover:border-brand-300&quot;' x-on:click='activeImage = idx'>
-              <span class='text-sm font-bold text-gray-400' x-text='typeof img === &quot;string&quot; &amp;&amp; img.length === 2 ? img : product.title.substring(0, 1)' />
+            <button class='w-16 h-16 rounded-lg border-2 flex items-center justify-center transition-all overflow-hidden' :class='activeImage === idx ? &quot;border-brand-500 bg-brand-50 dark:bg-brand-900/20&quot; : &quot;border-theme-border bg-theme-secondary hover:border-brand-300&quot;' x-on:click='activeImage = idx'>
+              <template x-if='img &amp;&amp; img.startsWith(&quot;http&quot;)'>
+                <img :src='img' :alt='product.title || product.name' class='w-full h-full object-cover' />
+              </template>
+              <template x-if='!img || !img.startsWith(&quot;http&quot;)'>
+                <span class='text-sm font-bold text-gray-400' x-text='(product.title || product.name || &quot;?&quot;).substring(0, 1)' />
+              </template>
             </button>
           </template>
         </div>
@@ -98,20 +108,65 @@
 
   <!-- Related Products -->
   <div class='mt-12' x-data='{
-    relatedProducts: [
-      { id: &quot;rp1&quot;, name: &quot;Knalpot Racing Carbon&quot;, price: 2850000, image: &quot;KR&quot; },
-      { id: &quot;rp2&quot;, name: &quot;Kampas Rem Brembo&quot;, price: 875000, image: &quot;BR&quot; },
-      { id: &quot;rp3&quot;, name: &quot;Filter Udara K&amp;N&quot;, price: 450000, image: &quot;KN&quot; },
-      { id: &quot;rp4&quot;, name: &quot;Lampu LED Philips&quot;, price: 350000, image: &quot;LP&quot; }
-    ],
+    relatedProducts: [],
+    isLoadingRelated: true,
+    async init() {
+      const meta = window._lastResolvedMeta;
+      if (!meta || !meta.category) {
+        this.isLoadingRelated = false;
+        return;
+      }
+      const currentSlug = meta.slug || meta.id || &quot;&quot;;
+      try {
+        const res = await fetch(&quot;/feeds/posts/default/-/product?alt=json&amp;maxResults=500&quot;);
+        const json = await res.json();
+        if (json.feed &amp;&amp; json.feed.entry) {
+          const parsed = [];
+          for (const entry of json.feed.entry) {
+            try {
+              const content = entry.content?.$t || &quot;&quot;;
+              const parser = new DOMParser();
+              const doc = parser.parseFromString(content, &quot;text/html&quot;);
+              const el = doc.querySelector(&quot;.ezy-meta&quot;);
+              if (!el) continue;
+              const raw = el.getAttribute(&quot;data-meta&quot;) || &quot;{}&quot;;
+              const d = JSON.parse(raw.replace(/&amp;apos;/g, &quot;'&quot;));
+              if (d._type !== &quot;product&quot;) continue;
+              if (d.slug === currentSlug || d.id === currentSlug) continue;
+              parsed.push({
+                id: d.id || &quot;&quot;,
+                name: d.name || entry.title?.$t || &quot;&quot;,
+                slug: d.slug || &quot;&quot;,
+                price: Number(d.price) || 0,
+                category: d.category || &quot;&quot;,
+                image: d.image || &quot;&quot;
+              });
+            } catch(e) {}
+          }
+          this.relatedProducts = parsed.filter(p =&gt; p.category === meta.category).slice(0, 4);
+        }
+      } catch(e) {
+        console.warn(&quot;Related products fetch failed:&quot;, e);
+      } finally {
+        this.isLoadingRelated = false;
+      }
+    },
     formatPrice(num) { return `Rp ${Number(num).toLocaleString(&quot;id-ID&quot;)}`; }
   }'>
     <h2 class='text-lg font-bold text-theme-text mb-4'>Produk Terkait</h2>
-    <div class='grid grid-cols-2 md:grid-cols-4 gap-4'>
+    <div x-show='isLoadingRelated' class='text-sm text-theme-text-sub py-4'>Memuat produk terkait...</div>
+    <div x-show='!isLoadingRelated &amp;&amp; relatedProducts.length === 0' class='text-sm text-theme-text-sub py-4'>Tidak ada produk terkait.</div>
+    <div x-show='!isLoadingRelated &amp;&amp; relatedProducts.length > 0' class='grid grid-cols-2 md:grid-cols-4 gap-4'>
       <template x-for='p in relatedProducts' :key='p.id'>
-        <div class='bg-theme-secondary border border-theme-border rounded-xl p-4 hover:shadow-md hover:border-brand-200 dark:hover:border-brand-700 transition-all group cursor-pointer'>
-          <div class='flex items-center justify-center h-28 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-lg mb-3'>
-            <span class='text-xl font-extrabold text-gray-300 dark:text-gray-600' x-text='p.image' />
+        <div class='bg-theme-secondary border border-theme-border rounded-xl p-4 hover:shadow-md hover:border-brand-200 dark:hover:border-brand-700 transition-all group cursor-pointer'
+          x-on:click="window.navigate('product', { slug: p.slug })">
+          <div class='flex items-center justify-center h-28 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-lg mb-3 overflow-hidden'>
+            <template x-if='p.image &amp;&amp; p.image.startsWith(&quot;http&quot;)'>
+              <img :src='p.image' :alt='p.name' class='w-full h-full object-cover' />
+            </template>
+            <template x-if='!p.image || !p.image.startsWith(&quot;http&quot;)'>
+              <span class='text-xl font-extrabold text-gray-300 dark:text-gray-600' x-text='(p.name || &quot;?&quot;).substring(0, 2).toUpperCase()' />
+            </template>
           </div>
           <h4 class='text-sm font-semibold text-theme-text mb-1 truncate' x-text='p.name' />
           <p class='text-sm font-bold text-brand-600 dark:text-brand-400' x-text='formatPrice(p.price)' />
