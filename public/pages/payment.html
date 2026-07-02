@@ -32,11 +32,17 @@
     <h2 class='text-lg font-bold text-theme-text'>Review Pesanan</h2>
     <template x-for='(item, idx) in $store.cart.items' :key='item.id'>
       <div class='bg-theme-secondary border border-theme-border rounded-xl p-4 flex items-center gap-4'>
-        <div class='w-14 h-14 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-lg flex items-center justify-center flex-shrink-0'>
-          <span class='text-xs font-bold text-gray-300 dark:text-gray-600' x-text='(item.name || &quot;?&quot;).substring(0, 2).toUpperCase()' />
+        <div class='w-14 h-14 shrink-0 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800'>
+          <template x-if='item.imageurl'>
+            <img :src='item.imageurl' class='h-full w-full object-cover' @error='$event.target.classList.add("hidden")' />
+          </template>
+          <template x-if='!item.imageurl'>
+            <div class='flex h-full items-center justify-center text-xs font-bold text-gray-300 dark:text-gray-600' x-text='(item.name || &quot;?&quot;).substring(0, 2).toUpperCase()' />
+          </template>
         </div>
         <div class='flex-1 min-w-0'>
           <h4 class='text-sm font-semibold text-theme-text truncate' x-text='item.name' />
+          <div x-show='item.sku' class='text-[10px] font-mono text-gray-400 truncate' x-text='item.sku' />
           <div class='flex items-center gap-2 mt-1'>
             <button
               class='w-6 h-6 flex items-center justify-center rounded border border-theme-border text-theme-text-sub hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors text-sm font-bold'

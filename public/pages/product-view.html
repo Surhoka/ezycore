@@ -229,7 +229,9 @@ window.productViewData = function () {
         id: this.product.slug || this.product.id || 'unknown',
         name: this.product.title || this.product.name,
         price: this.product.price || 0,
-        imageurl: this.product.image || ''
+        sku: this.product.sku || '',
+        imageurl: this.product.image || '',
+        images: this.product.images || []
       }, this.qty);
       this.qty = 1;
     },
