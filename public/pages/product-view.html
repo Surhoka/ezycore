@@ -164,16 +164,54 @@ window.productViewData = function () {
     images: [],
 
     init: function () {
+      var self = this;
       var meta = window._lastResolvedMeta;
       if (meta) {
-        this.product = meta;
-        this.images = (meta.images && meta.images.length > 0)
+        self.product = meta;
+        // Gunakan images array jika ada, fallback ke image tunggal, lalu inisial
+        self.images = (meta.images && meta.images.length > 0)
           ? meta.images
-          : [(meta.title || meta.name || '?').substring(0, 2).toUpperCase()];
+          : (meta.image ? [meta.image] : [(meta.title || meta.name || '?').substring(0, 2).toUpperCase()]);
+
+        // Jika meta dari feed (tidak punya stock/description lengkap), fetch dari SSR page
+        var needsFullData = (meta.stock === undefined || meta.stock === null || !meta.description);
+        if (needsFullData && meta.slug) {
+          self.fetchFullMeta(meta.slug);
+        }
       } else {
-        this.product = { title: 'Produk Tidak Ditemukan', name: 'Produk Tidak Ditemukan', price: 0, description: 'Maaf, produk yang Anda cari tidak tersedia.' };
-        this.images = ['??'];
+        self.product = { title: 'Produk Tidak Ditemukan', name: 'Produk Tidak Ditemukan', price: 0, description: 'Maaf, produk yang Anda cari tidak tersedia.' };
+        self.images = ['??'];
       }
+    },
+
+    fetchFullMeta: async function (slug) {
+      var self = this;
+      try {
+        // Coba dari slugTypeMap cache untuk tahu URL
+        var slugTypeMap = JSON.parse(localStorage.getItem('ezy_slug_type') || '{}');
+        // Fetch dari Blogger feed untuk mendapatkan meta lengkap
+        var res = await fetch('/feeds/posts/default/-/product?alt=json&maxResults=500');
+        if (!res.ok) return;
+        var json = await res.json();
+        var entries = (json.feed && json.feed.entry) || [];
+        for (var i = 0; i < entries.length; i++) {
+          try {
+            var content = (entries[i].content && entries[i].content.$t) ? entries[i].content.$t : '';
+            var doc = new DOMParser().parseFromString(content, 'text/html');
+            var el = doc.querySelector('.ezy-meta');
+            if (!el) continue;
+            var d = JSON.parse((el.getAttribute('data-meta') || '{}').replace(/&apos;/g, "'"));
+            if (d.slug !== slug && d.id !== slug) continue;
+            // Merge data lengkap ke product yang sudah ada
+            Object.assign(self.product, d);
+            self.images = (d.images && d.images.length > 0)
+              ? d.images
+              : (d.image ? [d.image] : [(d.name || '?').substring(0, 2).toUpperCase()]);
+            window._lastResolvedMeta = self.product;
+            break;
+          } catch (e) {}
+        }
+      } catch (e) { console.warn('[productView] fetchFullMeta failed:', e); }
     },
 
     formatPrice: function (num) {
