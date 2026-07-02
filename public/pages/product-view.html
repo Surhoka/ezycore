@@ -316,9 +316,9 @@
                   if (!el) continue;
                   const raw = el.getAttribute("data-meta") || "{}";
                   const d = JSON.parse(raw.replace(/&apos;/g, "'"));
-                  if (d._type !== " product") continue; if (d.slug===currentSlug || d.id===currentSlug) continue;
+                  if (d._type !== "product") continue; if (d.slug===currentSlug || d.id===currentSlug) continue;
           parsed.push({ id: d.id || "" , name: d.name || entry.title?.$t || "" , slug: d.slug || "" , price:
-          Number(d.price) || 0, category: d.category || "" , image: d.image || "" }); } catch(e) {} }
+          Number(d.price) || 0, category: d.category || "" , image: d.image || "", publishedat: d.publishedat || "" }); } catch(e) {} }
           this.relatedProducts=parsed.filter(p=> p.category === meta.category).slice(0, 4);
           }
           } catch(e) {
@@ -344,7 +344,7 @@
             <template x-for='p in relatedProducts' :key='p.id'>
               <div
                 class='bg-theme-secondary border border-theme-border rounded-xl p-4 hover:shadow-md hover:border-brand-200 dark:hover:border-brand-700 transition-all group cursor-pointer'
-                x-on:click="window.navigate('product', { slug: p.slug })">
+                x-on:click="window.navigate('product', { slug: p.slug, year: window.extractDateParams({ publishedat: p.publishedat }).year, month: window.extractDateParams({ publishedat: p.publishedat }).month })">
                 <div
                   class='flex items-center justify-center h-28 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-lg mb-3 overflow-hidden'>
                   <template x-if='p.image && p.image.startsWith("http")'>
