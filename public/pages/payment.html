@@ -35,6 +35,7 @@
         <thead>
           <tr class='border-b border-theme-border text-theme-text-sub text-xs uppercase tracking-wider'>
             <th class='text-left py-3 px-4 font-medium'>Produk</th>
+            <th class='text-left py-3 px-4 font-medium'>SKU</th>
             <th class='text-center py-3 px-4 font-medium'>Kuantitas</th>
             <th class='text-right py-3 px-4 font-medium'>Harga</th>
             <th class='text-center py-3 px-4 font-medium w-12'>Aksi</th>
@@ -55,9 +56,11 @@
                   </div>
                   <div class='min-w-0'>
                     <h4 class='text-sm font-semibold text-theme-text truncate' x-text='item.name' />
-                    <div x-show='item.sku' class='text-[10px] font-mono text-gray-400 truncate' x-text='item.sku' />
                   </div>
                 </div>
+              </td>
+              <td class='py-3 px-4'>
+                <span class='text-[11px] font-mono text-gray-400' x-text='item.sku || &quot;-&quot;' />
               </td>
               <td class='py-3 px-4'>
                 <div class='flex items-center justify-center gap-1'>
