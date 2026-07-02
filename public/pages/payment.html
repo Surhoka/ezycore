@@ -36,6 +36,7 @@
           <tr class='border-b border-theme-border text-theme-text-sub text-xs uppercase tracking-wider'>
             <th class='text-left py-3 px-4 font-medium'>Produk</th>
             <th class='text-left py-3 px-4 font-medium'>SKU</th>
+            <th class='text-center py-3 px-4 font-medium'>Berat</th>
             <th class='text-center py-3 px-4 font-medium'>Kuantitas</th>
             <th class='text-right py-3 px-4 font-medium'>Harga</th>
             <th class='text-center py-3 px-4 font-medium w-12'>Aksi</th>
@@ -61,6 +62,9 @@
               </td>
               <td class='py-3 px-4'>
                 <span class='text-[11px] font-mono text-gray-400' x-text='item.sku || &quot;-&quot;' />
+              </td>
+              <td class='py-3 px-4 text-center'>
+                <span class='text-xs text-theme-text' x-text='item.weight ? item.weight + &quot; &quot; + (item.weightunit || &quot;gram&quot;) : &quot;-&quot;' />
               </td>
               <td class='py-3 px-4'>
                 <div class='flex items-center justify-center gap-1'>
