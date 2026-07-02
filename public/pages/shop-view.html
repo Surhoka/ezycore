@@ -51,12 +51,8 @@
         x-on:click="window.navigate('product', { slug: product.slug, year: window.extractDateParams({ publishedat: product.publishedat }).year, month: window.extractDateParams({ publishedat: product.publishedat }).month, meta: { slug: product.slug, id: product.id, name: product.name, title: product.name, price: product.price, category: product.category, image: product.image, images: product.images || [], stock: product.stock, compareatprice: product.compareatprice || 0, description: product.description || '', sku: product.sku || '', weight: product.weight || 0, weightunit: product.weightunit || 'gram', publishedat: product.publishedat, _type: 'product' } })">
         <div class='relative'>
           <div class='flex items-center justify-center aspect-square bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 overflow-hidden'>
-            <template x-if='product.image &amp;&amp; product.image.startsWith("http")'>
-              <img :src='product.image' :alt='product.name' class='w-full h-full object-cover' />
-            </template>
-            <template x-if='!product.image || !product.image.startsWith("http")'>
-              <span class='text-2xl font-extrabold text-gray-300 dark:text-gray-600' x-text='(product.name || "?").substring(0, 2).toUpperCase()' />
-            </template>
+            <img :src='product.image' :alt='product.name' class='w-full h-full object-cover' x-show='product.image && product.image.startsWith("http")' />
+            <span class='text-2xl font-extrabold text-gray-300 dark:text-gray-600' x-text='(product.name || "?").substring(0, 2).toUpperCase()' x-show='!product.image || !product.image.startsWith("http")' />
           </div>
         </div>
         <div class='p-3 flex items-start justify-between gap-2'>
