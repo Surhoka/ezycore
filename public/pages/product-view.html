@@ -180,10 +180,10 @@
         <div x-show="!isLoadingRelated && relatedProducts.length === 0" class="text-sm text-theme-text-sub py-4">Tidak
           ada produk terkait.</div>
         <div x-show="!isLoadingRelated && relatedProducts.length > 0" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <template x-for="p in relatedProducts" :key="p.id">
-            <div
-              class="bg-theme-secondary border border-theme-border rounded-xl p-4 hover:shadow-md hover:border-brand-200 dark:hover:border-brand-700 transition-all cursor-pointer"
-              @click="window.navigate('product', { slug: p.slug, year: window.extractDateParams({ publishedat: p.publishedat }).year, month: window.extractDateParams({ publishedat: p.publishedat }).month, meta: { slug: p.slug, id: p.id, name: p.name, title: p.name, price: p.price, category: p.category, image: p.image, publishedat: p.publishedat, _type: 'product' } })">
+<template x-for="p in relatedProducts" :key="p.id">
+                 <div
+                   class="bg-theme-secondary border border-theme-border rounded-xl p-4 hover:shadow-md hover:border-brand-200 dark:hover:border-brand-700 transition-all cursor-pointer"
+                   @click="window.navigate('product', { slug: p.slug, year: window.extractDateParams({ publishedat: p.publishedat }).year, month: window.extractDateParams({ publishedat: p.publishedat }).month, meta: { slug: p.slug, id: p.id, name: p.name, title: p.name, price: p.price, category: p.category, image: p.image, publishedat: p.publishedat, weight: p.weight || 0, weightunit: p.weightunit || 'gram', _type: 'product' } })">
               <div
                 class="flex items-center justify-center h-28 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-lg mb-3 overflow-hidden">
                 <template x-if="p.image && p.image.startsWith('http')">
