@@ -12,7 +12,7 @@
             class="bg-theme-primary border border-theme-border rounded-xl flex items-center justify-center h-64 md:h-80 mb-3 overflow-hidden">
             <template x-if="images[activeImage] && images[activeImage].startsWith('http')">
               <img :src="images[activeImage]" :alt="product.title || product.name"
-                class="w-full h-full object-contain" />
+                class="w-full h-full object-contain" loading="lazy" />
             </template>
             <template x-if="!images[activeImage] || !images[activeImage].startsWith('http')">
               <span class="text-6xl font-extrabold text-gray-200 dark:text-gray-700"
@@ -26,7 +26,7 @@
                 :class="activeImage === idx ? 'border-brand-500' : 'border-theme-border bg-theme-primary hover:border-brand-300'"
                 @click="activeImage = idx">
                 <template x-if="img && img.startsWith('http')">
-                  <img :src="img" :alt="product.title || product.name" class="w-full h-full object-cover" />
+                  <img :src="img" :alt="product.title || product.name" class="w-full h-full object-cover" loading="lazy" />
                 </template>
                 <template x-if="!img || !img.startsWith('http')">
                   <span class="text-sm font-bold text-gray-400"
@@ -186,9 +186,9 @@
                    @click="window.navigate('product', { slug: p.slug, year: window.extractDateParams({ publishedat: p.publishedat }).year, month: window.extractDateParams({ publishedat: p.publishedat }).month, meta: { slug: p.slug, id: p.id, name: p.name, title: p.name, price: p.price, category: p.category, image: p.image, publishedat: p.publishedat, weight: p.weight || 0, weightunit: p.weightunit || 'gram', _type: 'product' } })">
               <div
                 class="flex items-center justify-center h-28 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-lg mb-3 overflow-hidden">
-                <template x-if="p.image && p.image.startsWith('http')">
-                  <img :src="p.image" :alt="p.name" class="w-full h-full object-cover" />
-                </template>
+<template x-if="p.image && p.image.startsWith('http')">
+                   <img :src="p.image" :alt="p.name" class="w-full h-full object-cover" loading="lazy" />
+                 </template>
                 <template x-if="!p.image || !p.image.startsWith('http')">
                   <span class="text-xl font-extrabold text-gray-300 dark:text-gray-600"
                     x-text="(p.name || '?').substring(0, 2).toUpperCase()"></span>
