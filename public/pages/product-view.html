@@ -218,33 +218,33 @@
        @keydown.window.left.prevent="galleryOpen && galleryPrev()"
        @keydown.window.right.prevent="galleryOpen && galleryNext()"
        @click.self="closeGallery()"
-       class="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 p-4">
+        class="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 p-2 sm:p-4">
     <!-- Close -->
     <button @click="closeGallery()" 
-            class="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-white/10 hover:bg-white/25 flex items-center justify-center text-white transition-colors">
+            class="absolute top-2 sm:top-4 right-2 sm:right-4 z-20 w-10 h-10 rounded-full bg-white/10 hover:bg-white/25 flex items-center justify-center text-white transition-colors">
       <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <line x1="18" y1="6" x2="6" y2="18" />
         <line x1="6" y1="6" x2="18" y2="18" />
       </svg>
     </button>
 
-    <div class="flex gap-4 max-w-5xl w-full items-start">
+    <div class="flex gap-2 sm:gap-4 w-full items-stretch" style="max-width:95vw;height:85vh;">
       <!-- Large Image -->
-      <div class="flex-1 relative bg-black rounded-xl overflow-hidden" style="aspect-ratio: 1;">
+      <div class="flex-1 relative bg-black rounded-xl overflow-hidden min-h-0">
         <img :src="images[activeImage]" :alt="(product && (product.title || product.name)) || ''" 
              class="w-full h-full object-contain" />
 
         <template x-if="images.length > 1">
           <div>
             <button @click="galleryPrev()" 
-                    class="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/40 flex items-center justify-center text-white transition-colors">
-              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    class="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 w-9 sm:w-10 h-9 sm:h-10 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/40 flex items-center justify-center text-white transition-colors">
+              <svg class="w-4 sm:w-5 h-4 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <polyline points="15 18 9 12 15 6" />
               </svg>
             </button>
             <button @click="galleryNext()" 
-                    class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/40 flex items-center justify-center text-white transition-colors">
-              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    class="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 w-9 sm:w-10 h-9 sm:h-10 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/40 flex items-center justify-center text-white transition-colors">
+              <svg class="w-4 sm:w-5 h-4 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <polyline points="9 18 15 12 9 6" />
               </svg>
             </button>
@@ -259,7 +259,7 @@
 
       <!-- Thumbnails -->
       <div x-show="images.length > 1" 
-           class="flex flex-col gap-2 overflow-y-auto max-h-[calc(100vh-120px)] w-[88px] flex-shrink-0">
+           class="flex flex-col gap-1.5 sm:gap-2 overflow-y-auto max-h-full w-14 sm:w-[88px] flex-shrink-0">
         <template x-for="(img, idx) in images" :key="idx">
           <button @click="activeImage = idx" 
                   class="w-full aspect-square rounded-lg overflow-hidden border-2 flex-shrink-0 transition-colors"
