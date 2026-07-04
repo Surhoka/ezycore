@@ -9,7 +9,7 @@
         <!-- LEFT: Images -->
         <div>
           <div
-            class="bg-theme-primary border border-theme-border rounded-xl flex items-center justify-center h-64 md:h-80 mb-3 overflow-hidden">
+            class="bg-theme-primary border border-theme-border rounded-xl flex items-center justify-center aspect-w-3 aspect-h-4 mb-3 overflow-hidden">
             <template x-if="images[activeImage] && images[activeImage].startsWith('http')">
               <img :src="images[activeImage]" :alt="product.title || product.name"
                 class="w-full h-full object-contain" loading="lazy" />
