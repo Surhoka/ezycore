@@ -10,10 +10,10 @@
         <div>
           <div
             class="bg-theme-primary border border-theme-border rounded-xl flex items-center justify-center aspect-w-3 aspect-h-4 mb-3 overflow-hidden">
-            <template x-if="images[activeImage] && images[activeImage].startsWith('http')">
-              <img :src="images[activeImage]" :alt="product.title || product.name"
-                class="w-full h-full object-contain" loading="lazy" />
-            </template>
+<template x-if="images[activeImage] && images[activeImage].startsWith('http')">
+  <img :src="images[activeImage]" :alt="product.title || product.name"
+    class="w-full h-full object-cover" loading="lazy" />
+</template>
             <template x-if="!images[activeImage] || !images[activeImage].startsWith('http')">
               <span class="text-6xl font-extrabold text-gray-200 dark:text-gray-700"
                 x-text="(product.title || product.name || '?').substring(0, 2).toUpperCase()"></span>
