@@ -217,63 +217,68 @@
        @keydown.window.escape="galleryOpen && closeGallery()"
        @keydown.window.left.prevent="galleryOpen && galleryPrev()"
        @keydown.window.right.prevent="galleryOpen && galleryNext()"
-       @click.self="closeGallery()"
-        class="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 p-2 sm:p-4">
-    <!-- Close -->
-    <button @click="closeGallery()" 
-            class="absolute top-2 sm:top-4 right-2 sm:right-4 z-20 w-10 h-10 rounded-full bg-white/10 hover:bg-white/25 flex items-center justify-center text-white transition-colors">
-      <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <line x1="18" y1="6" x2="6" y2="18" />
-        <line x1="6" y1="6" x2="18" y2="18" />
-      </svg>
-    </button>
+       class="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 p-2 sm:p-4">
+       
+    <!-- Click away backdrop layer -->
+    <div class="absolute inset-0 z-0" @click="closeGallery()"></div>
 
-    <div class="flex gap-2 sm:gap-4 w-full items-stretch" style="max-width:95vw;height:85vh;">
-      <!-- Large Image -->
-      <div class="flex-1 relative bg-black rounded-xl overflow-hidden min-h-0">
+    <!-- Modal Content -->
+    <div class="bg-white dark:bg-theme-primary flex flex-col md:flex-row w-full max-w-5xl h-[85vh] md:h-[600px] relative z-10 shadow-2xl rounded-sm">
+      
+      <!-- Close Button -->
+      <button @click="closeGallery()" 
+              class="absolute top-2 right-2 z-20 w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+
+      <!-- Left: Large Image Area -->
+      <div class="relative w-full md:w-[65%] h-[50vh] md:h-full bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
         <img :src="images[activeImage]" :alt="(product && (product.title || product.name)) || ''" 
              class="w-full h-full object-contain" />
-
+        
         <template x-if="images.length > 1">
           <div>
             <button @click="galleryPrev()" 
-                    class="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 w-9 sm:w-10 h-9 sm:h-10 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/40 flex items-center justify-center text-white transition-colors">
-              <svg class="w-4 sm:w-5 h-4 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    class="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-16 sm:w-12 sm:h-20 bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-colors">
+              <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="15 18 9 12 15 6" />
               </svg>
             </button>
             <button @click="galleryNext()" 
-                    class="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 w-9 sm:w-10 h-9 sm:h-10 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/40 flex items-center justify-center text-white transition-colors">
-              <svg class="w-4 sm:w-5 h-4 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    class="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-16 sm:w-12 sm:h-20 bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-colors">
+              <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="9 18 15 12 9 6" />
               </svg>
             </button>
           </div>
         </template>
-
-        <div x-show="images.length > 1" 
-             class="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/60 text-white text-xs font-medium px-3 py-1 rounded-full"
-             x-text="(activeImage + 1) + ' / ' + images.length">
-        </div>
       </div>
 
-      <!-- Thumbnails -->
-      <div x-show="images.length > 1" 
-           class="flex flex-col gap-1.5 sm:gap-2 overflow-y-auto max-h-full w-14 sm:w-[88px] flex-shrink-0">
-        <template x-for="(img, idx) in images" :key="idx">
-          <button @click="activeImage = idx" 
-                  class="w-full aspect-square rounded-lg overflow-hidden border-2 flex-shrink-0 transition-colors"
-                  :class="activeImage === idx ? 'border-white' : 'border-transparent hover:border-white/50'">
-            <template x-if="img.startsWith('http')">
-              <img :src="img" :alt="'Thumbnail ' + (idx + 1)" class="w-full h-full object-cover" />
+      <!-- Right: Thumbnails & Title -->
+      <div class="w-full md:w-[35%] flex flex-col h-full bg-white dark:bg-theme-secondary p-5 pt-12 md:pt-6">
+        <h3 class="text-base md:text-[17px] font-medium leading-snug text-theme-text pr-4 mb-4" x-text="(product && (product.title || product.name)) || ''"></h3>
+        
+        <div class="flex-1 overflow-y-auto chat-scrollbar pr-1">
+          <div class="grid grid-cols-3 gap-2">
+            <template x-for="(img, idx) in images" :key="idx">
+              <button @click="activeImage = idx" 
+                      class="aspect-square border-2 overflow-hidden transition-colors relative"
+                      :class="activeImage === idx ? 'border-brand-500' : 'border-transparent hover:border-brand-200'">
+                <template x-if="img.startsWith('http')">
+                  <img :src="img" :alt="'Thumbnail ' + (idx + 1)" class="w-full h-full object-cover" />
+                </template>
+                <template x-if="!img.startsWith('http')">
+                  <div class="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 text-xs font-bold"
+                       x-text="img">
+                  </div>
+                </template>
+              </button>
             </template>
-            <template x-if="!img.startsWith('http')">
-              <div class="w-full h-full bg-gray-700 flex items-center justify-center text-white/60 text-xs font-bold"
-                   x-text="img">
-              </div>
-            </template>
-          </button>
-        </template>
+          </div>
+        </div>
       </div>
     </div>
   </div>
