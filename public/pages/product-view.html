@@ -12,7 +12,7 @@
             class="bg-theme-primary border border-theme-border rounded-xl flex items-center justify-center aspect-square mb-3 overflow-hidden">
             <template x-if="images[activeImage] && images[activeImage].startsWith('http')">
               <img :src="images[activeImage]" :alt="product.title || product.name"
-                class="w-full h-full object-contain p-4" loading="lazy" />
+                class="w-full h-full object-contain" loading="lazy" />
             </template>
             <template x-if="!images[activeImage] || !images[activeImage].startsWith('http')">
               <span class="text-6xl font-extrabold text-gray-200 dark:text-gray-700"
