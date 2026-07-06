@@ -34,7 +34,11 @@
 
         // Backup: sync UI saat dbSetup berubah programmatically (misal dari discoverDatabase)
         this.$watch('formData.dbSetup', (value, oldValue) => {
-            if (value !== oldValue) this.syncResetUI(value === 'force_new');
+            if (value !== oldValue) {
+                this.syncResetUI(value === 'force_new');
+                const checkbox = this.$el.querySelector('input[type=checkbox]');
+                if (checkbox) checkbox.checked = value === 'force_new';
+            }
         });
 
         window.addEventListener('ezy-api-ready', (event) => {
@@ -406,13 +410,13 @@
                     <div class="p-3 rounded-xl bg-theme-primary border border-theme-border flex-1"
                         :class="autoCreateConfirmed ? 'opacity-70 pointer-events-none' : ''">
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" x-model="formData.dbSetup"
-                                x-bind:true-value="'force_new'"
-                                x-bind:false-value="'use_existing'" :disabled="autoCreateConfirmed"
+                            <input type="checkbox" :disabled="autoCreateConfirmed"
                                 class="w-4 h-4 rounded border-theme-border text-brand-500 focus:ring-brand-500"
                                 x-on:change="
-                                    syncResetUI(formData.dbSetup === 'force_new');
-                                    window.showToast(formData.dbSetup === 'force_new' ? 'Mode Reset aktif! Semua data akan dihapus dan dibuat ulang.' : 'Mode Reset dibatalkan.', formData.dbSetup === 'force_new' ? 'warning' : 'info');
+                                    const checked = $event.target.checked;
+                                    formData.dbSetup = checked ? 'force_new' : 'use_existing';
+                                    syncResetUI(checked);
+                                    window.showToast(checked ? 'Mode Reset aktif! Semua data akan dihapus dan dibuat ulang.' : 'Mode Reset dibatalkan.', checked ? 'warning' : 'info');
                                 ">
                             <span class="text-xs font-medium text-theme-text">Reset / Buat Database Baru</span>
                         </label>
