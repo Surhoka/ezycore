@@ -209,13 +209,6 @@
             return;
         }
 
-        if (!this.firebaseStatus?.configured) {
-            window.showToast('Upload Firebase service account JSON terlebih dahulu.', 'warning');
-            const fbSection = document.getElementById('firebase-section');
-            if (fbSection) fbSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            return;
-        }
-
         if (this.needsDatabaseConfirmation && !forceAutoCreate && !this.autoCreateConfirmed) {
             this.openAutoCreateModal();
             return;
@@ -263,7 +256,8 @@
                 dbName: this.formData.dbName,
                 dbSetup: forceAutoCreate ? 'force_new' : this.formData.dbSetup,
                 autoCreateConfirmed: forceAutoCreate || this.autoCreateConfirmed,
-                role: 'Admin'
+                role: 'Admin',
+                firebaseConfig: this.firebaseFile || null
             }, 
             async (response) => {
                 if (response.status === 'success') {
