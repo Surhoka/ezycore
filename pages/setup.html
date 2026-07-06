@@ -191,6 +191,7 @@
             }, (res) => {
                 // Jika sukses atau DB ID sudah muncul, anggap selesai
                 if (res.setupStatus === 'COMPLETED' || (res.dbId && res.dbId.length > 5)) {
+                    this.isSubmitting = false;
                     this.message = 'Setup Selesai!';
                     window.showToast('Sistem berhasil dikonfigurasi!', 'success');
                     
