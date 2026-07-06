@@ -218,24 +218,45 @@
         this.message = 'Mengirim instruksi setup...';
         
         try {
-            const needsReset = this.formData.dbSetup === 'force_new' && !forceAutoCreate;
-            
-            // Jika centang reset, panggil reset_system dulu sebelum setup
-            if (needsReset) {
-                this.message = 'Meriset sistem...';
-                const resetResult = await new Promise((resolve, reject) => {
-                    window.sendDataToGoogle('reset_system', { blogId: this.formData.blogId },
+            // Jika ada file Firebase JSON, simpan dulu ke server (sebelum setup)
+            if (this.firebaseFile) {
+                this.message = 'Menyimpan Firebase config...';
+                const fbResult = await new Promise((resolve, reject) => {
+                    window.sendDataToGoogle('save_firebase_config',
+                        { payload: this.firebaseFile },
                         (res) => resolve(res),
                         (err) => reject(err),
                         this.formData.webappUrl
                     );
                 });
-                if (resetResult.status !== 'success') {
-                    window.showToast('Reset gagal: ' + (resetResult.message || 'unknown'), 'error');
+                if (fbResult.status === 'success') {
+                    this.firebaseStatus = { configured: true, projectId: fbResult.projectId, clientEmail: fbResult.clientEmail };
+                    this.firebaseFile = null;
+                    this.firebaseFileName = '';
+                    const input = document.getElementById('firebase-json-input');
+                    if (input) input.value = '';
+                } else {
+                    window.showToast('Gagal simpan Firebase: ' + (fbResult.message || ''), 'error');
                     this.isSubmitting = false;
                     return;
                 }
-                this.message = 'Reset berhasil. Memulai setup...';
+            }
+
+            // Set flag reset via save_settings (deployed doPost)
+            const needsReset = this.formData.dbSetup === 'force_new' && !forceAutoCreate;
+            this.message = needsReset ? 'Menyetel flag reset...' : 'Menyetel mode setup...';
+            const flagResult = await new Promise((resolve, reject) => {
+                window.sendDataToGoogle('save_settings',
+                    { blogId: this.formData.blogId, gatewayToken: needsReset ? 'RESET' : 'NORMAL' },
+                    (res) => resolve(res),
+                    (err) => reject(err),
+                    this.formData.webappUrl
+                );
+            });
+            if (flagResult.status !== 'success') {
+                window.showToast('Gagal menyetel konfigurasi: ' + (flagResult.message || ''), 'error');
+                this.isSubmitting = false;
+                return;
             }
 
             // Simpan ke LocalStorage untuk EzyCoreAi
@@ -256,8 +277,7 @@
                 dbName: this.formData.dbName,
                 dbSetup: forceAutoCreate ? 'force_new' : this.formData.dbSetup,
                 autoCreateConfirmed: forceAutoCreate || this.autoCreateConfirmed,
-                role: 'Admin',
-                firebaseConfig: this.firebaseFile || null
+                role: 'Admin'
             }, 
             async (response) => {
                 if (response.status === 'success') {
