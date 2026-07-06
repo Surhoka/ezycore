@@ -192,7 +192,7 @@
                 // Jika sukses atau DB ID sudah muncul, anggap selesai
                 if (res.setupStatus === 'COMPLETED' || (res.dbId && res.dbId.length > 5)) {
                     this.isSubmitting = false;
-                    this.message = 'Setup Selesai!';
+                    this.message = '✓ Setup Selesai!';
                     window.showToast('Sistem berhasil dikonfigurasi!', 'success');
                     
                     // Simpan DB ID terbaru ke form jika ada
@@ -213,15 +213,17 @@
                         setTimeout(() => { window.location.hash = '#dashboard'; }, 1500);
                     }
                 } else if (res.setupStatus === 'ERROR' || res.status === 'error') {
-                    this.message = 'Gagal: ' + (res.errorMessage || res.message || 'Unknown Error');
+                    this.message = '✗ Gagal: ' + (res.errorMessage || res.message || 'Unknown Error');
                     window.showToast(this.message, 'error');
                     this.isSubmitting = false;
                 } else {
                     // Masih IN_PROGRESS atau status lainnya (IDLE dsb)
                     this.message = res.statusMessage || 'Server sedang menyiapkan database...';
                     
-                    // Tambahkan status teknis untuk debug jika statusMessage kosong
-                    if (!res.statusMessage && res.setupStatus) {
+                    // Tampilkan pesan langkah-demi-langkah dari server
+                    if (res.statusMessage) {
+                        this.message = res.statusMessage;
+                    } else if (res.setupStatus) {
                         this.message = `Status: ${res.setupStatus}...`;
                     }
                     setTimeout(check, 3000); // Cek lagi setelah 3 detik
@@ -444,10 +446,27 @@
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                                 </svg>
-                                <span x-text="message"></span>
+                                <span>Memproses...</span>
                             </span>
                         </template>
                     </button>
+                </div>
+
+                <!-- Progress Status (visible during setup) -->
+                <div class="col-span-2" x-show="isSubmitting">
+                    <div class="p-4 rounded-xl border border-theme-border bg-theme-primary/30">
+                        <div class="flex items-center gap-3 mb-3">
+                            <svg class="w-5 h-5 animate-spin text-brand-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                            </svg>
+                            <span class="text-sm font-medium text-theme-text" x-text="message"></span>
+                        </div>
+                        <div class="w-full h-1.5 rounded-full bg-theme-border overflow-hidden">
+                            <div class="h-full rounded-full bg-brand-500 animate-pulse" style="width: 60%"></div>
+                        </div>
+                        <p class="mt-2 text-xs text-theme-text-sub">Jangan tutup halaman ini selama proses berlangsung.</p>
+                    </div>
                 </div>
             </div>
         </div>
