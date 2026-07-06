@@ -26,47 +26,22 @@
             return;
         }
 
-        if (typeof firebase === 'undefined' || !firebase.auth) {
-            window.showToast('Firebase SDK not loaded. Please refresh.', 'error');
-            return;
-        }
-
         this.isSubmitting = true;
 
-        try {
-            const cred = await firebase.auth().createUserWithEmailAndPassword(
-                this.formData.email,
-                this.formData.password
-            );
-            const firebaseUid = cred.user.uid;
-
-            window.sendDataToGoogle('registerUser', {
-                email: this.formData.email,
-                fname: this.formData.fname,
-                lname: this.formData.lname,
-                firebaseUid: firebaseUid
-            }, (response) => {
-                if (response.status === 'success') {
-                    window.showToast('Registrasi berhasil! Silakan login.', 'success');
-                    setTimeout(() => {
-                        window.location.hash = '#signin';
-                    }, 1500);
-                } else {
-                    window.showToast(response.message || 'Gagal mendaftar.', 'error');
-                    this.isSubmitting = false;
-                }
-            }, (err) => {
-                window.showToast('Kesalahan jaringan saat mendaftar.', 'error');
+        window.sendDataToGoogle('registerUser', this.formData, (response) => {
+            if (response.status === 'success') {
+                window.showToast('Registrasi berhasil! Silakan login.', 'success');
+                setTimeout(() => {
+                    window.location.hash = '#signin';
+                }, 1500);
+            } else {
+                window.showToast(response.message || 'Gagal mendaftar.', 'error');
                 this.isSubmitting = false;
-            });
-        } catch (err) {
-            let msg = 'Gagal mendaftar.';
-            if (err.code === 'auth/email-already-in-use') msg = 'Email sudah digunakan.';
-            else if (err.code === 'auth/weak-password') msg = 'Password terlalu lemah (min 6 karakter).';
-            else if (err.code === 'auth/invalid-email') msg = 'Format email tidak valid.';
-            window.showToast(msg, 'error');
+            }
+        }, (err) => {
+            window.showToast('Kesalahan jaringan saat mendaftar.', 'error');
             this.isSubmitting = false;
-        }
+        });
     }
 }" class="auth-card max-w-md animate-slide-up">
     <!-- Form Section -->
