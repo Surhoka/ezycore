@@ -32,11 +32,9 @@
             }
         });
 
-        // Feedback visual saat reset checkbox di-click
+        // Backup: sync UI saat dbSetup berubah programmatically (misal dari discoverDatabase)
         this.$watch('formData.dbSetup', (value, oldValue) => {
-            if (value === 'force_new') {
-                window.showToast('Mode Reset aktif! Semua data akan dihapus dan dibuat ulang.', 'warning');
-            }
+            if (value !== oldValue) this.syncResetUI(value === 'force_new');
         });
 
         window.addEventListener('ezy-api-ready', (event) => {
@@ -88,6 +86,18 @@
         reader.readAsText(file);
     },
 
+    syncResetUI(isReset) {
+        const banner = document.getElementById('reset-warning-banner');
+        if (banner) banner.style.display = isReset ? 'block' : 'none';
+        const fbSection = document.getElementById('firebase-section');
+        if (fbSection) {
+            fbSection.style.borderColor = isReset ? '#f87171' : '';
+            fbSection.style.boxShadow = isReset ? '0 0 0 1px #f87171' : '';
+        }
+        const requiredMsg = document.getElementById('firebase-required-msg');
+        if (requiredMsg) requiredMsg.style.display = isReset ? 'flex' : 'none';
+    },
+
     openAutoCreateModal() {
         this.autoCreateModalOpen = true;
     },
@@ -104,6 +114,7 @@
     confirmAutoCreate() {
         this.autoCreateConfirmed = true;
         this.formData.dbSetup = 'force_new';
+        this.syncResetUI(true);
         this.formData.dbName = 'Firestore';
         this.autoCreateModalOpen = false;
         
@@ -395,19 +406,22 @@
                     <div class="p-3 rounded-xl bg-theme-primary border border-theme-border flex-1"
                         :class="autoCreateConfirmed ? 'opacity-70 pointer-events-none' : ''">
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" x-model="formData.dbSetup" x-bind:true-value="'force_new'"
+                            <input type="checkbox" x-model="formData.dbSetup"
+                                x-bind:true-value="'force_new'"
                                 x-bind:false-value="'use_existing'" :disabled="autoCreateConfirmed"
-                                class="w-4 h-4 rounded border-theme-border text-brand-500 focus:ring-brand-500">
+                                class="w-4 h-4 rounded border-theme-border text-brand-500 focus:ring-brand-500"
+                                x-on:change="
+                                    syncResetUI(formData.dbSetup === 'force_new');
+                                    window.showToast(formData.dbSetup === 'force_new' ? 'Mode Reset aktif! Semua data akan dihapus dan dibuat ulang.' : 'Mode Reset dibatalkan.', formData.dbSetup === 'force_new' ? 'warning' : 'info');
+                                ">
                             <span class="text-xs font-medium text-theme-text">Reset / Buat Database Baru</span>
                         </label>
                     </div>
                 </div>
 
                 <!-- Reset Warning Banner -->
-                <div x-show="formData.dbSetup === 'force_new'"
-                     x-transition:enter="transition ease-out duration-300"
-                     x-transition:enter-start="opacity-0 -translate-y-2"
-                     x-transition:enter-end="opacity-100 translate-y-0"
+                <div id="reset-warning-banner"
+                     style="display:none"
                      class="col-span-2 p-4 rounded-xl border border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
                     <div class="flex items-start gap-3">
                         <span class="w-6 h-6 text-red-500 mt-0.5 shrink-0" x-icon="'alert-triangle'"></span>
@@ -425,8 +439,7 @@
                 </div>
 
                 <!-- Firebase Config (full width) -->
-                <div id="firebase-section" class="col-span-2 p-4 rounded-xl border border-theme-border bg-theme-primary/50"
-                     :class="formData.dbSetup === 'force_new' && !firebaseFile ? 'border-red-400 ring-1 ring-red-400' : ''">
+                <div id="firebase-section" class="col-span-2 p-4 rounded-xl border border-theme-border bg-theme-primary/50">
                     <div class="flex items-center gap-2 mb-3">
                         <div class="p-1.5 bg-orange-500 rounded-lg text-white">
                             <span class="w-4 h-4 block" x-icon="'zap'"></span>
@@ -434,7 +447,8 @@
                         <div>
                             <h3 class="text-sm font-semibold text-theme-text">Firebase Configuration</h3>
                             <p class="text-xs text-theme-text-sub">Upload service account JSON untuk Firestore & Auth</p>
-                            <p x-show="formData.dbSetup === 'force_new' && !firebaseFile"
+                            <p id="firebase-required-msg"
+                               style="display:none"
                                class="mt-1 text-xs font-semibold text-red-600 dark:text-red-400 flex items-center gap-1">
                                 <span class="w-3 h-3" x-icon="'asterisk'"></span>
                                 Wajib upload file JSON untuk Reset / Buat Database Baru
