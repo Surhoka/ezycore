@@ -30,8 +30,10 @@
                 // --- LIFECYCLE & ACTIONS ---
                 async init() {
                     console.log("Profile Page Initialized with Alpine Component.");
-                    const sessionUser = JSON.parse(localStorage.getItem('signedInUser'));
-                    const sessionUserId = sessionUser ? (sessionUser.id || sessionUser.uid) : null;
+                    const blogId = window.EZY_BLOG_ID || '';
+                    const key = 'signedInUser_' + blogId;
+                    const sessionUser = JSON.parse(localStorage.getItem(key) || localStorage.getItem('signedInUser') || 'null');
+                    const sessionUserId = sessionUser ? (sessionUser.id || sessionUser.firebaseUid || sessionUser.uid) : null;
                     await this.fetchProfileData(sessionUserId);
                     this.isLoading = false;
                 },
