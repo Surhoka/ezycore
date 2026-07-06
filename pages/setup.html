@@ -8,6 +8,10 @@
                 : '',
         dbSetup: 'use_existing' // Default: Gunakan data yang sudah ada
     },
+    firebaseFile: null,
+    firebaseFileName: '',
+    firebaseStatus: null,
+    firebaseLoading: false,
     isSubmitting: false,
     isSearching: false,
     message: 'Menunggu respon...',
@@ -44,6 +48,69 @@
         if (this.formData.webappUrl && this.formData.blogId && this.formData.email) {
             this.$nextTick(() => this.discoverDatabase());
         }
+
+        this.$nextTick(() => this.checkFirebaseConfig());
+    },
+
+    checkFirebaseConfig() {
+        if (!this.formData.webappUrl) return;
+        window.sendDataToGoogle('check_firebase_config', {},
+            (res) => { this.firebaseStatus = res; },
+            () => {},
+            this.formData.webappUrl
+        );
+    },
+
+    handleFirebaseFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        this.firebaseFileName = file.name;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                JSON.parse(e.target.result);
+                this.firebaseFile = e.target.result;
+                window.showToast('File JSON valid, siap disimpan.', 'success');
+            } catch (err) {
+                window.showToast('File JSON tidak valid: ' + err.message, 'error');
+                this.firebaseFile = null;
+                this.firebaseFileName = '';
+            }
+        };
+        reader.readAsText(file);
+    },
+
+    saveFirebaseConfig() {
+        if (!this.firebaseFile) {
+            window.showToast('Pilih file JSON service account terlebih dahulu.', 'warning');
+            return;
+        }
+        if (!this.formData.webappUrl) {
+            window.showToast('Isi WebApp URL terlebih dahulu.', 'warning');
+            return;
+        }
+        this.firebaseLoading = true;
+        window.sendDataToGoogle('save_firebase_config',
+            { payload: this.firebaseFile },
+            (res) => {
+                this.firebaseLoading = false;
+                if (res.status === 'success') {
+                    window.showToast('Firebase tersimpan: ' + (res.projectId || ''), 'success');
+                    this.firebaseStatus = { configured: true, projectId: res.projectId, clientEmail: res.clientEmail };
+                    this.firebaseFile = null;
+                    this.firebaseFileName = '';
+                    const input = document.getElementById('firebase-json-input');
+                    if (input) input.value = '';
+                } else {
+                    window.showToast('Gagal: ' + (res.message || ''), 'error');
+                }
+            },
+            (err) => {
+                this.firebaseLoading = false;
+                window.showToast('Gagal terhubung ke server.', 'error');
+            },
+            this.formData.webappUrl
+        );
     },
 
     openAutoCreateModal() {
@@ -317,6 +384,56 @@
                 </div>
             </div>
 
+            <!-- Firebase Config -->
+            <div class="p-6 rounded-xl border border-theme-border bg-theme-primary/50">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="p-2 bg-orange-500 rounded-lg text-white">
+                        <span class="w-5 h-5 block" x-icon="'zap'"></span>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-theme-text">Firebase Configuration</h3>
+                        <p class="text-xs text-theme-text-sub">Upload service account JSON untuk Firestore & Auth</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 mb-3 text-xs"
+                    x-show="firebaseStatus !== null">
+                    <template x-if="firebaseStatus?.configured">
+                        <span class="flex items-center gap-1 text-green-600">
+                            <span class="w-3 h-3 bg-green-500 rounded-full"></span>
+                            Connected: <span x-text="firebaseStatus.projectId"></span>
+                        </span>
+                    </template>
+                    <template x-if="!firebaseStatus?.configured">
+                        <span class="flex items-center gap-1 text-amber-600">
+                            <span class="w-3 h-3 bg-amber-500 rounded-full"></span>
+                            Not Configured
+                        </span>
+                    </template>
+                </div>
+
+                <div class="flex gap-2">
+                    <div class="relative flex-1">
+                        <input type="file" accept=".json" id="firebase-json-input"
+                            @change="handleFirebaseFileUpload($event)"
+                            class="block w-full text-xs text-theme-text-sub file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-brand-500 file:text-white hover:file:bg-brand-600 cursor-pointer">
+                    </div>
+                    <button @click="saveFirebaseConfig()" :disabled="firebaseLoading || !firebaseFile"
+                        class="px-4 py-2 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white text-sm font-semibold rounded-xl transition-all flex items-center gap-2">
+                        <template x-if="!firebaseLoading">
+                            <span>Save</span>
+                        </template>
+                        <template x-if="firebaseLoading">
+                            <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                            </svg>
+                        </template>
+                    </button>
+                </div>
+                <p class="mt-1 text-xs text-theme-text-sub">File: <span x-text="firebaseFileName || '(not selected)'" class="font-mono"></span></p>
+            </div>
+
             <!-- Submit Button -->
             <button @click="saveSetup()" :disabled="isSubmitting"
                 class="w-full bg-brand-500 hover:bg-brand-600 disabled:bg-brand-300 text-white font-bold py-4 rounded-xl shadow-lg shadow-brand-500/20 transition-all active:scale-[0.98] flex flex-col items-center justify-center gap-1">
@@ -366,6 +483,10 @@
                     <li class="flex gap-2">
                         <span class="mt-1 w-1.5 h-1.5 rounded-full bg-brand-500 flex-none"></span>
                         <span>Folder <strong>Images</strong> untuk penyimpanan file</span>
+                    </li>
+                    <li class="flex gap-2">
+                        <span class="mt-1 w-1.5 h-1.5 rounded-full bg-orange-500 flex-none"></span>
+                        <span>Upload <strong>Firebase JSON</strong> di halaman Setup untuk Firestore & Auth</span>
                     </li>
                 </ul>
                 <p class="text-xs leading-5 text-theme-text-sub">
