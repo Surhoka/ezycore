@@ -33,7 +33,7 @@
             );
             const firebaseUid = cred.user.uid;
 
-            window.sendDataToGoogle('SignInUser', { firebaseUid: firebaseUid }, (response) => {
+            window.sendDataToGoogle('SignInUser', { firebaseUid: firebaseUid, email: this.formData.email }, (response) => {
                 if (response.status === 'success') {
                     window.showToast('Login berhasil! Selamat datang kembali.', 'success');
                     const blogId = window.EZY_BLOG_ID || '';
