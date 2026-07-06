@@ -189,8 +189,7 @@
             window.sendDataToGoogle('get_setup_status', { 
                 blogId: this.formData.blogId 
             }, (res) => {
-                // Jika sukses atau DB ID sudah muncul, anggap selesai
-                if (res.setupStatus === 'COMPLETED' || (res.dbId && res.dbId.length > 5)) {
+                if (res.setupStatus === 'COMPLETED') {
                     this.isSubmitting = false;
                     this.message = '✓ Setup Selesai!';
                     window.showToast('Sistem berhasil dikonfigurasi!', 'success');
