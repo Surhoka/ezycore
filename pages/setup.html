@@ -463,28 +463,32 @@
 
             <div class="modal-body-content">
                 <p class="text-sm leading-6 text-theme-text">
-                    EzyCore akan membuat database otomatis:
+                    EzyCore akan menginisialisasi sistem dengan Firestore:
                 </p>
                 <ul class="space-y-2 text-sm text-theme-text-sub">
                     <li class="flex gap-2">
                         <span class="mt-1 w-1.5 h-1.5 rounded-full bg-brand-500 flex-none"></span>
-                        <span>Folder <strong>EzyCore_Database</strong> di Google Drive</span>
+                        <span>Firestore collection <strong>_config/global</strong> untuk konfigurasi sistem</span>
                     </li>
                     <li class="flex gap-2">
                         <span class="mt-1 w-1.5 h-1.5 rounded-full bg-brand-500 flex-none"></span>
-                        <span>Spreadsheet <strong>DB_Admin</strong> dengan sheet <strong>Meta</strong></span>
+                        <span>Firestore collection <strong>Users</strong> untuk autentikasi Firebase Auth</span>
                     </li>
                     <li class="flex gap-2">
                         <span class="mt-1 w-1.5 h-1.5 rounded-full bg-brand-500 flex-none"></span>
-                        <span>Folder <strong>Images</strong> untuk penyimpanan file</span>
+                        <span>Firestore collection <strong>Profile</strong> untuk data pengguna</span>
+                    </li>
+                    <li class="flex gap-2">
+                        <span class="mt-1 w-1.5 h-1.5 rounded-full bg-brand-500 flex-none"></span>
+                        <span>Folder <strong>Images</strong> di Google Drive untuk penyimpanan file</span>
                     </li>
                     <li class="flex gap-2">
                         <span class="mt-1 w-1.5 h-1.5 rounded-full bg-orange-500 flex-none"></span>
-                        <span>Upload <strong>Firebase JSON</strong> di halaman Setup untuk Firestore & Auth</span>
+                        <span>Upload <strong>Firebase JSON</strong> (service account) untuk akses Firestore & Auth</span>
                     </li>
                 </ul>
                 <p class="text-xs leading-5 text-theme-text-sub">
-                    Lanjutkan hanya jika Anda yakin ingin membuat database baru untuk Blog ID ini.
+                    Lanjutkan hanya jika Anda yakin ingin menginisialisasi sistem baru untuk Blog ID ini.
                 </p>
             </div>
 
