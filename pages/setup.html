@@ -80,39 +80,6 @@
         reader.readAsText(file);
     },
 
-    saveFirebaseConfig() {
-        if (!this.firebaseFile) {
-            window.showToast('Pilih file JSON service account terlebih dahulu.', 'warning');
-            return;
-        }
-        if (!this.formData.webappUrl) {
-            window.showToast('Isi WebApp URL terlebih dahulu.', 'warning');
-            return;
-        }
-        this.firebaseLoading = true;
-        window.sendDataToGoogle('save_firebase_config',
-            { payload: this.firebaseFile },
-            (res) => {
-                this.firebaseLoading = false;
-                if (res.status === 'success') {
-                    window.showToast('Firebase tersimpan: ' + (res.projectId || ''), 'success');
-                    this.firebaseStatus = { configured: true, projectId: res.projectId, clientEmail: res.clientEmail };
-                    this.firebaseFile = null;
-                    this.firebaseFileName = '';
-                    const input = document.getElementById('firebase-json-input');
-                    if (input) input.value = '';
-                } else {
-                    window.showToast('Gagal: ' + (res.message || ''), 'error');
-                }
-            },
-            (err) => {
-                this.firebaseLoading = false;
-                window.showToast('Gagal terhubung ke server.', 'error');
-            },
-            this.formData.webappUrl
-        );
-    },
-
     openAutoCreateModal() {
         this.autoCreateModalOpen = true;
     },
@@ -258,6 +225,26 @@
         this.message = 'Mengirim instruksi setup...';
         
         try {
+            const needsReset = this.formData.dbSetup === 'force_new' && !forceAutoCreate;
+            
+            // Jika centang reset, panggil reset_system dulu sebelum setup
+            if (needsReset) {
+                this.message = 'Meriset sistem...';
+                const resetResult = await new Promise((resolve, reject) => {
+                    window.sendDataToGoogle('reset_system', { blogId: this.formData.blogId },
+                        (res) => resolve(res),
+                        (err) => reject(err),
+                        this.formData.webappUrl
+                    );
+                });
+                if (resetResult.status !== 'success') {
+                    window.showToast('Reset gagal: ' + (resetResult.message || 'unknown'), 'error');
+                    this.isSubmitting = false;
+                    return;
+                }
+                this.message = 'Reset berhasil. Memulai setup...';
+            }
+
             // Simpan ke LocalStorage untuk EzyCoreAi
             const config = {
                 webappUrl: this.formData.webappUrl,
@@ -418,18 +405,7 @@
                                 @change="handleFirebaseFileUpload($event)"
                                 class="block w-full text-xs text-theme-text-sub file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-brand-500 file:text-white hover:file:bg-brand-600 cursor-pointer">
                         </div>
-                        <button @click="saveFirebaseConfig()" :disabled="firebaseLoading || !firebaseFile"
-                            class="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white text-xs font-semibold rounded-xl transition-all flex items-center gap-1">
-                            <template x-if="!firebaseLoading">
-                                <span>Save</span>
-                            </template>
-                            <template x-if="firebaseLoading">
-                                <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                                </svg>
-                            </template>
-                        </button>
+
                     </div>
                     <p class="mt-1 text-xs text-theme-text-sub">File: <span x-text="firebaseFileName || '(not selected)'" class="font-mono"></span></p>
                 </div>
