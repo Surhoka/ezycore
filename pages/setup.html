@@ -213,7 +213,7 @@
                         setTimeout(() => { window.location.hash = '#dashboard'; }, 1500);
                     }
                 } else if (res.setupStatus === 'ERROR' || res.status === 'error') {
-                    this.message = '✗ Gagal: ' + (res.errorMessage || res.message || 'Unknown Error');
+                    this.message = '✗ ' + (res.statusMessage || res.errorMessage || res.message || 'Gagal tidak diketahui');
                     window.showToast(this.message, 'error');
                     this.isSubmitting = false;
                 } else {
