@@ -129,11 +129,15 @@
             this.needsDatabaseConfirmation = !!(response.requiresDatabaseCreation || (response.isSetup === false && !response.dbId && !response.legacyDatabaseFound));
 
             if (response.status === 'success' && response.isSetup) {
-                // Database ditemukan secara fisik di Drive
+                // Database ditemukan
                 this.formData.dbName = response.dbName || 'Firestore';
                 this.formData.email = response.email || this.formData.email;
-                this.formData.dbSetup = 'use_existing'; // Pastikan mode kembali ke existing
-                window.showToast('Database terdeteksi: ' + (response.dbName || response.dbId.substring(0,8)), 'success');
+                if (this.formData.dbSetup === 'force_new') {
+                    window.showToast('Database sudah ada! Reset akan menghapus data lama dan membuat ulang.', 'warning');
+                } else {
+                    this.formData.dbSetup = 'use_existing';
+                    window.showToast('Database terdeteksi: ' + (response.dbName || response.dbId.substring(0,8)), 'success');
+                }
             } else if (response.requiresDatabaseCreation) {
                 window.showToast('Database legacy tidak ditemukan. Konfirmasi pembuatan database otomatis.', 'warning');
                 this.openAutoCreateModal();
@@ -215,7 +219,7 @@
             return;
         }
 
-        if (this.formData.dbSetup === 'force_new' && !this.firebaseFile) {
+        if (this.formData.dbSetup === 'force_new' && !this.firebaseFile && !forceAutoCreate) {
             window.showToast('Firebase JSON wajib dilampirkan untuk Reset / Buat Database Baru!', 'error');
             return;
         }
@@ -393,7 +397,7 @@
                 </div>
 
                 <!-- Reset Warning Banner -->
-                <div x-show="formData.dbSetup === 'force_new'" x-cloak
+                <div x-show="formData.dbSetup === 'force_new'"
                      class="col-span-2 p-4 rounded-xl border border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
                     <div class="flex items-start gap-3">
                         <span class="w-6 h-6 text-red-500 mt-0.5 shrink-0" x-icon="'alert-triangle'"></span>
