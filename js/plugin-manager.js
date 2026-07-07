@@ -94,7 +94,7 @@
                         this.formData.showInMenu = template.showInMenu !== false;
                         this.formData.scripts = template.scripts || '';
                         this.formData.children = template.children || null;
-                        this.formData.databaseSchema = template.databaseSchema || null;
+                        this.formData.firestoreCollections = template.firestoreCollections || null;
                         this.formData.databaseName = template.databaseName || '';
                     }
                 },
@@ -293,12 +293,10 @@
                     window.showToast(`Memulai inisialisasi database untuk ${plugin.name}...`, 'info');
                     try {
                          const res = await new Promise((resolve, reject) => {
-                             window.sendDataToGoogle('setupPluginDatabase', {
-                                 fileName: `DB_${plugin.name}`,
-                                 pluginId: plugin.id,
-                                 databaseSchema: plugin.databaseSchema || [],
-                                 dbId: plugin.databaseId || this.mainDbId
-                             }, resolve, reject);
+                              window.sendDataToGoogle('setupPluginDatabase', {
+                                  pluginId: plugin.id,
+                                  firestoreCollections: plugin.firestoreCollections || [],
+                              }, resolve, reject);
                          });
                         if (res.status === 'success') {
                             // [REVISI] Simpan ID dan Nama Database ke Properti Plugin secara mandiri
