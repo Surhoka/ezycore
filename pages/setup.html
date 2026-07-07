@@ -6,8 +6,7 @@
         dbName: localStorage.getItem('EzycoreConfig_' + (window.EZY_BLOG_ID || '')) 
                 ? (JSON.parse(localStorage.getItem('EzycoreConfig_' + (window.EZY_BLOG_ID || ''))).dbName || '') 
                 : '',
-        dbSetup: 'use_existing', // Default: Gunakan data yang sudah ada
-        webApiKey: ''
+        dbSetup: 'use_existing' // Default: Gunakan data yang sudah ada
     },
     firebaseFile: null,
     firebaseFileName: '',
@@ -255,7 +254,7 @@
                 this.message = 'Menyimpan Firebase config...';
                 const fbResult = await new Promise((resolve, reject) => {
                     window.sendDataToGoogle('save_firebase_config',
-                        { payload: this.firebaseFile, webApiKey: this.formData.webApiKey || undefined },
+                        { payload: this.firebaseFile },
                         (res) => resolve(res),
                         (err) => reject(err),
                         this.formData.webappUrl
@@ -355,7 +354,8 @@
                 <div class="col-span-2">
                     <label class="block text-sm font-semibold mb-1 text-theme-text">Google Web App URL</label>
                     <div class="relative">
-                        <span class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" x-icon="'link'"></span>
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+                            x-icon="'link'"></span>
                         <input type="url" x-model="formData.webappUrl"
                             placeholder="https://script.google.com/macros/s/.../exec" class="auth-input !pl-10">
                     </div>
@@ -366,7 +366,8 @@
                     <label class="block text-sm font-semibold mb-1 text-theme-text">Database Name</label>
                     <div class="flex gap-2">
                         <div class="relative flex-1">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" x-icon="'file-text'"></span>
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+                                x-icon="'file-text'"></span>
                             <input type="text" x-model="formData.dbName" placeholder="EzyCore_Database"
                                 class="auth-input !pl-10" :disabled="autoCreateConfirmed"
                                 :class="autoCreateConfirmed ? 'opacity-70 bg-theme-primary cursor-not-allowed' : ''">
@@ -378,9 +379,12 @@
                                 <span class="w-4 h-4" x-icon="'search'"></span>
                             </template>
                             <template x-if="isSearching">
-                                <svg class="w-4 h-4 animate-spin text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                <svg class="w-4 h-4 animate-spin text-brand-500" xmlns="http://www.w3.org/2000/svg"
+                                    fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                        stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                                 </svg>
                             </template>
                         </button>
@@ -391,7 +395,8 @@
                 <div>
                     <label class="block text-sm font-semibold mb-1 text-theme-text">Blogger Blog ID</label>
                     <div class="relative">
-                        <span class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" x-icon="'database'"></span>
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+                            x-icon="'database'"></span>
                         <input type="text" x-model="formData.blogId" placeholder="ID Blog" class="auth-input !pl-10">
                     </div>
                 </div>
@@ -400,8 +405,10 @@
                 <div>
                     <label class="block text-sm font-semibold mb-1 text-theme-text">Admin Email</label>
                     <div class="relative">
-                        <span class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" x-icon="'user'"></span>
-                        <input type="email" x-model="formData.email" placeholder="admin@gmail.com" class="auth-input !pl-10">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+                            x-icon="'user'"></span>
+                        <input type="email" x-model="formData.email" placeholder="admin@gmail.com"
+                            class="auth-input !pl-10">
                     </div>
                 </div>
 
@@ -424,16 +431,18 @@
                 </div>
 
                 <!-- Reset Warning Banner -->
-                <div id="reset-warning-banner"
-                     style="display:none"
-                     class="col-span-2 p-4 rounded-xl border border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
+                <div id="reset-warning-banner" style="display:none"
+                    class="col-span-2 p-4 rounded-xl border border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
                     <div class="flex items-start gap-3">
                         <span class="w-6 h-6 text-red-500 mt-0.5 shrink-0" x-icon="'alert-triangle'"></span>
                         <div>
-                            <p class="text-sm font-bold text-red-700 dark:text-red-400">PERHATIAN! Reset Database akan menghapus semua data!</p>
+                            <p class="text-sm font-bold text-red-700 dark:text-red-400">PERHATIAN! Reset Database akan
+                                menghapus semua data!</p>
                             <p class="text-xs text-red-600 dark:text-red-400 mt-1 leading-relaxed">
-                                Semua data <strong>Users, Profile, Notifikasi, dan konfigurasi sistem</strong> akan dihapus permanen. 
-                                Proses ini tidak dapat dibatalkan. Setelah reset, sistem akan menjalankan setup baru dari awal.
+                                Semua data <strong>Users, Profile, Notifikasi, dan konfigurasi sistem</strong> akan
+                                dihapus permanen.
+                                Proses ini tidak dapat dibatalkan. Setelah reset, sistem akan menjalankan setup baru
+                                dari awal.
                             </p>
                             <p class="text-xs text-red-600 dark:text-red-400 mt-2 font-semibold">
                                 Pastikan Anda telah memiliki backup data sebelum melanjutkan.
@@ -443,17 +452,18 @@
                 </div>
 
                 <!-- Firebase Config (full width) -->
-                <div id="firebase-section" class="col-span-2 p-4 rounded-xl border border-theme-border bg-theme-primary/50">
+                <div id="firebase-section"
+                    class="col-span-2 p-4 rounded-xl border border-theme-border bg-theme-primary/50">
                     <div class="flex items-center gap-2 mb-3">
                         <div class="p-1.5 bg-orange-500 rounded-lg text-white">
                             <span class="w-4 h-4 block" x-icon="'zap'"></span>
                         </div>
                         <div>
                             <h3 class="text-sm font-semibold text-theme-text">Firebase Configuration</h3>
-                            <p class="text-xs text-theme-text-sub">Upload service account JSON untuk Firestore & Auth</p>
-                            <p id="firebase-required-msg"
-                               style="display:none"
-                               class="mt-1 text-xs font-semibold text-red-600 dark:text-red-400 flex items-center gap-1">
+                            <p class="text-xs text-theme-text-sub">Upload service account JSON untuk Firestore & Auth
+                            </p>
+                            <p id="firebase-required-msg" style="display:none"
+                                class="mt-1 text-xs font-semibold text-red-600 dark:text-red-400 flex items-center gap-1">
                                 <span class="w-3 h-3" x-icon="'asterisk'"></span>
                                 Wajib upload file JSON untuk Reset / Buat Database Baru
                             </p>
@@ -482,13 +492,8 @@
                                 class="block w-full text-xs text-theme-text-sub file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-brand-500 file:text-white hover:file:bg-brand-600 cursor-pointer">
                         </div>
                     </div>
-                    <p class="mt-1 text-xs text-theme-text-sub">File: <span x-text="firebaseFileName || '(not selected)'" class="font-mono"></span></p>
-                    <div class="mt-2">
-                        <label class="block text-xs font-medium text-theme-text mb-1">Firebase Web API Key</label>
-                        <input type="text" x-model="formData.webApiKey"
-                            placeholder="AIzaSy... (dari Firebase Console > Project Settings > Web API Key)"
-                            class="auth-input text-xs">
-                    </div>
+                    <p class="mt-1 text-xs text-theme-text-sub">File: <span
+                            x-text="firebaseFileName || '(not selected)'" class="font-mono"></span></p>
                 </div>
 
                 <!-- Submit Button (full width) -->
@@ -496,13 +501,17 @@
                     <button @click="saveSetup()" :disabled="isSubmitting"
                         class="w-full bg-brand-500 hover:bg-brand-600 disabled:bg-brand-300 text-white font-bold py-3 rounded-xl shadow-lg shadow-brand-500/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
                         <template x-if="!isSubmitting">
-                            <span x-text="formData.dbSetup === 'force_new' ? 'Reset &amp; Setup Baru' : 'Simpan &amp; Hubungkan'"></span>
+                            <span
+                                x-text="formData.dbSetup === 'force_new' ? 'Reset &amp; Setup Baru' : 'Simpan &amp; Hubungkan'"></span>
                         </template>
                         <template x-if="isSubmitting">
                             <span class="flex items-center gap-2">
-                                <svg class="w-4 h-4 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                <svg class="w-4 h-4 animate-spin text-white" xmlns="http://www.w3.org/2000/svg"
+                                    fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                        stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                                 </svg>
                                 <span>Memproses...</span>
                             </span>
@@ -514,16 +523,20 @@
                 <div class="col-span-2" x-show="isSubmitting">
                     <div class="p-4 rounded-xl border border-theme-border bg-theme-primary/30">
                         <div class="flex items-center gap-3 mb-3">
-                            <svg class="w-5 h-5 animate-spin text-brand-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                            <svg class="w-5 h-5 animate-spin text-brand-500 shrink-0" xmlns="http://www.w3.org/2000/svg"
+                                fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                             </svg>
                             <span class="text-sm font-medium text-theme-text" x-text="message"></span>
                         </div>
                         <div class="w-full h-1.5 rounded-full bg-theme-border overflow-hidden">
                             <div class="h-full rounded-full bg-brand-500 animate-pulse" style="width: 60%"></div>
                         </div>
-                        <p class="mt-2 text-xs text-theme-text-sub">Jangan tutup halaman ini selama proses berlangsung.</p>
+                        <p class="mt-2 text-xs text-theme-text-sub">Jangan tutup halaman ini selama proses berlangsung.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -569,7 +582,8 @@
                     </li>
                     <li class="flex gap-2">
                         <span class="mt-1 w-1.5 h-1.5 rounded-full bg-orange-500 flex-none"></span>
-                        <span>Upload <strong>Firebase JSON</strong> (service account) untuk akses Firestore & Auth</span>
+                        <span>Upload <strong>Firebase JSON</strong> (service account) untuk akses Firestore &
+                            Auth</span>
                     </li>
                 </ul>
                 <p class="text-xs leading-5 text-theme-text-sub">
