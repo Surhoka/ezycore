@@ -18,6 +18,7 @@
     autoCreateModalOpen: false,
     needsDatabaseConfirmation: false,
     autoCreateConfirmed: false,
+    resetWarningModalOpen: false,
 
     init() {
         // Otomatis mencari database saat URL WebApp ditempelkan
@@ -93,8 +94,6 @@
     },
 
     syncResetUI(isReset) {
-        const banner = document.getElementById('reset-warning-banner');
-        if (banner) banner.style.display = isReset ? 'block' : 'none';
         const fbSection = document.getElementById('firebase-section');
         if (fbSection) {
             fbSection.style.borderColor = isReset ? '#f87171' : '';
@@ -115,6 +114,23 @@
     cancelAutoCreate() {
         this.autoCreateModalOpen = false;
         this.needsDatabaseConfirmation = false;
+    },
+
+    openResetWarningModal() {
+        this.resetWarningModalOpen = true;
+    },
+
+    closeResetWarningModal() {
+        this.resetWarningModalOpen = false;
+    },
+
+    confirmResetWarning() {
+        this.formData.dbSetup = 'force_new';
+        this.resetWarningModalOpen = false;
+        this.syncResetUI(true);
+        window.showToast('Mode Reset aktif! Semua data akan dihapus dan dibuat ulang.', 'warning');
+        const checkbox = this.$el.querySelector('input[type=checkbox]');
+        if (checkbox) checkbox.checked = true;
     },
 
     confirmAutoCreate() {
@@ -424,33 +440,17 @@
                                 class="w-4 h-4 rounded border-theme-border text-brand-500 focus:ring-brand-500"
                                 x-on:change="
                                     const checked = $event.target.checked;
-                                    formData.dbSetup = checked ? 'force_new' : 'use_existing';
-                                    syncResetUI(checked);
-                                    window.showToast(checked ? 'Mode Reset aktif! Semua data akan dihapus dan dibuat ulang.' : 'Mode Reset dibatalkan.', checked ? 'warning' : 'info');
+                                    if (checked) {
+                                        $event.target.checked = false;
+                                        openResetWarningModal();
+                                    } else {
+                                        formData.dbSetup = 'use_existing';
+                                        syncResetUI(false);
+                                        window.showToast('Mode Reset dibatalkan.', 'info');
+                                    }
                                 ">
                             <span class="text-xs font-medium text-theme-text">Reset / Buat Database Baru</span>
                         </label>
-                    </div>
-                </div>
-
-                <!-- Reset Warning Banner -->
-                <div id="reset-warning-banner" style="display:none"
-                    class="col-span-2 p-4 rounded-xl border border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
-                    <div class="flex items-start gap-3">
-                        <span class="w-6 h-6 text-red-500 mt-0.5 shrink-0" x-icon="'alert-triangle'"></span>
-                        <div>
-                            <p class="text-sm font-bold text-red-700 dark:text-red-400">PERHATIAN! Reset Database akan
-                                menghapus semua data!</p>
-                            <p class="text-xs text-red-600 dark:text-red-400 mt-1 leading-relaxed">
-                                Semua data <strong>Users, Profile, Notifikasi, dan konfigurasi sistem</strong> akan
-                                dihapus permanen.
-                                Proses ini tidak dapat dibatalkan. Setelah reset, sistem akan menjalankan setup baru
-                                dari awal.
-                            </p>
-                            <p class="text-xs text-red-600 dark:text-red-400 mt-2 font-semibold">
-                                Pastikan Anda telah memiliki backup data sebelum melanjutkan.
-                            </p>
-                        </div>
                     </div>
                 </div>
 
@@ -600,6 +600,61 @@
                 </button>
                 <button @click="confirmAutoCreate()" class="btn btn-primary w-full">
                     Buat Database Otomatis
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reset Warning Modal -->
+    <div class="modal" :class="resetWarningModalOpen ? 'show' : ''" x-show="resetWarningModalOpen" x-cloak
+        @keydown.escape.window="closeResetWarningModal()" aria-hidden="true">
+        <div class="modal-backdrop absolute inset-0 bg-gray-950/60" @click="closeResetWarningModal()"></div>
+        <div class="modal-dialog relative z-10">
+            <div class="modal-header-sticky">
+                <div class="flex items-start gap-3">
+                    <div class="p-3 bg-red-100 text-red-600 rounded-xl">
+                        <span class="w-6 h-6 block" x-icon="'alert-triangle'"></span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-theme-text">PERHATIAN! Reset Database</h3>
+                        <p class="mt-1 text-sm text-theme-text-sub">Tindakan ini akan menghapus semua data yang ada.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-body-content">
+                <p class="text-sm leading-6 text-theme-text font-semibold">
+                    Reset Database akan menghapus permanen:
+                </p>
+                <ul class="space-y-2 text-sm text-theme-text-sub mt-2">
+                    <li class="flex gap-2">
+                        <span class="mt-1 w-1.5 h-1.5 rounded-full bg-red-500 flex-none"></span>
+                        <span>Data <strong>Users</strong> & autentikasi Firebase Auth</span>
+                    </li>
+                    <li class="flex gap-2">
+                        <span class="mt-1 w-1.5 h-1.5 rounded-full bg-red-500 flex-none"></span>
+                        <span>Data <strong>Profile</strong> pengguna</span>
+                    </li>
+                    <li class="flex gap-2">
+                        <span class="mt-1 w-1.5 h-1.5 rounded-full bg-red-500 flex-none"></span>
+                        <span>Data <strong>Notifikasi</strong> dan konfigurasi sistem</span>
+                    </li>
+                    <li class="flex gap-2">
+                        <span class="mt-1 w-1.5 h-1.5 rounded-full bg-red-500 flex-none"></span>
+                        <span>Semua <strong>koleksi Firestore</strong> lainnya</span>
+                    </li>
+                </ul>
+                <p class="text-xs leading-5 text-red-600 dark:text-red-400 mt-3 font-semibold">
+                    Proses ini tidak dapat dibatalkan. Pastikan Anda telah memiliki backup data sebelum melanjutkan.
+                </p>
+            </div>
+
+            <div class="modal-footer-actions">
+                <button @click="closeResetWarningModal()" class="btn btn-outline w-full">
+                    Batal
+                </button>
+                <button @click="confirmResetWarning()" class="btn bg-red-600 hover:bg-red-700 text-white w-full">
+                    Ya, Reset Database
                 </button>
             </div>
         </div>
