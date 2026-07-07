@@ -209,20 +209,43 @@
                     // Simpan DB ID terbaru ke form jika ada
                     if (res.dbId) this.formData.dbName = res.dbName || this.formData.dbName;
 
-                    // PENTING: Hapus config lokal sementara.
-                    // Ini memaksa appinit.min.js melakukan 'Remote Discovery' ke Blogger Page
-                    // untuk memastikan integrasi benar-benar tersinkronisasi.
+                    // Simpan konfigurasi final ke localStorage langsung (tanpa remote discovery).
+                    // Remote discovery via Blogger Feed API tidak bisa diandalkan dari konteks GAS
+                    // karena relative URL '/feeds/pages/...' akan resolve ke domain GAS, bukan Blogger.
                     const storageKey = 'EzycoreConfig_' + this.formData.blogId;
-                    localStorage.removeItem(storageKey);
+                    localStorage.setItem(storageKey, JSON.stringify({
+                        webappUrl: window.appsScriptUrl || this.formData.webappUrl,
+                        email: res.email || this.formData.email || '',
+                        role: 'Admin',
+                        dbName: res.dbName || this.formData.dbName || '',
+                        dbId: res.dbId || '',
+                        siteKey: res.siteKey || '',
+                        blogId: this.formData.blogId || '',
+                        pageId: res.pageId || ''
+                    }));
 
-                    // Finalisasi status di global app
-                    if (window.app && typeof window.app.checkInitialSetup === 'function') {
-                        window.app.checkInitialSetup().then(() => {
-                            setTimeout(() => { window.location.hash = '#dashboard'; }, 1000);
-                        });
-                    } else {
-                        setTimeout(() => { window.location.hash = '#dashboard'; }, 1500);
+                    // Tandai sistem sehat langsung agar handleHashChange tidak redirect ke setup
+                    if (window.app) {
+                        window.app.dbHealthy = true;
+                        window.app.dbStatusChecked = true;
+                        window.appsScriptUrl = window.appsScriptUrl || this.formData.webappUrl;
                     }
+
+                    // Dispatch event agar komponen lain tahu setup selesai
+                    window.dispatchEvent(new CustomEvent('ezy-api-ready', {
+                        detail: {
+                            config: {
+                                isSetup: true,
+                                status: 'success',
+                                webappUrl: window.appsScriptUrl || this.formData.webappUrl,
+                                dbName: res.dbName || this.formData.dbName,
+                                email: res.email || this.formData.email,
+                                siteKey: res.siteKey || ''
+                            }
+                        }
+                    }));
+
+                    setTimeout(() => { window.location.hash = '#dashboard'; }, 1000);
                 } else if (res.setupStatus === 'ERROR' || res.status === 'error') {
                     this.message = '✗ ' + (res.statusMessage || res.errorMessage || res.message || 'Gagal tidak diketahui');
                     window.showToast(this.message, 'error');
