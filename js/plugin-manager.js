@@ -52,11 +52,12 @@
                     window.dispatchEvent(new CustomEvent('ezy:menu-update'));
                 },
 
- async fetchAvailablePlugins() {
+  async fetchAvailablePlugins() {
                       if (!window.EzyApi || !window.EzyApi.isReady) {
-                          await new Promise(resolve => {
-                              window.addEventListener('ezy-api-ready', resolve, { once: true });
-                          });
+                          await Promise.race([
+                              new Promise(resolve => window.addEventListener('ezy-api-ready', resolve, { once: true })),
+                              new Promise((_, reject) => setTimeout(() => reject(new Error('ezy-api-ready timeout')), 15000))
+                          ]).catch(() => {});
                       }
                       const url = this.apiUrl;
                       if (!url) {
@@ -357,22 +358,19 @@
                     }
                 },
 
-                async pingPlugin(plugin) {
+                        async pingPlugin(plugin) {
                     plugin.pinging = true;
                     const start = Date.now();
                     try {
-                        await window.app.fetchJsonp(this.apiUrl, {
-                            action: 'ping',
-                            pluginId: plugin.id
-                        });
+                        await window.app.fetchJsonp(this.apiUrl, { action: 'ping' });
                         const latency = Date.now() - start;
                         plugin.pinging = false;
                         plugin.pingResult = { status: 'success', latency: latency + 'ms' };
-                        window.showToast('Ping OK: ' + latency + 'ms', "success");
+                        window.showToast('API OK: ' + latency + 'ms', "success");
                     } catch (e) {
                         plugin.pinging = false;
                         plugin.pingResult = { status: 'error' };
-                        window.showToast("Ping connection error", "error");
+                        window.showToast("API connection error", "error");
                     }
                 },
 
