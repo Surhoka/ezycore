@@ -911,6 +911,7 @@ Alpine.data('ecommerceSettings', () => ({
   activeTab: 'general',
   settings: {
     blogId: '', blogUrl: '', webAppUrl: '', pageIdShop: '', pageIdAlbum: '', pageIdHomeData: '',
+    pageIdSystemConfig: '',
     currency: 'IDR', taxRate: '11', midtransClientKey: '', siteKey: ''
   },
   homeData: {
@@ -1004,6 +1005,7 @@ Alpine.data('ecommerceSettings', () => ({
     var config = JSON.parse(localStorage.getItem(storageKey) || '{}');
     config.pageIdAlbum = this.settings.pageIdAlbum;
     config.pageIdHomeData = this.settings.pageIdHomeData;
+    config.pageIdSystemConfig = this.settings.pageIdSystemConfig;
     config.blogId = blogId;
     config.blogUrl = this.settings.blogUrl;
     config.webUrl = this.settings.blogUrl;
