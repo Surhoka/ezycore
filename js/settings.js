@@ -2,6 +2,7 @@
     const registerSettings = () => {
         Alpine.data('settingsPage', () => ({
             isLoading: false,
+            isSaving: false,
             activeTab: 'general',
             showToken: false,
             settings: {
@@ -56,33 +57,27 @@
                 // Load live sensitive settings from server cache (EzyCoreConfig_Cache)
                 const configCache = localStorage.getItem('EzyCoreConfig_Cache');
                 if (configCache) {
-                    const config = JSON.parse(configCache);
-                    if (config.gatewayToken) {
-                        this.settings.gatewayToken = config.gatewayToken;
-                    }
-                    if (config.siteKey) {
-                        this.settings.siteKey = config.siteKey;
-                    }
-                    if (config.adminUrl || config.webappUrl) {
-                        this.settings.adminUrl = config.adminUrl || config.webappUrl;
-                    }
-                    if (config.dbName) {
-                        this.settings.dbName = config.dbName;
-                    }
-                    if (config.blogId) {
-                        this.settings.blogId = config.blogId;
-                    }
+                    try {
+                        const config = JSON.parse(configCache);
+                        if (config.gatewayToken) this.settings.gatewayToken = config.gatewayToken;
+                        if (config.siteKey) this.settings.siteKey = config.siteKey;
+                        if (config.adminUrl || config.webappUrl) this.settings.adminUrl = config.adminUrl || config.webappUrl;
+                        if (config.dbName) this.settings.dbName = config.dbName;
+                        if (config.blogId) this.settings.blogId = config.blogId;
+                    } catch (e) { console.error('Error parsing EzyCoreConfig_Cache', e); }
                 }
 
                 // Load dari EzycoreConfig_<blogId> (discovery appinit — lebih lengkap)
                 const blogConfigKey = 'EzycoreConfig_' + (window.EZY_BLOG_ID || '');
                 const blogConfigCache = localStorage.getItem(blogConfigKey);
                 if (blogConfigCache) {
-                    const config = JSON.parse(blogConfigCache);
-                    if (config.siteKey && !this.settings.siteKey) this.settings.siteKey = config.siteKey;
-                    if (config.dbName && !this.settings.dbName) this.settings.dbName = config.dbName;
-                    if (config.webappUrl && !this.settings.adminUrl) this.settings.adminUrl = config.webappUrl;
-                    if (config.blogId && !this.settings.blogId) this.settings.blogId = config.blogId;
+                    try {
+                        const config = JSON.parse(blogConfigCache);
+                        if (config.siteKey && !this.settings.siteKey) this.settings.siteKey = config.siteKey;
+                        if (config.dbName && !this.settings.dbName) this.settings.dbName = config.dbName;
+                        if (config.webappUrl && !this.settings.adminUrl) this.settings.adminUrl = config.webappUrl;
+                        if (config.blogId && !this.settings.blogId) this.settings.blogId = config.blogId;
+                    } catch (e) { console.error('Error parsing blogConfigCache', e); }
                 }
 
                 // Fallback synchronous dari EzyApi.config dan EZY_BLOG_ID template
@@ -111,15 +106,13 @@
                 }, () => {});
             },
 
-            saveSettings(btn) {
-                if (btn && window.setButtonLoading) window.setButtonLoading(btn, true);
+            saveSettings() {
+                this.isSaving = true;
 
-                // Simulate API delay for better UX
                 setTimeout(() => {
                     localStorage.setItem('userSettings', JSON.stringify(this.settings));
 
                     if (window.sendDataToGoogle) {
-                        // Simpan General & Security Settings ke backend (PropertiesService)
                         const blogId = this.settings.blogId || (window.EzyApi && window.EzyApi.config && window.EzyApi.config.blogId) || '';
                         const settingsPayload = {
                             blogId: blogId,
@@ -128,34 +121,27 @@
                         };
 
                         window.sendDataToGoogle('save_settings', settingsPayload, (res) => {
+                            this.isSaving = false;
                             if (res && res.status === 'success') {
                                 window.showToast('Semua pengaturan berhasil disinkronkan ke Cloud!', 'success');
 
-                                // Update runtime config & cache untuk konsistensi langsung tanpa reload
                                 if (window.EzyApi && window.EzyApi.config) {
                                     window.EzyApi.config.blogId = blogId;
-                                    window.EzyApi.config.pageId = this.settings.pageId;
-                                    window.EzyApi.config.pageIdJsonLd = this.settings.pageIdJsonLd;
-                                    window.EzyApi.config.webUrl = this.settings.webUrl;
                                     window.EzyApi.config.gatewayToken = this.settings.gatewayToken;
                                     window.EzyApi.config.dbName = this.settings.dbName;
                                     window.EzyApi.config.adminUrl = this.settings.adminUrl;
                                     window.EzyApi.config.siteKey = this.settings.siteKey;
                                 }
 
-                                // Update Local Cache untuk konsistensi antar halaman
                                 const currentCache = JSON.parse(localStorage.getItem('EzyCoreConfig_Cache') || '{}');
                                 localStorage.setItem('EzyCoreConfig_Cache', JSON.stringify({ ...currentCache, blogId: blogId, ...settingsPayload }));
-
-                                if (btn && window.setButtonSuccess) window.setButtonSuccess(btn, { closeModal: false });
                             } else {
                                 window.showToast('Gagal sinkronisasi: ' + (res?.message || 'Server Error'), 'error');
-                                if (btn && window.setButtonLoading) window.setButtonLoading(btn, false);
                             }
                         });
                     } else {
+                        this.isSaving = false;
                         window.showToast('Mode Offline: Tersimpan di browser saja.', 'warning');
-                        if (btn && window.setButtonSuccess) window.setButtonSuccess(btn, { closeModal: false });
                     }
                 }, 600);
             },
