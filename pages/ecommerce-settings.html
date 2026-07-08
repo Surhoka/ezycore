@@ -106,10 +106,12 @@
                 class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
             </div>
             <div class="lg:col-span-2">
-              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Google Maps Embed URL</label>
+              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Google Maps Embed
+                URL</label>
               <input type="text" x-model="homeData.storeMapUrl" placeholder="https://www.google.com/maps/embed?pb=..."
                 class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
-              <p class="mt-1 text-xs text-gray-500">Dapatkan embed URL dari Google Maps &rarr; Bagikan &rarr; Sematkan peta. Jika kosong, placeholder akan ditampilkan.</p>
+              <p class="mt-1 text-xs text-gray-500">Dapatkan embed URL dari Google Maps &rarr; Bagikan &rarr; Sematkan
+                peta. Jika kosong, placeholder akan ditampilkan.</p>
             </div>
           </div>
         </div>
@@ -149,6 +151,13 @@
               <input type="text" :value="settings.siteKey" readonly
                 class="w-full h-11 rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-500 cursor-not-allowed dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
               <p class="mt-1 text-xs text-gray-500">Otomatis dari pengaturan SiteKey</p>
+            </div>
+            <div>
+              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">System Config Page
+                ID</label>
+              <input type="text" :value="settings.pageIdSystemConfig" readonly
+                class="w-full h-11 rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-500 cursor-not-allowed dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+              <p class="mt-1 text-xs text-gray-500">Otomatis dari pengaturan BloggerConfigPage</p>
             </div>
           </div>
         </div>
