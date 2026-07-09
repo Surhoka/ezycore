@@ -26,39 +26,70 @@
         }
 
         this.isSubmitting = true;
-        
-        window.sendDataToGoogle('SignInUser', this.formData, (response) => {
-            if (response.status === 'success') {
-                window.showToast('Login berhasil! Selamat datang kembali.', 'success');
-                const blogId = window.EZY_BLOG_ID || '';
-                const userData = {
-                    ...response.user,
-                    isLoggedIn: true,
-                    loginDate: new Date().toISOString()
-                };
-                localStorage.setItem('signedInUser_' + blogId, JSON.stringify(userData));
-                
-                if (response.token) {
-                    localStorage.setItem('sessionToken_' + blogId, response.token);
-                }
-                
-                if (window.app) {
-                    window.app.currentUser = userData;
-                }
 
-                // Reset state loading sebelum berpindah halaman agar saat kembali halaman sudah bersih
-                setTimeout(() => { 
-                    this.isSubmitting = false;
-                    window.location.hash = '#dashboard'; 
-                }, 1000);
-            } else {
-                window.showToast(response.message || 'Login gagal, periksa kredensial Anda.', 'error');
-                this.isSubmitting = false;
-            }
-        }, (err) => {
-            window.showToast('Terjadi kesalahan koneksi ke server.', 'error');
+        if (typeof firebase === 'undefined' || !firebase.apps.length) {
+            window.showToast('Firebase belum dikonfigurasi. Hubungi admin.', 'error');
             this.isSubmitting = false;
-        });
+            return;
+        }
+
+        try {
+            const cred = await firebase.auth().signInWithEmailAndPassword(
+                this.formData.email,
+                this.formData.password
+            );
+            const idToken = await cred.user.getIdToken();
+
+            var targetUrl = window.appsScriptUrl;
+            if (!targetUrl) {
+                var blogId = window.EZY_BLOG_ID || '';
+                var config = JSON.parse(localStorage.getItem('EzycoreConfig_' + blogId) || '{}');
+                targetUrl = config.webappUrl;
+            }
+
+            fetch(targetUrl, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'verifyFirebaseToken', idToken: idToken })
+            })
+                .then(function(res) { return res.json(); })
+                .then(function(response) {
+                    if (response.status === 'success') {
+                        window.showToast('Login berhasil! Selamat datang kembali.', 'success');
+                        var blogId = window.EZY_BLOG_ID || '';
+                        var userData = Object.assign({}, response.user, {
+                            isLoggedIn: true,
+                            loginDate: new Date().toISOString()
+                        });
+                        localStorage.setItem('signedInUser_' + blogId, JSON.stringify(userData));
+                        
+                        if (window.app) {
+                            window.app.currentUser = userData;
+                        }
+
+                        setTimeout(function() { 
+                            this.isSubmitting = false;
+                            window.location.hash = '#dashboard'; 
+                        }.bind(this), 1000);
+                    } else {
+                        window.showToast(response.message || 'Verifikasi token gagal.', 'error');
+                        this.isSubmitting = false;
+                    }
+                }.bind(this))
+                .catch(function(err) {
+                    window.showToast('Terjadi kesalahan koneksi ke server.', 'error');
+                    this.isSubmitting = false;
+                }.bind(this));
+        } catch (e) {
+            var msg = 'Login gagal.';
+            if (e.code === 'auth/user-not-found') msg = 'Email tidak terdaftar.';
+            else if (e.code === 'auth/wrong-password') msg = 'Password salah.';
+            else if (e.code === 'auth/invalid-email') msg = 'Format email tidak valid.';
+            else if (e.code === 'auth/too-many-requests') msg = 'Terlalu banyak percobaan. Coba lagi nanti.';
+            else if (e.code === 'auth/user-disabled') msg = 'Akun telah dinonaktifkan.';
+            else msg = e.message || 'Login gagal.';
+            window.showToast(msg, 'error');
+            this.isSubmitting = false;
+        }
     }
 }" class="auth-card max-w-md animate-slide-up">
     <!-- Form Section -->

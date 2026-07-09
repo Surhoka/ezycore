@@ -26,22 +26,64 @@
             return;
         }
 
+        if (typeof firebase === 'undefined' || !firebase.apps.length) {
+            window.showToast('Firebase belum dikonfigurasi.', 'error');
+            return;
+        }
+
         this.isSubmitting = true;
 
-        window.sendDataToGoogle('registerUser', this.formData, (response) => {
-            if (response.status === 'success') {
-                window.showToast('Registrasi berhasil! Silakan login.', 'success');
-                setTimeout(() => {
-                    window.location.hash = '#signin';
-                }, 1500);
-            } else {
-                window.showToast(response.message || 'Gagal mendaftar.', 'error');
-                this.isSubmitting = false;
+        try {
+            const cred = await firebase.auth().createUserWithEmailAndPassword(
+                this.formData.email,
+                this.formData.password
+            );
+            await cred.user.updateProfile({
+                displayName: (this.formData.fname + ' ' + (this.formData.lname || '')).trim()
+            });
+
+            var targetUrl = window.appsScriptUrl;
+            if (!targetUrl) {
+                var blogId = window.EZY_BLOG_ID || '';
+                var config = JSON.parse(localStorage.getItem('EzycoreConfig_' + blogId) || '{}');
+                targetUrl = config.webappUrl;
             }
-        }, (err) => {
-            window.showToast('Kesalahan jaringan saat mendaftar.', 'error');
+
+            fetch(targetUrl, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'createUserProfile',
+                    uid: cred.user.uid,
+                    email: this.formData.email,
+                    firstName: this.formData.fname,
+                    lastName: this.formData.lname || ''
+                })
+            })
+                .then(function(res) { return res.json(); })
+                .then(function(response) {
+                    if (response.status === 'success') {
+                        window.showToast('Registrasi berhasil! Silakan login.', 'success');
+                        setTimeout(function() {
+                            window.location.hash = '#signin';
+                        }, 1500);
+                    } else {
+                        window.showToast(response.message || 'Profil gagal dibuat.', 'error');
+                        this.isSubmitting = false;
+                    }
+                }.bind(this))
+                .catch(function(err) {
+                    window.showToast('Kesalahan jaringan saat membuat profil.', 'error');
+                    this.isSubmitting = false;
+                }.bind(this));
+        } catch (e) {
+            var msg = 'Registrasi gagal.';
+            if (e.code === 'auth/email-already-in-use') msg = 'Email sudah terdaftar.';
+            else if (e.code === 'auth/invalid-email') msg = 'Format email tidak valid.';
+            else if (e.code === 'auth/weak-password') msg = 'Password terlalu lemah (min 6 karakter).';
+            else msg = e.message || 'Registrasi gagal.';
+            window.showToast(msg, 'error');
             this.isSubmitting = false;
-        });
+        }
     }
 }" class="auth-card max-w-md animate-slide-up">
     <!-- Form Section -->
