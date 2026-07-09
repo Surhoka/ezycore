@@ -222,8 +222,19 @@
                         dbId: res.dbId || '',
                         siteKey: res.siteKey || '',
                         blogId: this.formData.blogId || '',
-                        pageId: res.pageId || ''
+                        pageId: res.pageId || '',
+                        firebaseApiKey: this.formData.webApiKey || '',
+                        projectId: this.firebaseStatus?.projectId || ''
                     }));
+
+                    // Init Firebase sekarang (config sudah di localStorage)
+                    if (typeof firebase !== 'undefined' && !firebase.apps.length && this.formData.webApiKey && this.firebaseStatus?.projectId) {
+                        firebase.initializeApp({
+                            apiKey: this.formData.webApiKey,
+                            authDomain: this.firebaseStatus.projectId + '.firebaseapp.com',
+                            projectId: this.firebaseStatus.projectId
+                        });
+                    }
 
                     // Tandai sistem sehat langsung agar handleHashChange tidak redirect ke setup
                     if (window.app) {
