@@ -129,6 +129,7 @@
                     <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500 w-16">Preview</th>
                     <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500">Nama</th>
                     <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500">URL</th>
+                    <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500">Dibuat</th>
                     <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500 text-right">Aksi</th>
                   </tr>
                 </thead>
@@ -168,6 +169,9 @@
                           </button>
                         </div>
                       </td>
+                      <td class="px-4 py-3">
+                        <span class="text-[11px] text-gray-500 dark:text-gray-400 whitespace-nowrap" x-text="formatDate(file.createdat || file.uploadedat)"></span>
+                      </td>
                       <td class="px-4 py-3 text-right">
                         <div class="flex items-center justify-end gap-1">
                           <button @click="editFileCaption(file)" class="text-gray-400 hover:text-brand-500 p-1.5" title="Edit Caption">
@@ -205,6 +209,7 @@
                         <template x-if="isYoutube(file)"><span class="rounded-md bg-red-50 px-1 py-0.5 text-[7px] font-bold uppercase text-red-600">YT</span></template>
                       </div>
                       <code class="block truncate rounded bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 text-[9px] text-gray-500 mt-1" x-text="file.fileurl"></code>
+                      <span class="block text-[9px] text-gray-400 mt-0.5" x-text="'Dibuat: ' + formatDate(file.createdat || file.uploadedat)"></span>
                     </div>
                   </div>
                   <div class="mt-2 flex items-center justify-end gap-2 border-t border-gray-100 dark:border-gray-700 pt-2">
