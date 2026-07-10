@@ -399,7 +399,8 @@ Alpine.data('ecommerceAlbums', () => ({
           ...file, dbId: this.dbId, albumId: this.selectedAlbumId,
           fileName: file.filename, originalFileName: file.originalfilename,
           fileUrl: file.fileurl, contentType: file.contenttype || 'image',
-          thumbnailUrl: file.thumbnailurl || ''
+          thumbnailUrl: file.thumbnailurl || '',
+          createdat: file.createdat || ''
         });
         if (res && res.status === 'success') {
           if (window.showToast) window.showToast('Caption diperbarui', 'success');
@@ -507,7 +508,8 @@ Alpine.data('ecommerceAlbums', () => ({
       const res = await ecomApi('saveAlbumImage', {
         albumId: this.selectedAlbumId, dbId: this.dbId,
         fileName: title, originalFileName: url, fileUrl: embedUrl,
-        thumbnailUrl: thumbUrl, contentType: 'youtube', mimeType: 'video/youtube', size: 0
+        thumbnailUrl: thumbUrl, contentType: 'youtube', mimeType: 'video/youtube', size: 0,
+        createdat: new Date().toISOString()
       });
       if (res && res.status === 'success') {
         if (window.showToast) window.showToast('Video YouTube berhasil ditambahkan!', 'success');
@@ -535,7 +537,8 @@ Alpine.data('ecommerceAlbums', () => ({
       const res = await ecomApi('saveAlbumImage', {
         albumId: this.selectedAlbumId, dbId: this.dbId,
         fileName: title, originalFileName: url, fileurl: directUrl,
-        thumbnailUrl: '', contentType: 'drive', mimeType: 'video/mp4', size: 0
+        thumbnailUrl: '', contentType: 'drive', mimeType: 'video/mp4', size: 0,
+        createdat: new Date().toISOString()
       });
       if (res && res.status === 'success') {
         if (window.showToast) window.showToast('Video Drive berhasil ditambahkan!', 'success');
@@ -609,6 +612,15 @@ Alpine.data('ecommerceAlbums', () => ({
       currentParentId = parent ? parent.parentid : null;
     }
     return true;
+  },
+
+  formatDate(dateStr) {
+    if (!dateStr) return '—';
+    try {
+      var d = new Date(dateStr);
+      if (isNaN(d.getTime())) return '—';
+      return d.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    } catch(e) { return '—'; }
   },
 
   getThumbUrl(file) {
