@@ -4,9 +4,10 @@
     <!-- Loading Overlay -->
     <div x-show="isLoading" x-cloak
       class="absolute inset-0 z-10 flex items-center justify-center bg-secondary/80 backdrop-blur-sm rounded-lg">
-      <svg class="h-8 w-8 animate-spin text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+      <svg class="h-8 w-8 animate-spin text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none"
+        viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
       </svg>
     </div>
 
@@ -16,14 +17,17 @@
         <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
           <div class="flex items-center gap-2">
             <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90">Album Explorer</h3>
-            <span class="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold dark:bg-gray-800 text-gray-500" x-text="albums.length + ' Album'"></span>
+            <span class="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold dark:bg-gray-800 text-gray-500"
+              x-text="albums.length + ' Album'"></span>
           </div>
           <div class="flex items-center gap-2">
             <div class="relative hidden sm:block">
               <input type="text" x-model="fileSearchQuery" placeholder="Cari file..."
                 class="h-8 w-40 lg:w-56 rounded-lg border border-gray-200 bg-gray-50 pl-3 pr-3 text-xs focus:border-brand-500 focus:ring-0 dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
             </div>
-            <button @click="openAddAlbum()" class="px-3 py-1.5 text-xs font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600">+ Album</button>
+            <button @click="openAddAlbum()"
+              class="px-3 py-1.5 text-xs font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600">+
+              Album</button>
           </div>
         </div>
         <div class="overflow-x-auto">
@@ -40,7 +44,9 @@
                         <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
                           :class="alb.parentid ? '' : 'bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400'">
                           <template x-if="!alb.parentid">
-                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                              <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
+                            </svg>
                           </template>
                           <template x-if="alb.parentid">
                             <div class="w-1.5 h-1.5 rounded-full bg-gray-300"></div>
@@ -48,20 +54,34 @@
                         </div>
                         <div>
                           <span class="text-sm font-semibold text-gray-900 dark:text-white" x-text="alb.name"></span>
-                          <span x-show="alb.parentid" class="rounded-md bg-orange-50 px-1.5 py-0.5 text-[8px] font-bold uppercase text-orange-600 dark:bg-orange-500/10 ml-1">Sub</span>
+                          <span x-show="alb.parentid"
+                            class="rounded-md bg-orange-50 px-1.5 py-0.5 text-[8px] font-bold uppercase text-orange-600 dark:bg-orange-500/10 ml-1">Sub</span>
                         </div>
                       </div>
                       <div class="flex items-center gap-1">
                         <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button @click.stop="editAlbum(alb)" class="rounded-lg p-1.5 text-gray-400 hover:text-brand-500 transition-colors" title="Edit">
-                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                          <button @click.stop="editAlbum(alb)"
+                            class="rounded-lg p-1.5 text-gray-400 hover:text-brand-500 transition-colors" title="Edit">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
                           </button>
-                          <button @click.stop="deleteAlbum(alb.id)" class="rounded-lg p-1.5 text-gray-400 hover:text-red-500 transition-colors" title="Delete">
-                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                          <button @click.stop="deleteAlbum(alb.id)"
+                            class="rounded-lg p-1.5 text-gray-400 hover:text-red-500 transition-colors" title="Delete">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                              <polyline points="3 6 5 6 21 6" />
+                              <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                            </svg>
                           </button>
                         </div>
-                        <button x-show="hasChildren(alb.id)" @click.stop="toggleExpand(alb.id)" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all">
-                          <svg class="w-4 h-4 text-gray-400 transition-transform duration-300" :class="expandedIds.includes(alb.id) ? 'rotate-180 text-brand-500' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                        <button x-show="hasChildren(alb.id)" @click.stop="toggleExpand(alb.id)"
+                          class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all">
+                          <svg class="w-4 h-4 text-gray-400 transition-transform duration-300"
+                            :class="expandedIds.includes(alb.id) ? 'rotate-180 text-brand-500' : ''" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9" />
+                          </svg>
                         </button>
                       </div>
                     </div>
@@ -74,8 +94,10 @@
       </section>
 
       <!-- ===== File Browser ===== -->
-      <section class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] min-h-[300px]">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800 gap-2">
+      <section
+        class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] min-h-[300px]">
+        <div
+          class="flex flex-col sm:flex-row sm:items-center sm:justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800 gap-2">
           <div>
             <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90 flex items-center gap-1">
               <span>Album:</span>
@@ -91,20 +113,39 @@
             </h3>
           </div>
           <div class="flex gap-2">
-            <button @click="openYoutubeModal()" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20 whitespace-nowrap">
-              <svg class="w-3.5 h-3.5 inline mr-1" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+            <button @click="openYoutubeModal()"
+              class="px-3 py-1.5 text-xs font-medium rounded-lg border border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20 whitespace-nowrap">
+              <svg class="w-3.5 h-3.5 inline mr-1" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+              </svg>
               YouTube
             </button>
-            <button @click="openDriveModal()" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-emerald-200 text-emerald-600 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-900/20 whitespace-nowrap">
-              <svg class="w-3.5 h-3.5 inline mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            <button @click="openDriveModal()"
+              class="px-3 py-1.5 text-xs font-medium rounded-lg border border-emerald-200 text-emerald-600 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-900/20 whitespace-nowrap">
+              <svg class="w-3.5 h-3.5 inline mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+              </svg>
               Drive
             </button>
-            <button @click="syncMetadata()" :disabled="isSyncing" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 whitespace-nowrap">
-              <svg class="w-3.5 h-3.5 inline mr-1" :class="isSyncing ? 'animate-spin' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+            <button @click="syncMetadata()" :disabled="isSyncing"
+              class="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 whitespace-nowrap">
+              <svg class="w-3.5 h-3.5 inline mr-1" :class="isSyncing ? 'animate-spin' : ''" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 4v6h-6" />
+                <path d="M1 20v-6h6" />
+                <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+              </svg>
               <span x-text="isSyncing ? 'Sync...' : 'Sync'"></span>
             </button>
-            <button @click="openBloggerEditor()" class="px-3 py-1.5 text-xs font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600 whitespace-nowrap">
-              <svg class="w-3.5 h-3.5 inline mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+            <button @click="openBloggerEditor()"
+              class="px-3 py-1.5 text-xs font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600 whitespace-nowrap">
+              <svg class="w-3.5 h-3.5 inline mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <path d="M12 5v14" />
+                <path d="M5 12h14" />
+              </svg>
               Upload
             </button>
           </div>
@@ -113,9 +154,16 @@
         <!-- Empty State -->
         <template x-if="selectedAlbumId && filteredAlbumFiles.length === 0">
           <div class="flex flex-col items-center justify-center py-12 text-gray-500">
-            <svg class="w-12 h-12 text-gray-300 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-            <p class="font-medium text-gray-900 dark:text-white" x-text="fileSearchQuery ? 'Tidak ada file yang cocok.' : 'Belum ada file di album ini.'"></p>
-            <p class="text-xs mt-1" x-show="!fileSearchQuery">Gunakan tombol "Upload" untuk menambahkan gambar dari Blogger.</p>
+            <svg class="w-12 h-12 text-gray-300 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.5">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <polyline points="21 15 16 10 5 21" />
+            </svg>
+            <p class="font-medium text-gray-900 dark:text-white"
+              x-text="fileSearchQuery ? 'Tidak ada file yang cocok.' : 'Belum ada file di album ini.'"></p>
+            <p class="text-xs mt-1" x-show="!fileSearchQuery">Gunakan tombol "Upload" untuk menambahkan gambar dari
+              Blogger.</p>
           </div>
         </template>
 
@@ -129,56 +177,79 @@
                     <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500 w-16">Preview</th>
                     <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500">Nama</th>
                     <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500">URL</th>
-                    <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500 w-32 whitespace-nowrap">Dibuat</th>
-                    <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500 text-right">Aksi</th>
+                    <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500">Dibuat</th>
+                    <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500">Aksi</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                   <template x-for="file in paginatedAlbumFiles" :key="file.id">
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-900/40 transition-colors">
                       <td class="px-4 py-3">
-                        <div class="h-12 w-12 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 relative cursor-pointer group"
+                        <div
+                          class="h-12 w-12 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 relative cursor-pointer group"
                           @click="isVideo(file) ? window.open(file.originalfilename || file.fileurl, '_blank') : window.open(file.fileurl, '_blank')">
                           <img :src="getThumbUrl(file)" alt="" class="h-full w-full object-cover">
                           <template x-if="isVideo(file)">
                             <div class="absolute inset-0 flex items-center justify-center bg-black/30">
-                              <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                              <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M8 5v14l11-7z" />
+                              </svg>
                             </div>
                           </template>
                         </div>
                       </td>
                       <td class="px-4 py-3">
                         <div class="flex items-center gap-1.5 flex-wrap">
-                          <span class="font-medium text-gray-900 dark:text-white text-xs" x-text="file.filename || 'Tanpa Judul'"></span>
+                          <span class="font-medium text-gray-900 dark:text-white text-xs"
+                            x-text="file.filename || 'Tanpa Judul'"></span>
                           <template x-if="!isVideo(file)">
-                            <span class="rounded-md bg-blue-50 px-1.5 py-0.5 text-[8px] font-bold uppercase text-blue-600 dark:bg-blue-500/10">Gambar</span>
+                            <span
+                              class="rounded-md bg-blue-50 px-1.5 py-0.5 text-[8px] font-bold uppercase text-blue-600 dark:bg-blue-500/10">Gambar</span>
                           </template>
                           <template x-if="isYoutube(file)">
-                            <span class="rounded-md bg-red-50 px-1.5 py-0.5 text-[8px] font-bold uppercase text-red-600 dark:bg-red-500/10">YouTube</span>
+                            <span
+                              class="rounded-md bg-red-50 px-1.5 py-0.5 text-[8px] font-bold uppercase text-red-600 dark:bg-red-500/10">YouTube</span>
                           </template>
                           <template x-if="isDriveVideo(file)">
-                            <span class="rounded-md bg-emerald-50 px-1.5 py-0.5 text-[8px] font-bold uppercase text-emerald-600 dark:bg-emerald-500/10">Drive</span>
+                            <span
+                              class="rounded-md bg-emerald-50 px-1.5 py-0.5 text-[8px] font-bold uppercase text-emerald-600 dark:bg-emerald-500/10">Drive</span>
                           </template>
                         </div>
                       </td>
                       <td class="px-4 py-3">
                         <div class="flex items-center gap-1">
-                          <code class="max-w-[180px] truncate rounded bg-gray-100 px-2 py-0.5 text-[10px] text-gray-600 dark:bg-gray-800 dark:text-gray-400" x-text="file.fileurl"></code>
-                          <button @click="copyUrl(file.fileurl)" class="text-gray-400 hover:text-brand-500 p-0.5 shrink-0">
-                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                          <code
+                            class="max-w-[180px] truncate rounded bg-gray-100 px-2 py-0.5 text-[10px] text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                            x-text="file.fileurl"></code>
+                          <button @click="copyUrl(file.fileurl)"
+                            class="text-gray-400 hover:text-brand-500 p-0.5 shrink-0">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                              stroke-width="2">
+                              <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2" />
+                              <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+                            </svg>
                           </button>
                         </div>
                       </td>
                       <td class="px-4 py-3 whitespace-nowrap">
-                        <span class="text-[11px] text-gray-500 dark:text-gray-400" x-text="formatDate(file.uploadedat || file.createdat || file.lastmodified)"></span>
+                        <span class="text-[11px] text-gray-500 dark:text-gray-400"
+                          x-text="formatDate(file.uploadedat || file.createdat || file.lastmodified)"></span>
                       </td>
                       <td class="px-4 py-3 text-right">
                         <div class="flex items-center justify-end gap-1">
-                          <button @click="editFileCaption(file)" class="text-gray-400 hover:text-brand-500 p-1.5" title="Edit Caption">
-                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                          <button @click="editFileCaption(file)" class="text-gray-400 hover:text-brand-500 p-1.5"
+                            title="Edit Caption">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
                           </button>
-                          <button @click="deleteFile(file.id)" class="text-red-500 hover:text-red-700 p-1.5" title="Hapus">
-                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                          <button @click="deleteFile(file.id)" class="text-red-500 hover:text-red-700 p-1.5"
+                            title="Hapus">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                              <polyline points="3 6 5 6 21 6" />
+                              <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                            </svg>
                           </button>
                         </div>
                       </td>
@@ -193,38 +264,52 @@
               <template x-for="file in paginatedAlbumFiles" :key="file.id">
                 <div class="bg-gray-50 dark:bg-gray-800/30 rounded-xl border border-gray-100 dark:border-gray-700 p-3">
                   <div class="flex gap-3">
-                    <div class="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700 relative cursor-pointer"
+                    <div
+                      class="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700 relative cursor-pointer"
                       @click="isVideo(file) ? window.open(file.originalfilename || file.fileurl, '_blank') : window.open(file.fileurl, '_blank')">
                       <img :src="getThumbUrl(file)" alt="" class="h-full w-full object-cover">
                       <template x-if="isVideo(file)">
                         <div class="absolute inset-0 flex items-center justify-center bg-black/30">
-                          <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                          <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
                         </div>
                       </template>
                     </div>
                     <div class="flex-1 min-w-0">
                       <div class="flex items-center gap-1 flex-wrap">
-                        <span class="font-semibold text-gray-900 dark:text-white text-xs truncate" x-text="file.filename || 'Tanpa Judul'"></span>
-                        <template x-if="!isVideo(file)"><span class="rounded-md bg-blue-50 px-1 py-0.5 text-[7px] font-bold uppercase text-blue-600">IMG</span></template>
-                        <template x-if="isYoutube(file)"><span class="rounded-md bg-red-50 px-1 py-0.5 text-[7px] font-bold uppercase text-red-600">YT</span></template>
+                        <span class="font-semibold text-gray-900 dark:text-white text-xs truncate"
+                          x-text="file.filename || 'Tanpa Judul'"></span>
+                        <template x-if="!isVideo(file)"><span
+                            class="rounded-md bg-blue-50 px-1 py-0.5 text-[7px] font-bold uppercase text-blue-600">IMG</span></template>
+                        <template x-if="isYoutube(file)"><span
+                            class="rounded-md bg-red-50 px-1 py-0.5 text-[7px] font-bold uppercase text-red-600">YT</span></template>
                       </div>
-                      <code class="block truncate rounded bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 text-[9px] text-gray-500 mt-1" x-text="file.fileurl"></code>
-                      <span class="block text-[9px] text-gray-400 mt-0.5" x-text="'Dibuat: ' + formatDate(file.uploadedat || file.createdat || file.lastmodified)"></span>
+                      <code
+                        class="block truncate rounded bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 text-[9px] text-gray-500 mt-1"
+                        x-text="file.fileurl"></code>
+                      <span class="block text-[9px] text-gray-400 mt-0.5"
+                        x-text="formatDate(file.uploadedat || file.createdat || file.lastmodified)"></span>
                     </div>
                   </div>
-                  <div class="mt-2 flex items-center justify-end gap-2 border-t border-gray-100 dark:border-gray-700 pt-2">
-                    <button @click="editFileCaption(file)" class="text-xs font-medium text-gray-500 hover:text-brand-500">Edit</button>
-                    <button @click="deleteFile(file.id)" class="text-xs font-medium text-red-500 hover:text-red-700">Hapus</button>
+                  <div
+                    class="mt-2 flex items-center justify-end gap-2 border-t border-gray-100 dark:border-gray-700 pt-2">
+                    <button @click="editFileCaption(file)"
+                      class="text-xs font-medium text-gray-500 hover:text-brand-500">Edit</button>
+                    <button @click="deleteFile(file.id)"
+                      class="text-xs font-medium text-red-500 hover:text-red-700">Hapus</button>
                   </div>
                 </div>
               </template>
             </div>
 
             <!-- Pagination -->
-            <div class="flex flex-col items-center justify-between gap-3 sm:flex-row border-t border-gray-100 dark:border-gray-800 px-4 py-3"
+            <div
+              class="flex flex-col items-center justify-between gap-3 sm:flex-row border-t border-gray-100 dark:border-gray-800 px-4 py-3"
               x-show="totalPages > 1">
               <div class="text-xs text-gray-500">
-                <span x-text="(currentPage - 1) * itemsPerPage + 1"></span>-<span x-text="Math.min(currentPage * itemsPerPage, filteredAlbumFiles.length)"></span>
+                <span x-text="(currentPage - 1) * itemsPerPage + 1"></span>-<span
+                  x-text="Math.min(currentPage * itemsPerPage, filteredAlbumFiles.length)"></span>
                 dari <span class="font-medium" x-text="filteredAlbumFiles.length"></span>
               </div>
               <div class="flex items-center gap-2">
@@ -232,7 +317,8 @@
                   class="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
                   Prev
                 </button>
-                <span class="text-xs text-gray-600 dark:text-gray-300" x-text="'Page ' + currentPage + ' of ' + totalPages"></span>
+                <span class="text-xs text-gray-600 dark:text-gray-300"
+                  x-text="'Page ' + currentPage + ' of ' + totalPages"></span>
                 <button @click="currentPage < totalPages ? currentPage++ : null" :disabled="currentPage === totalPages"
                   class="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
                   Next
@@ -248,7 +334,8 @@
   <!-- ===== MODAL: Album Form ===== -->
   <div :class="{ 'show': showAlbumModal }" x-cloak
     class="modal fixed inset-0 p-4 md:p-5 overflow-hidden flex justify-center items-center isolate z-[99999]">
-    <div @click="showAlbumModal = false" class="fixed inset-0 h-full w-full bg-gray-900/40 transition-opacity duration-300"></div>
+    <div @click="showAlbumModal = false"
+      class="fixed inset-0 h-full w-full bg-gray-900/40 transition-opacity duration-300"></div>
     <div class="modal-dialog max-w-2xl">
       <button @click="showAlbumModal = false" class="modal-close-btn">
         <span class="w-6 h-6 block" x-icon="'close'"></span>
@@ -268,7 +355,8 @@
             </div>
             <div>
               <label class="form-label">Slug URL</label>
-              <input type="text" x-model="editingAlbum.slug" placeholder="summer-product" class="form-input font-mono" />
+              <input type="text" x-model="editingAlbum.slug" placeholder="summer-product"
+                class="form-input font-mono" />
               <p class="mt-1 text-[10px] text-gray-500">Dibuat otomatis dari nama.</p>
             </div>
           </div>
@@ -293,11 +381,14 @@
         <div class="modal-footer-actions">
           <div class="flex w-full sm:w-auto gap-3 ml-auto items-center">
             <label class="flex items-center gap-2 mr-auto">
-              <input type="checkbox" x-model="editingAlbum.active" class="form-checkbox h-4 w-4 rounded border-gray-300 text-brand-500" />
+              <input type="checkbox" x-model="editingAlbum.active"
+                class="form-checkbox h-4 w-4 rounded border-gray-300 text-brand-500" />
               <span class="text-xs font-medium text-gray-600 dark:text-gray-400">Aktif</span>
             </label>
-            <button type="button" @click="showAlbumModal = false" class="btn btn-outline w-full sm:w-auto">Batal</button>
-            <button id="save-album-btn" type="button" @click="saveAlbum()" class="btn btn-primary w-full sm:w-auto">Simpan Album</button>
+            <button type="button" @click="showAlbumModal = false"
+              class="btn btn-outline w-full sm:w-auto">Batal</button>
+            <button id="save-album-btn" type="button" @click="saveAlbum()"
+              class="btn btn-primary w-full sm:w-auto">Simpan Album</button>
           </div>
         </div>
       </div>
@@ -307,7 +398,8 @@
   <!-- ===== MODAL: YouTube Video ===== -->
   <div :class="{ 'show': showYoutubeModal }" x-cloak
     class="modal fixed inset-0 p-4 md:p-5 overflow-hidden flex justify-center items-center isolate z-[99999]">
-    <div @click="showYoutubeModal = false" class="fixed inset-0 h-full w-full bg-gray-900/40 transition-opacity duration-300"></div>
+    <div @click="showYoutubeModal = false"
+      class="fixed inset-0 h-full w-full bg-gray-900/40 transition-opacity duration-300"></div>
     <div class="modal-dialog max-w-lg">
       <button @click="showYoutubeModal = false" class="modal-close-btn">
         <span class="w-6 h-6 block" x-icon="'close'"></span>
@@ -315,8 +407,12 @@
       <div class="modal-content">
         <div class="modal-header-sticky">
           <div class="flex items-center gap-3">
-            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-600 dark:bg-red-500/10">
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+            <div
+              class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-600 dark:bg-red-500/10">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+              </svg>
             </div>
             <div>
               <h3 class="h3">Tambah Video YouTube</h3>
@@ -327,18 +423,23 @@
         <div class="modal-body-content custom-scrollbar">
           <template x-if="youtubeInput.url && extractYoutubeId(youtubeInput.url)">
             <div class="relative overflow-hidden rounded-xl bg-black aspect-video">
-              <img :src="`https://img.youtube.com/vi/${extractYoutubeId(youtubeInput.url)}/hqdefault.jpg`" class="w-full h-full object-cover opacity-80" />
+              <img :src="`https://img.youtube.com/vi/${extractYoutubeId(youtubeInput.url)}/hqdefault.jpg`"
+                class="w-full h-full object-cover opacity-80" />
               <div class="absolute inset-0 flex items-center justify-center">
                 <div class="flex h-12 w-12 items-center justify-center rounded-full bg-red-600 shadow-lg">
-                  <svg class="w-6 h-6 text-white ml-0.5" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                  <svg class="w-6 h-6 text-white ml-0.5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
                 </div>
               </div>
             </div>
           </template>
           <div>
             <label class="form-label">URL Video YouTube</label>
-            <input type="url" x-model="youtubeInput.url" placeholder="https://www.youtube.com/watch?v=..." class="form-input font-mono" />
-            <p class="mt-1 text-[10px] text-gray-500">Mendukung: youtube.com/watch?v=, youtu.be/, youtube.com/shorts/</p>
+            <input type="url" x-model="youtubeInput.url" placeholder="https://www.youtube.com/watch?v=..."
+              class="form-input font-mono" />
+            <p class="mt-1 text-[10px] text-gray-500">Mendukung: youtube.com/watch?v=, youtu.be/, youtube.com/shorts/
+            </p>
           </div>
           <div>
             <label class="form-label">Judul / Caption</label>
@@ -347,14 +448,19 @@
         </div>
         <div class="modal-footer-actions">
           <div class="flex w-full sm:w-auto gap-3 ml-auto">
-            <button type="button" @click="showYoutubeModal = false" class="btn btn-outline w-full sm:w-auto">Batal</button>
+            <button type="button" @click="showYoutubeModal = false"
+              class="btn btn-outline w-full sm:w-auto">Batal</button>
             <button id="save-youtube-btn" type="button" @click="addYoutubeVideo()" :disabled="youtubeInput.isSaving"
               class="btn btn-primary w-full sm:w-auto" style="background-color:#dc2626;border-color:#dc2626">
               <template x-if="!youtubeInput.isSaving">
-                <svg class="w-4 h-4 mr-1" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                <svg class="w-4 h-4 mr-1" viewBox="0 0 24 24" fill="currentColor">
+                  <path
+                    d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                </svg>
               </template>
               <template x-if="youtubeInput.isSaving">
-                <span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-1"></span>
+                <span
+                  class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-1"></span>
               </template>
               <span x-text="youtubeInput.isSaving ? 'Menyimpan...' : 'Simpan Video'"></span>
             </button>
@@ -367,7 +473,8 @@
   <!-- ===== MODAL: Google Drive Video ===== -->
   <div :class="{ 'show': showDriveModal }" x-cloak
     class="modal fixed inset-0 p-4 md:p-5 overflow-hidden flex justify-center items-center isolate z-[99999]">
-    <div @click="showDriveModal = false" class="fixed inset-0 h-full w-full bg-gray-900/40 transition-opacity duration-300"></div>
+    <div @click="showDriveModal = false"
+      class="fixed inset-0 h-full w-full bg-gray-900/40 transition-opacity duration-300"></div>
     <div class="modal-dialog max-w-lg">
       <button @click="showDriveModal = false" class="modal-close-btn">
         <span class="w-6 h-6 block" x-icon="'close'"></span>
@@ -375,8 +482,11 @@
       <div class="modal-content">
         <div class="modal-header-sticky">
           <div class="flex items-center gap-3">
-            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10">
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            <div
+              class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+              </svg>
             </div>
             <div>
               <h3 class="h3">Tambah Video Google Drive</h3>
@@ -388,15 +498,21 @@
           <template x-if="driveInput.url && _extractDriveId(driveInput.url)">
             <div class="relative overflow-hidden rounded-xl bg-black aspect-video flex items-center justify-center">
               <div class="absolute inset-0 flex items-center justify-center bg-emerald-900/10">
-                <svg class="w-10 h-10 text-emerald-500 opacity-30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                <svg class="w-10 h-10 text-emerald-500 opacity-30" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="1">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                </svg>
               </div>
-              <video :src="`https://drive.google.com/uc?id=${_extractDriveId(driveInput.url)}`" class="w-full h-full object-contain relative z-10" controls playsinline></video>
+              <video :src="`https://drive.google.com/uc?id=${_extractDriveId(driveInput.url)}`"
+                class="w-full h-full object-contain relative z-10" controls playsinline></video>
             </div>
           </template>
           <div>
             <label class="form-label">URL File Google Drive</label>
-            <input type="url" x-model="driveInput.url" placeholder="https://drive.google.com/file/d/..." class="form-input font-mono" />
-            <p class="mt-1 text-[10px] text-gray-500">Format: drive.google.com/file/d/ID. Pastikan sharing publik aktif.</p>
+            <input type="url" x-model="driveInput.url" placeholder="https://drive.google.com/file/d/..."
+              class="form-input font-mono" />
+            <p class="mt-1 text-[10px] text-gray-500">Format: drive.google.com/file/d/ID. Pastikan sharing publik aktif.
+            </p>
           </div>
           <div>
             <label class="form-label">Judul / Caption</label>
@@ -405,14 +521,18 @@
         </div>
         <div class="modal-footer-actions">
           <div class="flex w-full sm:w-auto gap-3 ml-auto">
-            <button type="button" @click="showDriveModal = false" class="btn btn-outline w-full sm:w-auto">Batal</button>
+            <button type="button" @click="showDriveModal = false"
+              class="btn btn-outline w-full sm:w-auto">Batal</button>
             <button id="save-drive-btn" type="button" @click="addDriveVideo()" :disabled="driveInput.isSaving"
               class="btn btn-primary w-full sm:w-auto" style="background-color:#059669;border-color:#059669">
               <template x-if="!driveInput.isSaving">
-                <svg class="w-4 h-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                <svg class="w-4 h-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                </svg>
               </template>
               <template x-if="driveInput.isSaving">
-                <span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-1"></span>
+                <span
+                  class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-1"></span>
               </template>
               <span x-text="driveInput.isSaving ? 'Menyimpan...' : 'Simpan Video'"></span>
             </button>
