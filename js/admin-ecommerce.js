@@ -378,15 +378,6 @@ Alpine.data('ecommerceAlbums', () => ({
       const res = await ecomApi('getAlbumImages', { dbId: this.dbId, albumId: albumId });
       if (res && res.status === 'success') {
         this.albumFiles = res.data || [];
-        if (this.albumFiles.length > 0) {
-          var sample = this.albumFiles[0];
-          console.log('[AlbumFiles] sample keys:', Object.keys(sample));
-          console.log('[AlbumFiles] uploadedat:', sample.uploadedat, typeof sample.uploadedat);
-          console.log('[AlbumFiles] createdat:', sample.createdat, typeof sample.createdat);
-          console.log('[AlbumFiles] lastmodified:', sample.lastmodified, typeof sample.lastmodified);
-        } else {
-          console.log('[AlbumFiles] no files returned');
-        }
       } else {
         if (window.showToast) window.showToast((res && res.message) || 'Gagal memuat file', 'error');
       }
@@ -624,19 +615,10 @@ Alpine.data('ecommerceAlbums', () => ({
     return true;
   },
 
-  formatDate(val) {
-    if (!val) return '—';
+  formatDate(dateStr) {
+    if (!dateStr) return '—';
     try {
-      var d;
-      if (typeof val === 'object' && val.seconds) {
-        d = new Date(val.seconds * 1000);
-      } else if (typeof val === 'object' && val._seconds) {
-        d = new Date(val._seconds * 1000);
-      } else if (typeof val.toDate === 'function') {
-        d = val.toDate();
-      } else {
-        d = new Date(val);
-      }
+      var d = new Date(dateStr);
       if (isNaN(d.getTime())) return '—';
       return d.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     } catch(e) { return '—'; }
