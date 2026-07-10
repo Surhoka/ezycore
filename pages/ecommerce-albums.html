@@ -170,7 +170,7 @@
                         </div>
                       </td>
                       <td class="px-4 py-3">
-                        <span class="text-[11px] text-gray-500 dark:text-gray-400 whitespace-nowrap" x-text="formatDate(file.createdat || file.uploadedat)"></span>
+                        <span class="text-[11px] text-gray-500 dark:text-gray-400 whitespace-nowrap" x-text="formatDate(file.uploadedat)"></span>
                       </td>
                       <td class="px-4 py-3 text-right">
                         <div class="flex items-center justify-end gap-1">
@@ -209,7 +209,7 @@
                         <template x-if="isYoutube(file)"><span class="rounded-md bg-red-50 px-1 py-0.5 text-[7px] font-bold uppercase text-red-600">YT</span></template>
                       </div>
                       <code class="block truncate rounded bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 text-[9px] text-gray-500 mt-1" x-text="file.fileurl"></code>
-                      <span class="block text-[9px] text-gray-400 mt-0.5" x-text="'Dibuat: ' + formatDate(file.createdat || file.uploadedat)"></span>
+                      <span class="block text-[9px] text-gray-400 mt-0.5" x-text="'Sync: ' + formatDate(file.uploadedat)"></span>
                     </div>
                   </div>
                   <div class="mt-2 flex items-center justify-end gap-2 border-t border-gray-100 dark:border-gray-700 pt-2">
