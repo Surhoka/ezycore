@@ -615,10 +615,19 @@ Alpine.data('ecommerceAlbums', () => ({
     return true;
   },
 
-  formatDate(dateStr) {
-    if (!dateStr) return '—';
+  formatDate(val) {
+    if (!val) return '—';
     try {
-      var d = new Date(dateStr);
+      var d;
+      if (typeof val === 'object' && val.seconds) {
+        d = new Date(val.seconds * 1000);
+      } else if (typeof val === 'object' && val._seconds) {
+        d = new Date(val._seconds * 1000);
+      } else if (typeof val.toDate === 'function') {
+        d = val.toDate();
+      } else {
+        d = new Date(val);
+      }
       if (isNaN(d.getTime())) return '—';
       return d.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     } catch(e) { return '—'; }
