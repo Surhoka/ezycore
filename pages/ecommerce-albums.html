@@ -122,14 +122,14 @@
         <!-- Desktop Table -->
         <template x-if="selectedAlbumId && filteredAlbumFiles.length > 0">
           <div>
-            <div class="overflow-x-auto">
+            <div class="max-md:hidden overflow-x-auto">
               <table class="w-full text-left text-sm">
                 <thead>
                   <tr class="border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50">
                     <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500 w-16">Preview</th>
                     <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500">Nama</th>
                     <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500">URL</th>
-                    <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500">Dibuat</th>
+                    <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500 w-32 whitespace-nowrap">Dibuat</th>
                     <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500 text-right">Aksi</th>
                   </tr>
                 </thead>
@@ -169,8 +169,8 @@
                           </button>
                         </div>
                       </td>
-                      <td class="px-4 py-3 whitespace-nowrap bg-yellow-100">
-                        <span class="text-[11px] font-bold text-red-600">TEST</span>
+                      <td class="px-4 py-3 whitespace-nowrap">
+                        <span class="text-[11px] text-gray-500 dark:text-gray-400" x-text="formatDate(file.uploadedat || file.createdat || file.lastmodified)"></span>
                       </td>
                       <td class="px-4 py-3 text-right">
                         <div class="flex items-center justify-end gap-1">
