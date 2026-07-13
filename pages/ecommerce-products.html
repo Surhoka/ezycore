@@ -168,21 +168,7 @@
                             </div>
                         </div>
                         <div>
-                            <label class="form-label">Primary Thumbnail</label>
-                            <div class="flex items-center gap-3">
-                                <template x-if="editingItem.images && editingItem.images.length > 0">
-                                    <div class="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 border-2 border-brand-500">
-                                        <img :src="editingItem.images[0]" class="h-full w-full object-cover" @error="$el.classList.add('hidden'); $el.nextElementSibling.classList.remove('hidden')">
-                                        <div class="hidden absolute inset-0 flex items-center justify-center text-gray-400 text-[10px] font-bold">N/A</div>
-                                        <span class="absolute top-0.5 left-0.5 rounded bg-brand-500 px-1 py-px text-[8px] font-bold text-white shadow">UTAMA</span>
-                                    </div>
-                                </template>
-                                <template x-if="!editingItem.images || editingItem.images.length === 0">
-                                    <div class="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50">
-                                        <span class="w-6 h-6 text-gray-300" x-icon="'image'"></span>
-                                    </div>
-                                </template>
-                                <p class="text-[11px] text-gray-400">Klik ikon bintang pada gambar di atas untuk mengatur thumbnail utama produk.</p>
+                            <p class="text-[11px] text-gray-400">Klik ikon bintang pada gambar di atas untuk mengatur thumbnail utama produk.</p>
                             </div>
                         </div>
                         <div>
