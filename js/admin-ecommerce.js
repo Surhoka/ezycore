@@ -17,27 +17,66 @@ function ecomApi(action, data) {
 Alpine.data('ecommerceDashboard', () => ({
     charts: {},
     map: null,
-    loading: false,
+    loading: true,
 
-    countries: [
-        { name: 'USA', count: 2379, percentage: 79, color: 'bg-brand-500', flag: 'https://cdn.jsdelivr.net/gh/Surhoka/epart-lab@main/images/country-01.svg' },
-        { name: 'France', count: 589, percentage: 23, color: 'bg-brand-500', flag: 'https://cdn.jsdelivr.net/gh/Surhoka/epart-lab@main/images/country-02.svg' },
-    ],
+    totalCustomers: 0,
+    totalOrders: 0,
+    orderPercentChange: 0,
+    orderPercentChangeNeg: false,
+    todayRevenue: 0,
+    thisMonthRevenue: 0,
+    revenuePercentChange: 0,
 
-    recentOrders: [
-        { name: 'Macbook pro 13”', variant: '2 Variants', category: 'Laptop', price: '$2399.00', status: 'Delivered', statusColor: 'text-success-600 bg-success-50 dark:bg-success-500/15 dark:text-success-500', image: 'https://cdn.jsdelivr.net/gh/Surhoka/epart-lab@main/images/product-01.jpg' },
-        { name: 'Apple Watch Ultra', variant: '1 Variants', category: 'Watch', price: '$879.00', status: 'Pending', statusColor: 'text-warning-600 bg-warning-50 dark:bg-warning-500/15 dark:text-orange-400', image: 'https://cdn.jsdelivr.net/gh/Surhoka/epart-lab@main/images/product-02.jpg' },
-        { name: 'iPhone 15 Pro Max', variant: '2 Variants', category: 'SmartPhone', price: '$1869.00', status: 'Delivered', statusColor: 'text-success-600 bg-success-50 dark:bg-success-500/15 dark:text-success-500', image: 'https://cdn.jsdelivr.net/gh/Surhoka/epart-lab@main/images/product-03.jpg' },
-        { name: 'iPad Pro 3rd Gen', variant: '2 Variants', category: 'Electronics', price: '$1699.00', status: 'Canceled', statusColor: 'text-error-600 bg-error-50 dark:bg-error-500/15 dark:text-error-500', image: 'https://cdn.jsdelivr.net/gh/Surhoka/epart-lab@main/images/product-04.jpg' },
-        { name: 'Airpods Pro 2nd Gen', variant: '1 Variants', category: 'Accessories', price: '$240.00', status: 'Delivered', statusColor: 'text-success-600 bg-success-50 dark:bg-success-500/15 dark:text-success-500', image: 'https://cdn.jsdelivr.net/gh/Surhoka/epart-lab@main/images/product-05.jpg' },
-    ],
+    countries: [],
+    recentOrders: [],
+    mapMarkers: [],
 
-    init() {
+    monthlySales: { labels: [], sales: [], revenue: [] },
+    weeklyTarget: { labels: [], sales: [], revenue: [] },
+    statistics: { labels: [], sales: [], revenue: [] },
+
+    async init() {
+        await this.loadDashboardData();
         this.$nextTick(() => {
             this.initDatePicker();
             this.initCharts();
             this.initMap();
         });
+    },
+
+    async loadDashboardData() {
+        this.loading = true;
+        try {
+            const res = await ecomApi('getDashboardStats');
+            if (res && res.status === 'success' && res.data) {
+                const d = res.data;
+                const s = d.summary || {};
+                this.totalCustomers = s.totalCustomers || 0;
+                this.totalOrders = s.totalOrders || 0;
+                this.orderPercentChange = Math.abs(s.orderPercentChange || 0);
+                this.orderPercentChangeNeg = (s.orderPercentChange || 0) < 0;
+                this.todayRevenue = s.todayRevenue || 0;
+                this.thisMonthRevenue = s.thisMonthRevenue || 0;
+                this.revenuePercentChange = s.revenuePercentChange || 0;
+                this.monthlySales = d.monthlySales || this.monthlySales;
+                this.weeklyTarget = d.weeklyTarget || this.weeklyTarget;
+                this.statistics = d.statistics || this.statistics;
+                this.recentOrders = d.recentOrders || [];
+                this.countries = d.demographics || [];
+                this.mapMarkers = d.mapMarkers || [];
+            }
+        } catch (e) {
+            if (window.showToast) window.showToast('Gagal memuat data dashboard', 'error');
+        }
+        this.loading = false;
+    },
+
+    formatCurrency(val) {
+        return 'Rp ' + Number(val || 0).toLocaleString('id-ID');
+    },
+
+    formatNumber(val) {
+        return Number(val || 0).toLocaleString('id-ID');
     },
 
     initDatePicker() {
@@ -53,18 +92,24 @@ Alpine.data('ecommerceDashboard', () => ({
 
     async initCharts() {
         if (typeof Chart === 'undefined') {
-            try { await window.app.loadScript('https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js'); } 
+            try { await window.app.loadScript('https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js'); }
             catch (e) { return; }
         }
+
+        const ms = this.monthlySales;
+        const wt = this.weeklyTarget;
+        const st = this.statistics;
 
         const ctx1 = document.getElementById("chartOne");
         if (ctx1) {
             this.charts.chartOne = new Chart(ctx1, {
                 type: "line",
                 data: {
-                    labels: ["Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"],
-                    datasets: [{ label: "Sales", data: [45, 50, 48, 55, 40, 60, 65, 58, 70, 75, 80, 85], borderColor: "#3C50E0", backgroundColor: "rgba(60, 80, 224, 0.1)", borderWidth: 2, tension: 0.4, fill: true, pointBackgroundColor: "#fff", pointBorderColor: "#3C50E0" }, 
-                    { label: "Revenue", data: [35, 40, 38, 45, 30, 50, 55, 48, 60, 65, 70, 75], borderColor: "#80CAEE", backgroundColor: "rgba(128, 202, 238, 0.1)", borderWidth: 2, tension: 0.4, fill: true, pointBackgroundColor: "#fff", pointBorderColor: "#80CAEE" }]
+                    labels: ms.labels,
+                    datasets: [
+                        { label: "Sales", data: ms.sales, borderColor: "#3C50E0", backgroundColor: "rgba(60, 80, 224, 0.1)", borderWidth: 2, tension: 0.4, fill: true, pointBackgroundColor: "#fff", pointBorderColor: "#3C50E0" },
+                        { label: "Revenue", data: ms.revenue, borderColor: "#80CAEE", backgroundColor: "rgba(128, 202, 238, 0.1)", borderWidth: 2, tension: 0.4, fill: true, pointBackgroundColor: "#fff", pointBorderColor: "#80CAEE" }
+                    ]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } }, scales: { x: { grid: { display: false } }, y: { grid: { borderDash: [5, 5] }, beginAtZero: true } } }
             });
@@ -75,9 +120,11 @@ Alpine.data('ecommerceDashboard', () => ({
             this.charts.chartTwo = new Chart(ctx2, {
                 type: "bar",
                 data: {
-                    labels: ["M", "T", "W", "T", "F", "S", "S"],
-                    datasets: [{ label: "Sales", data: [40, 30, 45, 35, 55, 40, 50], backgroundColor: "#3C50E0", borderRadius: 4, barThickness: 10 }, 
-                    { label: "Revenue", data: [30, 25, 35, 30, 45, 35, 45], backgroundColor: "#80CAEE", borderRadius: 4, barThickness: 10 }]
+                    labels: wt.labels,
+                    datasets: [
+                        { label: "Sales", data: wt.sales, backgroundColor: "#3C50E0", borderRadius: 4, barThickness: 10 },
+                        { label: "Revenue", data: wt.revenue, backgroundColor: "#80CAEE", borderRadius: 4, barThickness: 10 }
+                    ]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, display: false } } }
             });
@@ -88,9 +135,11 @@ Alpine.data('ecommerceDashboard', () => ({
             this.charts.chartThree = new Chart(ctx3, {
                 type: "bar",
                 data: {
-                    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-                    datasets: [{ label: "Sales", data: [20, 25, 35, 30, 45, 35, 55, 40, 50, 60, 75, 80], backgroundColor: "#3C50E0", borderRadius: 2, barPercentage: 0.6 }, 
-                    { label: "Revenue", data: [15, 20, 30, 25, 40, 30, 50, 35, 45, 55, 70, 75], backgroundColor: "#80CAEE", borderRadius: 2, barPercentage: 0.6 }]
+                    labels: st.labels,
+                    datasets: [
+                        { label: "Sales", data: st.sales, backgroundColor: "#3C50E0", borderRadius: 2, barPercentage: 0.6 },
+                        { label: "Revenue", data: st.revenue, backgroundColor: "#80CAEE", borderRadius: 2, barPercentage: 0.6 }
+                    ]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { borderDash: [5, 5] }, beginAtZero: true } } }
             });
@@ -104,7 +153,7 @@ Alpine.data('ecommerceDashboard', () => ({
             this.map = new jsVectorMap({
                 selector: "#mapOne", map: "world", zoomButtons: true,
                 regionStyle: { initial: { fill: "#C8D0D8" }, hover: { fillOpacity: 1, fill: "#3056D3" } },
-                markers: [{ coords: [37.0902, -95.7129], name: "USA" }, { coords: [46.2276, 2.2137], name: "France" }],
+                markers: this.mapMarkers,
                 markerStyle: { initial: { r: 5, fill: "#3056D3", opacity: 1, stroke: "#FFF", strokeWidth: 1 }, hover: { stroke: "#3056D3", fill: "#FFF", strokeWidth: 2 } },
             });
         }
