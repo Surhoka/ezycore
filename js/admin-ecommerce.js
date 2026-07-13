@@ -1,4 +1,4 @@
-// ================================================================
+﻿// ================================================================
 // HELPER: Promise-based sendDataToGoogle untuk ecommerce
 // ================================================================
 function ecomApi(action, data) {
@@ -15,33 +15,132 @@ function ecomApi(action, data) {
 // ECOMMERCE DASHBOARD
 // ================================================================
 Alpine.data('ecommerceDashboard', () => ({
-  isLoading: true,
-  stats: { totalProducts: 0, totalOrders: 0, totalRevenue: 0, totalCustomers: 0 },
-  recentOrders: [],
+    charts: {},
+    map: null,
+    loading: false,
 
-  init() { this.loadDashboard(); },
+    countries: [
+        { name: 'USA', count: 2379, percentage: 79, color: 'bg-brand-500', flag: 'https://cdn.jsdelivr.net/gh/Surhoka/epart-lab@main/images/country-01.svg' },
+        { name: 'France', count: 589, percentage: 23, color: 'bg-brand-500', flag: 'https://cdn.jsdelivr.net/gh/Surhoka/epart-lab@main/images/country-02.svg' },
+    ],
 
-  async loadDashboard() {
-    this.isLoading = true;
-    try {
-      const products = await ecomApi('getProducts');
-      const orders = await ecomApi('getOrders');
-      const customers = await ecomApi('getCustomers');
-      this.stats.totalProducts = (products.data || []).length;
-      this.stats.totalOrders = (orders.data || []).length;
-      this.stats.totalCustomers = (customers.data || []).length;
+    recentOrders: [
+        { name: 'Macbook pro 13”', variant: '2 Variants', category: 'Laptop', price: '$2399.00', status: 'Delivered', statusColor: 'text-success-600 bg-success-50 dark:bg-success-500/15 dark:text-success-500', image: 'https://cdn.jsdelivr.net/gh/Surhoka/epart-lab@main/images/product-01.jpg' },
+        { name: 'Apple Watch Ultra', variant: '1 Variants', category: 'Watch', price: '$879.00', status: 'Pending', statusColor: 'text-warning-600 bg-warning-50 dark:bg-warning-500/15 dark:text-orange-400', image: 'https://cdn.jsdelivr.net/gh/Surhoka/epart-lab@main/images/product-02.jpg' },
+        { name: 'iPhone 15 Pro Max', variant: '2 Variants', category: 'SmartPhone', price: '$1869.00', status: 'Delivered', statusColor: 'text-success-600 bg-success-50 dark:bg-success-500/15 dark:text-success-500', image: 'https://cdn.jsdelivr.net/gh/Surhoka/epart-lab@main/images/product-03.jpg' },
+        { name: 'iPad Pro 3rd Gen', variant: '2 Variants', category: 'Electronics', price: '$1699.00', status: 'Canceled', statusColor: 'text-error-600 bg-error-50 dark:bg-error-500/15 dark:text-error-500', image: 'https://cdn.jsdelivr.net/gh/Surhoka/epart-lab@main/images/product-04.jpg' },
+        { name: 'Airpods Pro 2nd Gen', variant: '1 Variants', category: 'Accessories', price: '$240.00', status: 'Delivered', statusColor: 'text-success-600 bg-success-50 dark:bg-success-500/15 dark:text-success-500', image: 'https://cdn.jsdelivr.net/gh/Surhoka/epart-lab@main/images/product-05.jpg' },
+    ],
 
-      const paid = (orders.data || []).filter(o => o.paymentstatus === 'paid');
-      this.stats.totalRevenue = paid.reduce((sum, o) => sum + Number(o.total || 0), 0);
+    init() {
+        this.$nextTick(() => {
+            this.initDatePicker();
+            this.initCharts();
+            this.initMap();
+        });
+    },
 
-      this.recentOrders = (orders.data || []).slice(0, 5);
-    } catch (e) {
-      if (window.showToast) window.showToast('Failed to load dashboard: ' + e.message, 'error');
+    initDatePicker() {
+        if (typeof flatpickr !== 'undefined') {
+            flatpickr(".datepicker", {
+                mode: "range", static: true, monthSelectorType: "static", dateFormat: "M j, Y",
+                defaultDate: [new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), new Date()],
+                prevArrow: '<svg class="fill-current" width="7" height="11" viewBox="0 0 7 11"><path d="M5.4 10.8L1.4 6.8 5.4 2.8 6.8 4.2 4.2 6.8 6.8 9.4z" /></svg>',
+                nextArrow: '<svg class="fill-current" width="7" height="11" viewBox="0 0 7 11"><path d="M1.4 10.8L5.4 6.8 1.4 2.8 0 4.2 2.6 6.8 0 9.4z" /></svg>',
+            });
+        }
+    },
+
+    async initCharts() {
+        if (typeof Chart === 'undefined') {
+            try { await window.app.loadScript('https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js'); } 
+            catch (e) { return; }
+        }
+
+        const ctx1 = document.getElementById("chartOne");
+        if (ctx1) {
+            this.charts.chartOne = new Chart(ctx1, {
+                type: "line",
+                data: {
+                    labels: ["Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"],
+                    datasets: [{ label: "Sales", data: [45, 50, 48, 55, 40, 60, 65, 58, 70, 75, 80, 85], borderColor: "#3C50E0", backgroundColor: "rgba(60, 80, 224, 0.1)", borderWidth: 2, tension: 0.4, fill: true, pointBackgroundColor: "#fff", pointBorderColor: "#3C50E0" }, 
+                    { label: "Revenue", data: [35, 40, 38, 45, 30, 50, 55, 48, 60, 65, 70, 75], borderColor: "#80CAEE", backgroundColor: "rgba(128, 202, 238, 0.1)", borderWidth: 2, tension: 0.4, fill: true, pointBackgroundColor: "#fff", pointBorderColor: "#80CAEE" }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } }, scales: { x: { grid: { display: false } }, y: { grid: { borderDash: [5, 5] }, beginAtZero: true } } }
+            });
+        }
+
+        const ctx2 = document.getElementById("chartTwo");
+        if (ctx2) {
+            this.charts.chartTwo = new Chart(ctx2, {
+                type: "bar",
+                data: {
+                    labels: ["M", "T", "W", "T", "F", "S", "S"],
+                    datasets: [{ label: "Sales", data: [40, 30, 45, 35, 55, 40, 50], backgroundColor: "#3C50E0", borderRadius: 4, barThickness: 10 }, 
+                    { label: "Revenue", data: [30, 25, 35, 30, 45, 35, 45], backgroundColor: "#80CAEE", borderRadius: 4, barThickness: 10 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, display: false } } }
+            });
+        }
+
+        const ctx3 = document.getElementById("chartThree");
+        if (ctx3) {
+            this.charts.chartThree = new Chart(ctx3, {
+                type: "bar",
+                data: {
+                    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+                    datasets: [{ label: "Sales", data: [20, 25, 35, 30, 45, 35, 55, 40, 50, 60, 75, 80], backgroundColor: "#3C50E0", borderRadius: 2, barPercentage: 0.6 }, 
+                    { label: "Revenue", data: [15, 20, 30, 25, 40, 30, 50, 35, 45, 55, 70, 75], backgroundColor: "#80CAEE", borderRadius: 2, barPercentage: 0.6 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { borderDash: [5, 5] }, beginAtZero: true } } }
+            });
+        }
+    },
+
+    initMap() {
+        const mapEl = document.getElementById("mapOne");
+        if (mapEl && typeof jsVectorMap !== 'undefined') {
+            mapEl.innerHTML = '';
+            this.map = new jsVectorMap({
+                selector: "#mapOne", map: "world", zoomButtons: true,
+                regionStyle: { initial: { fill: "#C8D0D8" }, hover: { fillOpacity: 1, fill: "#3056D3" } },
+                markers: [{ coords: [37.0902, -95.7129], name: "USA" }, { coords: [46.2276, 2.2137], name: "France" }],
+                markerStyle: { initial: { r: 5, fill: "#3056D3", opacity: 1, stroke: "#FFF", strokeWidth: 1 }, hover: { stroke: "#3056D3", fill: "#FFF", strokeWidth: 2 } },
+            });
+        }
     }
-    this.isLoading = false;
-  }
 }));
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, display: false } } }
+            });
+        }
 
+        const ctx3 = document.getElementById(chartThree);
+        if (ctx3) {
+            this.charts.chartThree = new Chart(ctx3, {
+                type: ar,
+                data: {
+                    labels: [Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec],
+                    datasets: [{ label: Sales, data: [20, 25, 35, 30, 45, 35, 55, 40, 50, 60, 75, 80], backgroundColor: #3C50E0, borderRadius: 2, barPercentage: 0.6 }, 
+                    { label: Revenue, data: [15, 20, 30, 25, 40, 30, 50, 35, 45, 55, 70, 75], backgroundColor: #80CAEE, borderRadius: 2, barPercentage: 0.6 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { borderDash: [5, 5] }, beginAtZero: true } } }
+            });
+        }
+    },
+
+    initMap() {
+        const mapEl = document.getElementById(mapOne);
+        if (mapEl && typeof jsVectorMap !== 'undefined') {
+            mapEl.innerHTML = '';
+            this.map = new jsVectorMap({
+                selector: #mapOne, map: world, zoomButtons: true,
+                regionStyle: { initial: { fill: #C8D0D8 }, hover: { fillOpacity: 1, fill: #3056D3 } },
+                markers: [{ coords: [37.0902, -95.7129], name: USA }, { coords: [46.2276, 2.2137], name: France }],
+                markerStyle: { initial: { r: 5, fill: #3056D3, opacity: 1, stroke: #FFF, strokeWidth: 1 }, hover: { stroke: #3056D3, fill: #FFF, strokeWidth: 2 } },
+            });
+        }
+    }
+}));
 // ================================================================
 // ECOMMERCE PRODUCTS
 // ================================================================
@@ -96,7 +195,7 @@ Alpine.data('ecommerceProducts', () => ({
     item.stock = Number(item.stock || 0);
     item.weight = Number(item.weight || 0);
     item.imageurl = item.imageurl || '';
-    try { item.images = typeof item.images === 'string' ? JSON.parse(item.images) : (item.images || []); } catch(e) { item.images = []; }
+    try { item.images = typeof item.images === 'string' ? JSON.parse(item.images) : (item.images || []); } catch (e) { item.images = []; }
     item.active = item.active === true || item.active === 'TRUE' || item.status === 'published' || item.status === 'active';
     this.editingItem = item;
     this.showModal = true;
@@ -163,7 +262,7 @@ Alpine.data('ecommerceProducts', () => ({
   },
 
   async syncAllToBlogger() {
-    var activeCount = this.products.filter(function(p) { return p.active === true || p.active === 'TRUE' || p.status === 'published' || p.status === 'active'; }).length;
+    var activeCount = this.products.filter(function (p) { return p.active === true || p.active === 'TRUE' || p.status === 'published' || p.status === 'active'; }).length;
     if (activeCount === 0) {
       if (window.showToast) window.showToast('Tidak ada produk aktif yang perlu disinkronkan.', 'warning');
       return;
@@ -200,9 +299,9 @@ Alpine.data('ecommerceProducts', () => ({
 
   copyImageUrl(url) {
     if (!navigator.clipboard) { if (window.showToast) window.showToast('Clipboard tidak tersedia', 'error'); return; }
-    navigator.clipboard.writeText(url).then(function() {
+    navigator.clipboard.writeText(url).then(function () {
       if (window.showToast) window.showToast('URL disalin', 'success');
-    }).catch(function() {
+    }).catch(function () {
       if (window.showToast) window.showToast('Gagal menyalin URL', 'error');
     });
   },
@@ -220,12 +319,12 @@ Alpine.data('ecommerceProducts', () => ({
   },
 
   formatDate(dateStr) {
-    if (!dateStr) return '—';
+    if (!dateStr) return 'â€”';
     try {
       var d = new Date(dateStr);
-      if (isNaN(d.getTime())) return '—';
+      if (isNaN(d.getTime())) return 'â€”';
       return d.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-    } catch(e) { return '—'; }
+    } catch (e) { return 'â€”'; }
   }
 }));
 
@@ -616,12 +715,12 @@ Alpine.data('ecommerceAlbums', () => ({
   },
 
   formatDate(dateStr) {
-    if (!dateStr) return '—';
+    if (!dateStr) return 'â€”';
     try {
       var d = new Date(dateStr);
-      if (isNaN(d.getTime())) return '—';
+      if (isNaN(d.getTime())) return 'â€”';
       return d.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-    } catch(e) { return '—'; }
+    } catch (e) { return 'â€”'; }
   },
 
   getThumbUrl(file) {
@@ -1164,14 +1263,14 @@ Alpine.data('ecommercePromotions', () => ({
     this.showFeaturedPicker = true;
     try {
       var res = await ecomApi('getProducts', { dbId: this.dbId });
-      this.allProducts = (res.data || []).filter(function(p) { return p.Status === 'Published' || p.Status === 'published' || p.Active; });
+      this.allProducts = (res.data || []).filter(function (p) { return p.Status === 'Published' || p.Status === 'published' || p.Active; });
     } catch (e) {
       if (window.showToast) window.showToast('Failed to load products', 'error');
     }
   },
 
   selectFeaturedProduct(product) {
-    var exists = this.featuredProducts.some(function(fp) { return fp.sku === product.SKU || fp.id === product.ID; });
+    var exists = this.featuredProducts.some(function (fp) { return fp.sku === product.SKU || fp.id === product.ID; });
     if (exists) {
       if (window.showToast) window.showToast('Product already in featured list', 'error');
       return;
@@ -1237,7 +1336,7 @@ Alpine.data('ecommercePromotions', () => ({
         special_product: { name: '', price: 0, originalPrice: 0, imageUrl: '', link: '', badge: '', active: false }
       };
       var cleanPromos = {};
-      Object.keys(promos).forEach(function(k) {
+      Object.keys(promos).forEach(function (k) {
         var v = promos[k];
         var d = defaults[k];
         if (JSON.stringify(v) !== JSON.stringify(d)) {
@@ -1267,6 +1366,6 @@ Alpine.data('ecommercePromotions', () => ({
     var self = this;
     if (!this.featuredSearch) return this.allProducts;
     var q = this.featuredSearch.toLowerCase();
-    return this.allProducts.filter(function(p) { return (p.Name || '').toLowerCase().indexOf(q) !== -1; });
+    return this.allProducts.filter(function (p) { return (p.Name || '').toLowerCase().indexOf(q) !== -1; });
   }
 }));
