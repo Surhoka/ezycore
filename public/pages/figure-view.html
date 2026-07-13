@@ -1,0 +1,206 @@
+<div x-data="figureViewData()" x-init="init()">
+  <template x-if="figure">
+    <div class="space-y-6">
+
+      <!-- Figure Title -->
+      <div>
+        <h1 class="text-lg md:text-xl font-bold text-theme-text leading-snug" x-text="figure.title"></h1>
+        <p x-show="figure.description" class="mt-1 text-sm text-theme-text-sub" x-text="figure.description"></p>
+      </div>
+
+      <!-- Figure Image + Hotspot Container -->
+      <div class="bg-theme-secondary border border-theme-border rounded-xl p-4 md:p-6">
+        <div class="relative overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 select-none"
+             style="touch-action: none;"
+             @wheel.prevent="onWheel($event)"
+             @pointerdown="onPointerDown($event)"
+             @pointermove="onPointerMove($event)"
+             @pointerup="onPointerUp()"
+             @pointerleave="onPointerUp()"
+             @touchstart="onTouchStart($event)"
+             @touchmove="onTouchMove($event)"
+             @touchend="onTouchEnd()"
+             @dblclick="onDblClick()">
+
+          <!-- Transform wrapper -->
+          <div class="relative transition-transform duration-150 ease-out origin-top-left"
+               :style="transformStyle"
+               style="transform-origin: 0 0;">
+
+            <!-- Figure Image -->
+            <template x-if="figure.figureImage && figure.figureImage.startsWith('http')">
+              <img :src="figure.figureImage" :alt="figure.title"
+                   class="w-full h-auto block pointer-events-none" draggable="false" loading="lazy" />
+            </template>
+            <template x-if="!figure.figureImage || !figure.figureImage.startsWith('http')">
+              <div class="w-full aspect-video flex items-center justify-center text-gray-400 text-sm font-bold">
+                Gambar figure tidak tersedia
+              </div>
+            </template>
+
+            <!-- Hotspot Points -->
+            <template x-for="h in hotspots" :key="h.id">
+              <button class="absolute z-10 group/hotspot"
+                      :style="'left:' + h.x + '%; top:' + h.y + '%'"
+                      @click.stop="toggleHotspot(h)">
+
+                <!-- Pulse ring -->
+                <span class="absolute inset-0 -m-2 rounded-full bg-brand-500/20 animate-ping"></span>
+                <!-- Dot -->
+                <span class="relative flex items-center justify-center w-5 h-5 rounded-full border-2 border-white bg-brand-500 shadow-lg cursor-pointer transition-transform group-hover/hotspot:scale-125"
+                      :class="activeHotspot && activeHotspot.id === h.id ? 'ring-2 ring-brand-300 scale-125' : ''">
+                </span>
+
+                <!-- Hotspot Card (kiri-atas) -->
+                <div x-show="h._open"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100 scale-100"
+                     x-transition:leave-end="opacity-0 scale-95"
+                     @click.stop
+                     class="absolute z-20 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+                     :style="'right: calc(100% + 8px); bottom: calc(100% - 8px);'"
+                     x-cloak>
+
+                  <div class="p-3">
+                    <div class="flex gap-3">
+                      <!-- Product Image -->
+                      <div class="w-14 h-14 shrink-0 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
+                        <template x-if="h._imageUrl && h._imageUrl.startsWith('http')">
+                          <img :src="h._imageUrl" class="w-full h-full object-cover" loading="lazy" />
+                        </template>
+                        <template x-if="!h._imageUrl || !h._imageUrl.startsWith('http')">
+                          <div class="w-full h-full flex items-center justify-center text-gray-300 text-xs font-bold">N/A</div>
+                        </template>
+                      </div>
+                      <!-- Info -->
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-bold text-theme-text truncate" x-text="h.label"></p>
+                        <template x-if="h.sku">
+                          <p class="text-[11px] text-theme-text-sub font-mono" x-text="'SKU: ' + h.sku"></p>
+                        </template>
+                        <template x-if="h._price">
+                          <p class="text-sm font-extrabold text-red-600 dark:text-red-400 mt-0.5" x-text="formatPrice(h._price)"></p>
+                        </template>
+                      </div>
+                    </div>
+                    <template x-if="h.note">
+                      <p class="text-[11px] text-theme-text-sub mt-2 leading-relaxed" x-text="h.note"></p>
+                    </template>
+                    <template x-if="h._slug">
+                      <button @click="goToProduct(h)"
+                              class="mt-2 w-full text-xs font-bold py-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 text-white transition-colors flex items-center justify-center gap-1">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                          <line x1="3" y1="6" x2="21" y2="6"/>
+                          <path d="M16 10a4 4 0 0 1-8 0"/>
+                        </svg>
+                        Lihat Produk
+                      </button>
+                    </template>
+                  </div>
+                </div>
+              </button>
+            </template>
+          </div>
+        </div>
+
+        <!-- Zoom Controls -->
+        <div class="flex items-center gap-2 mt-3">
+          <div class="flex items-center border border-theme-border rounded-lg overflow-hidden">
+            <button @click="zoomIn()"
+                    class="w-8 h-8 flex items-center justify-center text-theme-text-sub hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors text-sm font-bold"
+                    title="Zoom In">+</button>
+            <span class="px-2 text-xs font-medium text-theme-text-sub border-x border-theme-border min-w-[3rem] text-center"
+                  x-text="Math.round(zoomScale * 100) + '%'"></span>
+            <button @click="zoomOut()"
+                    class="w-8 h-8 flex items-center justify-center text-theme-text-sub hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors text-sm font-bold"
+                    :class="zoomScale <= 1 ? 'opacity-30 cursor-not-allowed' : ''"
+                    title="Zoom Out">&minus;</button>
+          </div>
+          <button x-show="isZoomed" @click="resetZoom()"
+                  class="text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400 transition-colors"
+                  x-cloak>Reset</button>
+          <span class="text-[10px] text-theme-text-sub ml-auto hidden sm:inline">
+            <template x-if="isMobile">
+              <span>Pinch to zoom &middot; Double-tap to toggle</span>
+            </template>
+            <template x-if="!isMobile">
+              <span>Scroll to zoom &middot; Double-click to toggle &middot; Drag to pan</span>
+            </template>
+          </span>
+        </div>
+      </div>
+
+      <!-- Daftar Komponen -->
+      <div x-show="hotspots.length > 0" class="bg-theme-secondary border border-theme-border rounded-xl p-4 md:p-6" x-cloak>
+        <h2 class="text-base font-bold text-theme-text mb-4">Daftar Komponen</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-theme-border">
+                <th class="text-left py-2 px-3 text-xs font-semibold text-theme-text-sub">#</th>
+                <th class="text-left py-2 px-3 text-xs font-semibold text-theme-text-sub">Nama Komponen</th>
+                <th class="text-left py-2 px-3 text-xs font-semibold text-theme-text-sub">SKU</th>
+                <th class="text-right py-2 px-3 text-xs font-semibold text-theme-text-sub">Harga</th>
+                <th class="text-center py-2 px-3 text-xs font-semibold text-theme-text-sub">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template x-for="(h, idx) in hotspots" :key="h.id">
+                <tr class="border-b border-theme-border/50 hover:bg-brand-50/30 dark:hover:bg-brand-900/10 cursor-pointer transition-colors"
+                    @click="toggleHotspot(h)">
+                  <td class="py-2.5 px-3 text-theme-text-sub" x-text="idx + 1"></td>
+                  <td class="py-2.5 px-3">
+                    <span class="font-medium text-theme-text" x-text="h.label"></span>
+                    <span x-show="h.note" class="block text-[11px] text-theme-text-sub mt-0.5" x-text="h.note"></span>
+                  </td>
+                  <td class="py-2.5 px-3 font-mono text-xs text-theme-text-sub" x-text="h.sku || '—'"></td>
+                  <td class="py-2.5 px-3 text-right">
+                    <template x-if="h._price">
+                      <span class="font-bold text-brand-600 dark:text-brand-400 text-sm" x-text="formatPrice(h._price)"></span>
+                    </template>
+                    <template x-if="!h._price">
+                      <span class="text-theme-text-sub">—</span>
+                    </template>
+                  </td>
+                  <td class="py-2.5 px-3 text-center">
+                    <template x-if="h._slug">
+                      <button @click.stop="goToProduct(h)"
+                              class="text-xs font-bold text-brand-600 hover:text-brand-700 dark:text-brand-400 hover:underline transition-colors">
+                        Lihat &rarr;
+                      </button>
+                    </template>
+                    <template x-if="!h._slug">
+                      <span class="text-xs text-theme-text-sub">—</span>
+                    </template>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Hotspot kosong -->
+      <div x-show="hotspots.length === 0" class="bg-theme-secondary border border-theme-border rounded-xl p-8 text-center" x-cloak>
+        <p class="text-sm text-theme-text-sub">Tidak ada hotspot yang tersedia untuk figure ini.</p>
+      </div>
+
+    </div>
+  </template>
+
+  <!-- Fallback jika figure null -->
+  <template x-if="!figure">
+    <div class="bg-theme-secondary border border-theme-border rounded-xl p-8 text-center">
+      <p class="text-base font-bold text-theme-text">Figure Tidak Ditemukan</p>
+      <p class="text-sm text-theme-text-sub mt-1">Data figure tidak dapat dimuat.</p>
+      <button @click="window.navigate('shop')"
+              class="mt-4 px-4 py-2 bg-brand-500 text-white text-sm font-bold rounded-lg hover:bg-brand-600 transition-colors">
+        Kembali ke Shop
+      </button>
+    </div>
+  </template>
+</div>
