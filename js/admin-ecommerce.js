@@ -318,6 +318,13 @@ Alpine.data('ecommerceProducts', () => ({
     this.editingItem.images.splice(idx, 1);
   },
 
+  setPrimaryImage(idx) {
+    if (!this.editingItem.images || idx <= 0) return;
+    var img = this.editingItem.images.splice(idx, 1)[0];
+    this.editingItem.images.unshift(img);
+    if (window.showToast) window.showToast('Thumbnail utama diperbarui', 'success');
+  },
+
   copyImageUrl(url) {
     if (!navigator.clipboard) { if (window.showToast) window.showToast('Clipboard tidak tersedia', 'error'); return; }
     navigator.clipboard.writeText(url).then(function () {
