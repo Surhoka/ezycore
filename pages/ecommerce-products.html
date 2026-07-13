@@ -135,30 +135,22 @@
 
                     <div class="modal-body-content custom-scrollbar">
                         <div>
-                            <label class="form-label">Product Images</label>
-                            <div class="flex gap-2">
-                                <input type="url" x-model="newImageUrl" @keyup.enter="addImageUrl()" class="form-input" placeholder="https://example.com/image.jpg">
-                                <button @click="addImageUrl()" class="btn btn-primary btn-sm shrink-0">Add</button>
+                            <label class="form-label">Primary Thumbnail</label>
+                            <div class="flex items-center gap-3">
+                                <template x-if="editingItem.images && editingItem.images.length > 0">
+                                    <div class="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 border-2 border-brand-500">
+                                        <img :src="editingItem.images[0]" class="h-full w-full object-cover" @error="$el.classList.add('hidden'); $el.nextElementSibling.classList.remove('hidden')">
+                                        <div class="hidden absolute inset-0 flex items-center justify-center text-gray-400 text-[10px] font-bold">N/A</div>
+                                        <span class="absolute top-0.5 left-0.5 rounded bg-brand-500 px-1 py-px text-[8px] font-bold text-white shadow">UTAMA</span>
+                                    </div>
+                                </template>
+                                <template x-if="!editingItem.images || editingItem.images.length === 0">
+                                    <div class="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50">
+                                        <span class="w-6 h-6 text-gray-300" x-icon="'image'"></span>
+                                    </div>
+                                </template>
+                                <p class="text-[11px] text-gray-400">Klik ikon bintang pada gambar di bawah untuk mengatur thumbnail utama produk.</p>
                             </div>
-                            <template x-if="editingItem.images && editingItem.images.length > 0">
-                                <div class="grid grid-cols-3 gap-2 mt-3">
-                                    <template x-for="(url, idx) in editingItem.images" :key="idx">
-                                        <div class="relative group aspect-square overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
-                                            <img :src="url" class="h-full w-full object-cover" @error="$el.classList.add('hidden'); $el.nextElementSibling.classList.remove('hidden')">
-                                            <div class="hidden absolute inset-0 flex items-center justify-center text-gray-400 text-[10px] font-bold">Broken</div>
-                                            <div class="absolute inset-0 flex items-start justify-end gap-1 p-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button @click="copyImageUrl(url)" class="rounded bg-white/90 p-1.5 text-gray-600 hover:text-brand-600 shadow-sm" title="Copy URL">
-                                                    <span class="w-3.5 h-3.5 block" x-icon="'copy'"></span>
-                                                </button>
-                                                <button @click="removeImage(idx)" class="rounded bg-white/90 p-1.5 text-red-500 hover:bg-red-500 hover:text-white shadow-sm" title="Remove">
-                                                    <span class="w-3.5 h-3.5 block" x-icon="'close'"></span>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </template>
-                                </div>
-                            </template>
-                            <p class="mt-1 text-[10px] text-gray-400">First image will be used as the primary thumbnail.</p>
                         </div>
                         <div>
                             <label class="form-label">Product Name *</label>
@@ -209,6 +201,40 @@
                                     <span class="text-sm font-bold text-gray-700 dark:text-gray-300">Active</span>
                                 </label>
                             </div>
+                        </div>
+                        <div>
+                            <label class="form-label">Product Images</label>
+                            <div class="flex gap-2">
+                                <input type="url" x-model="newImageUrl" @keyup.enter="addImageUrl()" class="form-input" placeholder="https://example.com/image.jpg">
+                                <button @click="addImageUrl()" class="btn btn-primary btn-sm shrink-0">Add</button>
+                            </div>
+                            <template x-if="editingItem.images && editingItem.images.length > 0">
+                                <div class="grid grid-cols-3 gap-2 mt-3">
+                                    <template x-for="(url, idx) in editingItem.images" :key="idx">
+                                        <div class="relative group aspect-square overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
+                                            <img :src="url" class="h-full w-full object-cover" @error="$el.classList.add('hidden'); $el.nextElementSibling.classList.remove('hidden')">
+                                            <div class="hidden absolute inset-0 flex items-center justify-center text-gray-400 text-[10px] font-bold">Broken</div>
+                                            <div class="absolute inset-0 flex items-start justify-between p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button @click="setPrimaryImage(idx)" :class="idx === 0 ? 'bg-brand-500 text-white' : 'bg-white/90 text-gray-500 hover:text-brand-600'" class="rounded p-1.5 shadow-sm transition-colors" :title="idx === 0 ? 'Thumbnail Utama' : 'Atur sebagai Thumbnail Utama'">
+                                                    <span class="w-3.5 h-3.5 block" x-icon="'star'"></span>
+                                                </button>
+                                                <div class="flex gap-1">
+                                                    <button @click="copyImageUrl(url)" class="rounded bg-white/90 p-1.5 text-gray-600 hover:text-brand-600 shadow-sm" title="Copy URL">
+                                                        <span class="w-3.5 h-3.5 block" x-icon="'copy'"></span>
+                                                    </button>
+                                                    <button @click="removeImage(idx)" class="rounded bg-white/90 p-1.5 text-red-500 hover:bg-red-500 hover:text-white shadow-sm" title="Remove">
+                                                        <span class="w-3.5 h-3.5 block" x-icon="'close'"></span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <template x-if="idx === 0">
+                                                <span class="absolute bottom-1 left-1 rounded bg-brand-500 px-1 py-px text-[8px] font-bold text-white shadow">UTAMA</span>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                            <p class="mt-1 text-[10px] text-gray-400">Klik ikon bintang untuk mengatur gambar sebagai thumbnail utama.</p>
                         </div>
                     </div>
 
