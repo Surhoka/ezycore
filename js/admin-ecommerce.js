@@ -110,37 +110,9 @@ Alpine.data('ecommerceDashboard', () => ({
         }
     }
 }));
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, display: false } } }
-            });
-        }
 
-        const ctx3 = document.getElementById(chartThree);
-        if (ctx3) {
-            this.charts.chartThree = new Chart(ctx3, {
-                type: ar,
-                data: {
-                    labels: [Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec],
-                    datasets: [{ label: Sales, data: [20, 25, 35, 30, 45, 35, 55, 40, 50, 60, 75, 80], backgroundColor: #3C50E0, borderRadius: 2, barPercentage: 0.6 }, 
-                    { label: Revenue, data: [15, 20, 30, 25, 40, 30, 50, 35, 45, 55, 70, 75], backgroundColor: #80CAEE, borderRadius: 2, barPercentage: 0.6 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { borderDash: [5, 5] }, beginAtZero: true } } }
-            });
-        }
-    },
-
-    initMap() {
-        const mapEl = document.getElementById(mapOne);
-        if (mapEl && typeof jsVectorMap !== 'undefined') {
-            mapEl.innerHTML = '';
-            this.map = new jsVectorMap({
-                selector: #mapOne, map: world, zoomButtons: true,
-                regionStyle: { initial: { fill: #C8D0D8 }, hover: { fillOpacity: 1, fill: #3056D3 } },
-                markers: [{ coords: [37.0902, -95.7129], name: USA }, { coords: [46.2276, 2.2137], name: France }],
-                markerStyle: { initial: { r: 5, fill: #3056D3, opacity: 1, stroke: #FFF, strokeWidth: 1 }, hover: { stroke: #3056D3, fill: #FFF, strokeWidth: 2 } },
-            });
-        }
-    }
-}));
+// ================================================================
+// ECOMMERCE PRODUCTS
 // ================================================================
 // ECOMMERCE PRODUCTS
 // ================================================================
