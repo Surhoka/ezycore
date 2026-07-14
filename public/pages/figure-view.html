@@ -38,7 +38,20 @@
               </div>
             </template>
 
-            <!-- Hotspot Points -->
+            <!-- Polygon SVG Areas -->
+            <template x-for="h in hotspots.filter(h => h.type === 'polygon')" :key="'svg-' + h.id">
+              <svg class="absolute inset-0 w-full h-full z-[5]"
+                   viewBox="0 0 100 100" preserveAspectRatio="none">
+                <polygon :points="(h.points || []).map(p => p.x + ',' + p.y).join(' ')"
+                  class="fill-brand-500/10 stroke-brand-500/60 hover:fill-brand-500/20 hover:stroke-brand-600 cursor-pointer transition-all"
+                  style="stroke-width: 1.5; stroke-dasharray: 3 5; vector-effect: non-scaling-stroke;"
+                  :class="activeHotspot && activeHotspot.id === h.id ? 'fill-brand-500/20 stroke-brand-600' : ''"
+                  @click.stop="toggleHotspot(h)">
+                </polygon>
+              </svg>
+            </template>
+
+            <!-- Hotspot Points & Polygon Center Markers -->
             <template x-for="h in hotspots" :key="h.id">
               <button class="absolute z-10 group/hotspot"
                       :style="'left:' + h.x + '%; top:' + h.y + '%'"
@@ -155,6 +168,7 @@
                   <td class="py-2.5 px-3 text-theme-text-sub" x-text="idx + 1"></td>
                   <td class="py-2.5 px-3">
                     <span class="font-medium text-theme-text" x-text="h.label"></span>
+                    <span x-show="h.type === 'polygon'" class="ml-1.5 text-[9px] font-bold text-brand-600 bg-brand-50 px-1.5 py-0.5 rounded dark:bg-brand-900/20 dark:text-brand-400">Area</span>
                     <span x-show="h.note" class="block text-[11px] text-theme-text-sub mt-0.5" x-text="h.note"></span>
                   </td>
                   <td class="py-2.5 px-3 font-mono text-xs text-theme-text-sub" x-text="h.sku || '—'"></td>
