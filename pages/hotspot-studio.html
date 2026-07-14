@@ -2,23 +2,20 @@
     <input type="file" x-ref="imageInput" class="hidden" accept="image/*" @change="handleImageUpload($event)">
 
     <!-- Tab Navigation -->
-    <div class="mb-8 flex border-b border-gray-100 dark:border-gray-800">
-        <button type="button" @click="activeTab = 'list'"
-            :class="activeTab === 'list' ? 'border-brand-500 text-brand-500' : 'border-transparent text-gray-400 hover:text-gray-600'"
-            class="flex items-center gap-2 border-b-2 px-6 py-4 text-sm font-bold transition-all">
+    <div class="mb-8 tab-nav-container">
+        <button type="button" @click="activeTab = 'list'" class="tab-nav-btn"
+            :class="activeTab === 'list' ? 'active' : ''">
             <span class="w-4 h-4" x-icon="'table'"></span>
             Projects
         </button>
-        <button type="button" @click="activeTab = 'studio'"
-            :class="activeTab === 'studio' ? 'border-brand-500 text-brand-500' : 'border-transparent text-gray-400 hover:text-gray-600'"
-            class="flex items-center gap-2 border-b-2 px-6 py-4 text-sm font-bold transition-all">
+        <button type="button" @click="activeTab = 'studio'" class="tab-nav-btn"
+            :class="activeTab === 'studio' ? 'active' : ''">
             <span class="w-4 h-4" x-icon="'pencil'"></span>
             Studio
         </button>
-        <button type="button" @click="activeTab = 'preview'"
-            :class="activeTab === 'preview' ? 'border-brand-500 text-brand-500' : 'border-transparent text-gray-400 hover:text-gray-600'"
-            class="flex items-center gap-2 border-b-2 px-6 py-4 text-sm font-bold transition-all" :disabled="!imageUrl"
-            :class="!imageUrl ? 'opacity-30 cursor-not-allowed' : ''">
+        <button type="button" @click="activeTab = 'preview'" class="tab-nav-btn"
+            :class="[activeTab === 'preview' ? 'active' : '', !imageUrl ? 'opacity-30 cursor-not-allowed' : '']"
+            :disabled="!imageUrl">
             <span class="w-4 h-4" x-icon="'eye'"></span>
             Preview
         </button>
@@ -132,72 +129,72 @@
 
                         <button @click="$refs.imageInput.click()" :disabled="isUploadingImage"
                             :class="isUploadingImage ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-100 dark:hover:bg-white/5'"
-                            class="group relative flex h-9 w-9 items-center justify-center rounded-xl text-gray-500">
+                            class="flex h-9 w-9 items-center justify-center rounded-xl text-gray-500 transition-colors"
+                            title="Upload Image">
                             <span class="w-4 h-4" x-icon="'image'"></span>
-                            <div class="tooltip">Upload Image</div>
                         </button>
 
                         <div class="h-6 w-px bg-gray-200 dark:bg-gray-800 mx-1"></div>
 
                         <button @click="setTool('select')"
                             :class="tool === 'select' ? 'bg-brand-50 text-brand-500 dark:bg-brand-900/20 dark:text-brand-400' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5'"
-                            class="group relative flex h-9 w-9 items-center justify-center rounded-xl transition-colors">
+                            class="flex h-9 w-9 items-center justify-center rounded-xl transition-colors"
+                            title="Select Tool">
                             <span class="w-4 h-4" x-icon="'navigation'"></span>
-                            <div class="tooltip">Select Tool</div>
                         </button>
 
                         <button @click="setTool('point')"
                             :class="tool === 'point' ? 'bg-brand-50 text-brand-500 dark:bg-brand-900/20 dark:text-brand-400' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5'"
-                            class="group relative flex h-9 w-9 items-center justify-center rounded-xl transition-colors">
+                            class="flex h-9 w-9 items-center justify-center rounded-xl transition-colors"
+                            title="Add Hotspot">
                             <span class="w-4 h-4" x-icon="'map-pin'"></span>
-                            <div class="tooltip">Add Hotspot</div>
                         </button>
 
                         <button @click="setTool('polygon')"
                             :class="tool === 'polygon' ? 'bg-brand-50 text-brand-500 dark:bg-brand-900/20 dark:text-brand-400' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5'"
-                            class="group relative flex h-9 w-9 items-center justify-center rounded-xl transition-colors">
+                            class="flex h-9 w-9 items-center justify-center rounded-xl transition-colors"
+                            title="Add Area">
                             <span class="w-4 h-4" x-icon="'hexagon'"></span>
-                            <div class="tooltip">Add Area</div>
                         </button>
 
                         <button @click="setTool('hand')"
                             :class="tool === 'hand' ? 'bg-brand-50 text-brand-500 dark:bg-brand-900/20 dark:text-brand-400' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5'"
-                            class="group relative flex h-9 w-9 items-center justify-center rounded-xl transition-colors">
+                            class="flex h-9 w-9 items-center justify-center rounded-xl transition-colors"
+                            title="Drag Tool">
                             <span class="w-4 h-4" x-icon="'hand'"></span>
-                            <div class="tooltip">Drag Tool</div>
                         </button>
 
                         <div class="h-6 w-px bg-gray-200 dark:bg-gray-800 mx-1"></div>
 
                         <button @click="undo()" :disabled="historyIndex <= 0"
                             :class="historyIndex <= 0 ? 'text-gray-300 cursor-not-allowed dark:text-gray-700' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5'"
-                            class="group relative flex h-9 w-9 items-center justify-center rounded-xl transition-colors">
+                            class="flex h-9 w-9 items-center justify-center rounded-xl transition-colors"
+                            title="Undo">
                             <span class="w-4 h-4" x-icon="'undo'"></span>
-                            <div class="tooltip">Undo</div>
                         </button>
                         <button @click="redo()" :disabled="historyIndex >= history.length - 1"
                             :class="historyIndex >= history.length - 1 ? 'text-gray-300 cursor-not-allowed dark:text-gray-700' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5'"
-                            class="group relative flex h-9 w-9 items-center justify-center rounded-xl transition-colors">
+                            class="flex h-9 w-9 items-center justify-center rounded-xl transition-colors"
+                            title="Redo">
                             <span class="w-4 h-4" x-icon="'redo'"></span>
-                            <div class="tooltip">Redo</div>
                         </button>
 
                         <div class="h-6 w-px bg-gray-200 dark:bg-gray-800 mx-1"></div>
 
                         <button @click="zoomIn()"
-                            class="group relative flex h-9 w-9 items-center justify-center rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5">
+                            class="flex h-9 w-9 items-center justify-center rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+                            title="Zoom In">
                             <span class="w-4 h-4" x-icon="'plus'"></span>
-                            <div class="tooltip">Zoom In</div>
                         </button>
                         <button @click="zoomOut()"
-                            class="group relative flex h-9 w-9 items-center justify-center rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5">
+                            class="flex h-9 w-9 items-center justify-center rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+                            title="Zoom Out">
                             <span class="w-4 h-4" x-icon="'minus'"></span>
-                            <div class="tooltip">Zoom Out</div>
                         </button>
                         <button @click="resetView()"
-                            class="group relative flex h-9 w-9 items-center justify-center rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5">
+                            class="flex h-9 w-9 items-center justify-center rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+                            title="Reset View">
                             <span class="w-4 h-4" x-icon="'refresh'"></span>
-                            <div class="tooltip">Reset View</div>
                         </button>
 
                         <div class="flex-1"></div>
