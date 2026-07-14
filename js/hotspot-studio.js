@@ -10,7 +10,7 @@
                 activeTab: 'list',
                 isLoading: false,
                 projects: [],
-                project: { id: null, title: '', lastModified: Date.now() },
+                project: { id: null, title: '', created: Date.now(), lastModified: Date.now() },
                 hotspots: [],
                 imageUrl: null,
                 selectedId: null,
@@ -117,7 +117,7 @@
                 },
 
                 newProject() {
-                    this.project = { id: null, title: '', lastModified: Date.now() };
+                    this.project = { id: null, title: '', created: Date.now(), lastModified: Date.now() };
                     this.hotspots = [];
                     this.imageUrl = null;
                     this.pendingImageData = null;
@@ -144,7 +144,7 @@
                 },
 
                 cancelEdit() {
-                    this.project = { id: null, title: '', lastModified: Date.now() };
+                    this.project = { id: null, title: '', created: Date.now(), lastModified: Date.now() };
                     this.hotspots = [];
                     this.imageUrl = null;
                     this.pendingImageData = null;
@@ -413,7 +413,8 @@
                         id: this.project.id,
                         title: this.project.title,
                         imageUrl: this.imageUrl,
-                        hotspots: this.hotspots
+                        hotspots: this.hotspots,
+                        created: this.project.created || Date.now()
                     };
 
                     window.sendDataToGoogle('saveHotspotProject', payload, (response) => {
