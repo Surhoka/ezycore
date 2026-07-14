@@ -25,11 +25,19 @@
     <div x-show="activeTab === 'list'" class="space-y-6" x-transition>
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white">Hotspot Projects</h2>
-            <button type="button" @click.prevent="newProject()"
-                class="flex items-center gap-2 rounded-2xl bg-brand-500 px-6 py-2.5 text-sm font-bold text-white shadow-lg transition-all hover:bg-brand-600 active:scale-95">
-                <span class="w-4 h-4" x-icon="'plus'"></span>
-                Create New Project
-            </button>
+            <div class="flex items-center gap-3">
+                <button type="button" @click.prevent="syncAllProjects()" :disabled="isSyncing"
+                    :class="isSyncing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-brand-600 hover:scale-[1.02] active:scale-95'"
+                    class="flex items-center gap-2 rounded-2xl border border-brand-200 bg-brand-50 px-5 py-2.5 text-sm font-bold text-brand-700 transition-all dark:border-brand-800 dark:bg-brand-900/20 dark:text-brand-300">
+                    <span class="w-4 h-4" :class="isSyncing ? 'animate-spin' : ''" x-icon="'refresh-cw'"></span>
+                    <span x-text="isSyncing ? 'Syncing...' : 'Sync All'"></span>
+                </button>
+                <button type="button" @click.prevent="newProject()"
+                    class="flex items-center gap-2 rounded-2xl bg-brand-500 px-6 py-2.5 text-sm font-bold text-white shadow-lg transition-all hover:bg-brand-600 active:scale-95">
+                    <span class="w-4 h-4" x-icon="'plus'"></span>
+                    Create New Project
+                </button>
+            </div>
         </div>
 
         <div
@@ -38,7 +46,7 @@
                 <thead>
                     <tr
                         class="bg-brand-50 dark:bg-brand-500/5 text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-800">
-                        <th class="px-6 py-4 w-12"></th>
+                        <th class="px-6 py-4 w-12">Images</th>
                         <th class="px-6 py-4">Project Name</th>
                         <th class="px-6 py-4">Hotspots</th>
                         <th class="px-6 py-4">Created</th>
@@ -66,7 +74,8 @@
                     <template x-for="p in projects" :key="p.id">
                         <tr class="group hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
                             <td class="px-6 py-4">
-                                <div class="h-12 w-16 overflow-hidden rounded-lg border border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-800 flex items-center justify-center">
+                                <div
+                                    class="h-12 w-16 overflow-hidden rounded-lg border border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-800 flex items-center justify-center">
                                     <template x-if="p.imageUrl">
                                         <img :src="p.imageUrl" class="h-full w-full object-cover" loading="lazy">
                                     </template>
@@ -89,6 +98,12 @@
                             <td class="px-6 py-5 text-sm font-medium text-gray-500"
                                 x-text="new Date(p.lastModified).toLocaleDateString()"></td>
                             <td class="px-6 py-5 text-right space-x-2">
+                                <button type="button" @click.prevent="syncProject(p)" :disabled="isSyncing || !p.imageUrl"
+                                    :class="(!p.imageUrl || isSyncing) ? 'opacity-30 cursor-not-allowed' : 'hover:text-brand-500 hover:border-brand-500'"
+                                    class="h-8 w-8 rounded-lg border border-gray-100 bg-white text-gray-400 transition-all dark:bg-slate-900 dark:border-gray-800"
+                                    title="Sync to Blogger">
+                                    <span class="w-4 h-4 mx-auto" :class="isSyncing ? 'animate-spin' : ''" x-icon="'refresh-cw'"></span>
+                                </button>
                                 <button type="button" @click.prevent="editProject(p)"
                                     class="h-8 w-8 rounded-lg border border-gray-100 bg-white text-gray-400 hover:text-brand-500 hover:border-brand-500 transition-all dark:bg-slate-900 dark:border-gray-800">
                                     <span class="w-4 h-4 mx-auto" x-icon="'pencil'"></span>
@@ -188,14 +203,12 @@
 
                         <button @click="undo()" :disabled="historyIndex <= 0"
                             :class="historyIndex <= 0 ? 'text-gray-300 cursor-not-allowed dark:text-gray-700' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5'"
-                            class="flex h-9 w-9 items-center justify-center rounded-xl transition-colors"
-                            title="Undo">
+                            class="flex h-9 w-9 items-center justify-center rounded-xl transition-colors" title="Undo">
                             <span class="w-4 h-4" x-icon="'undo'"></span>
                         </button>
                         <button @click="redo()" :disabled="historyIndex >= history.length - 1"
                             :class="historyIndex >= history.length - 1 ? 'text-gray-300 cursor-not-allowed dark:text-gray-700' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5'"
-                            class="flex h-9 w-9 items-center justify-center rounded-xl transition-colors"
-                            title="Redo">
+                            class="flex h-9 w-9 items-center justify-center rounded-xl transition-colors" title="Redo">
                             <span class="w-4 h-4" x-icon="'redo'"></span>
                         </button>
 
