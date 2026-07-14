@@ -26,6 +26,7 @@
                 isUploadingImage: false,
                 pendingImageData: null,
                 pendingFileName: null,
+                isSyncing: false,
                 history: [],
                 historyIndex: -1,
 
@@ -439,6 +440,51 @@
                     }, null, 2);
                     console.log(data);
                     alert('Check console for JSON output');
+                },
+
+                syncProject(project) {
+                    if (!project.imageUrl) {
+                        window.showToast('Project belum memiliki gambar.', 'warning');
+                        return;
+                    }
+                    if (this.isSyncing) return;
+                    this.isSyncing = true;
+                    window.showToast('Menyinkronkan "' + (project.title || 'Untitled') + '"...', 'info');
+                    window.sendDataToGoogle('syncHotspotProject', { projectId: project.id }, (response) => {
+                        this.isSyncing = false;
+                        if (response.status === 'success') {
+                            window.showToast('Berhasil disinkronkan ke Blogger!', 'success');
+                            this.fetchProjects();
+                        } else {
+                            window.showToast('Gagal sinkronisasi: ' + (response.message || 'Unknown error'), 'error');
+                        }
+                    }, (error) => {
+                        this.isSyncing = false;
+                        window.showToast('API Error saat sinkronisasi', 'error');
+                    });
+                },
+
+                syncAllProjects() {
+                    var activeCount = this.projects.filter(function(p) { return p.imageUrl; }).length;
+                    if (activeCount === 0) {
+                        window.showToast('Tidak ada project dengan gambar yang perlu disinkronkan.', 'warning');
+                        return;
+                    }
+                    if (!confirm('Sinkronkan ' + activeCount + ' project ke Blogger?')) return;
+                    this.isSyncing = true;
+                    window.showToast('Menyinkronkan semua project...', 'info');
+                    window.sendDataToGoogle('syncAllHotspotsToBlogger', {}, (response) => {
+                        this.isSyncing = false;
+                        if (response.status === 'success') {
+                            window.showToast(response.message || 'Sinkronisasi selesai', 'success');
+                            this.fetchProjects();
+                        } else {
+                            window.showToast('Gagal: ' + (response.message || 'Unknown error'), 'error');
+                        }
+                    }, (error) => {
+                        this.isSyncing = false;
+                        window.showToast('API Error saat sinkronisasi massal', 'error');
+                    });
                 }
             }));
         }
