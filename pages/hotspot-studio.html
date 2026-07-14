@@ -37,9 +37,11 @@
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr
-                        class="bg-gray-50/50 dark:bg-black/20 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                        class="bg-brand-50 dark:bg-brand-500/5 text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-800">
+                        <th class="px-6 py-4 w-12"></th>
                         <th class="px-6 py-4">Project Name</th>
                         <th class="px-6 py-4">Hotspots</th>
+                        <th class="px-6 py-4">Created</th>
                         <th class="px-6 py-4">Last Modified</th>
                         <th class="px-6 py-4 text-right">Actions</th>
                     </tr>
@@ -47,7 +49,7 @@
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                     <template x-if="isLoading">
                         <tr>
-                            <td colspan="4" class="px-6 py-10 text-center">
+                            <td colspan="6" class="px-6 py-10 text-center">
                                 <span
                                     class="animate-spin inline-block w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full"></span>
                                 <div class="mt-2 text-xs text-gray-400 font-bold uppercase tracking-widest">Loading
@@ -57,12 +59,22 @@
                     </template>
                     <template x-if="!isLoading && projects.length === 0">
                         <tr>
-                            <td colspan="4" class="px-6 py-10 text-center text-gray-400">No projects found. Create your
+                            <td colspan="6" class="px-6 py-10 text-center text-gray-400">No projects found. Create your
                                 first one!</td>
                         </tr>
                     </template>
                     <template x-for="p in projects" :key="p.id">
                         <tr class="group hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+                            <td class="px-6 py-4">
+                                <div class="h-12 w-16 overflow-hidden rounded-lg border border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-800 flex items-center justify-center">
+                                    <template x-if="p.imageUrl">
+                                        <img :src="p.imageUrl" class="h-full w-full object-cover" loading="lazy">
+                                    </template>
+                                    <template x-if="!p.imageUrl">
+                                        <span class="w-5 h-5 text-gray-300 dark:text-gray-600" x-icon="'image'"></span>
+                                    </template>
+                                </div>
+                            </td>
                             <td class="px-6 py-5">
                                 <div class="font-bold text-gray-900 dark:text-white"
                                     x-text="p.title || 'Untitled Project'"></div>
@@ -72,6 +84,8 @@
                                     class="rounded-lg bg-gray-100 px-2.5 py-1 text-[10px] font-bold text-gray-600 dark:bg-white/5"
                                     x-text="(p.hotspots ? p.hotspots.length : 0) + ' Points'"></span>
                             </td>
+                            <td class="px-6 py-5 text-sm font-medium text-gray-500"
+                                x-text="new Date(p.created || p.lastModified).toLocaleDateString()"></td>
                             <td class="px-6 py-5 text-sm font-medium text-gray-500"
                                 x-text="new Date(p.lastModified).toLocaleDateString()"></td>
                             <td class="px-6 py-5 text-right space-x-2">
