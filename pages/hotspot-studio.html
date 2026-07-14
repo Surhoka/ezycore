@@ -93,6 +93,28 @@
 
     <!-- Tab 2: Studio -->
     <div x-show="activeTab === 'studio'" x-transition x-cloak>
+        <!-- Header -->
+        <div class="mb-8 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div class="flex-1">
+                <input type="text" x-model="project.title" placeholder="Project Title..."
+                    class="w-full border-none bg-transparent p-0 text-3xl font-extrabold tracking-tight text-gray-900 placeholder:text-gray-200 focus:ring-0 dark:text-white dark:placeholder:text-gray-800 lg:text-4xl" />
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button type="button" @click="cancelEdit()"
+                    class="group flex items-center gap-2 rounded-2xl border border-gray-200 bg-white px-5 py-3 text-sm font-bold text-gray-600 transition-all hover:border-gray-300 hover:bg-gray-50 active:scale-95 dark:border-gray-800 dark:bg-white/5 dark:text-gray-400 dark:hover:bg-white/10">
+                    Cancel
+                </button>
+                <button type="button" @click="saveProject($el)" :disabled="isUploadingImage"
+                    :class="isUploadingImage ? 'opacity-50 cursor-not-allowed' : 'hover:bg-brand-600 hover:scale-[1.02] active:scale-95'"
+                    class="flex items-center gap-2 rounded-2xl bg-brand-500 px-8 py-3 text-sm font-bold text-white shadow-xl shadow-brand-500/25 transition-all">
+                    <span class="w-4 h-4" :class="isUploadingImage ? 'animate-spin' : ''"
+                        x-icon="isUploadingImage ? 'refresh' : 'refresh'"></span>
+                    <span x-text="isUploadingImage ? 'Saving...' : 'Save Project'"></span>
+                </button>
+            </div>
+        </div>
+
         <!-- Main Workspace -->
         <div class="flex flex-col gap-8 lg:flex-row">
 
@@ -117,10 +139,6 @@
                             title="Upload from URL">
                             <span class="w-4 h-4" x-icon="'link'"></span>
                         </button>
-
-                        <!-- Project Title -->
-                        <input type="text" x-model="project.title" placeholder="Project Title..."
-                            class="min-w-0 flex-1 border-none bg-transparent px-2 py-1 text-lg font-extrabold tracking-tight text-gray-900 placeholder:text-gray-300 focus:ring-0 dark:text-white dark:placeholder:text-gray-700" />
 
                         <div class="h-6 w-px bg-gray-200 dark:bg-gray-800 mx-1"></div>
 
@@ -183,20 +201,6 @@
                             class="flex h-9 w-9 items-center justify-center rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
                             title="Reset View">
                             <span class="w-4 h-4" x-icon="'refresh'"></span>
-                        </button>
-
-                        <div class="h-6 w-px bg-gray-200 dark:bg-gray-800 mx-1"></div>
-
-                        <button type="button" @click="cancelEdit()"
-                            class="flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-4 py-1.5 text-xs font-bold text-gray-500 transition-all hover:border-gray-300 hover:bg-gray-50 dark:border-gray-800 dark:bg-white/5 dark:text-gray-400 dark:hover:bg-white/10">
-                            Cancel
-                        </button>
-                        <button type="button" @click="saveProject($el)" :disabled="isUploadingImage"
-                            :class="isUploadingImage ? 'opacity-50 cursor-not-allowed' : 'hover:bg-brand-600 hover:scale-[1.02] active:scale-95'"
-                            class="flex items-center gap-1.5 rounded-xl bg-brand-500 px-5 py-1.5 text-xs font-bold text-white shadow-lg shadow-brand-500/25 transition-all">
-                            <span class="w-3.5 h-3.5" :class="isUploadingImage ? 'animate-spin' : ''"
-                                x-icon="'refresh'"></span>
-                            <span x-text="isUploadingImage ? 'Saving...' : 'Save'"></span>
                         </button>
 
                         <div class="flex-1"></div>
