@@ -1,0 +1,616 @@
+<div x-data="hotspotStudio" id="hotspot-studio-page" class="w-full animate-fade-in">
+    <input type="file" x-ref="imageInput" class="hidden" accept="image/*" @change="handleImageUpload($event)">
+
+    <!-- Tab Navigation -->
+    <div class="mb-8 flex border-b border-gray-100 dark:border-gray-800">
+        <button type="button" @click="activeTab = 'list'"
+            :class="activeTab === 'list' ? 'border-brand-500 text-brand-500' : 'border-transparent text-gray-400 hover:text-gray-600'"
+            class="flex items-center gap-2 border-b-2 px-6 py-4 text-sm font-bold transition-all">
+            <span class="w-4 h-4" x-icon="'table'"></span>
+            Projects
+        </button>
+        <button type="button" @click="activeTab = 'studio'"
+            :class="activeTab === 'studio' ? 'border-brand-500 text-brand-500' : 'border-transparent text-gray-400 hover:text-gray-600'"
+            class="flex items-center gap-2 border-b-2 px-6 py-4 text-sm font-bold transition-all">
+            <span class="w-4 h-4" x-icon="'pencil'"></span>
+            Studio
+        </button>
+        <button type="button" @click="activeTab = 'preview'"
+            :class="activeTab === 'preview' ? 'border-brand-500 text-brand-500' : 'border-transparent text-gray-400 hover:text-gray-600'"
+            class="flex items-center gap-2 border-b-2 px-6 py-4 text-sm font-bold transition-all" :disabled="!imageUrl"
+            :class="!imageUrl ? 'opacity-30 cursor-not-allowed' : ''">
+            <span class="w-4 h-4" x-icon="'eye'"></span>
+            Preview
+        </button>
+    </div>
+
+    <!-- Tab 1: Project List -->
+    <div x-show="activeTab === 'list'" class="space-y-6" x-transition>
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white">Hotspot Projects</h2>
+            <button type="button" @click.prevent="newProject()"
+                class="flex items-center gap-2 rounded-2xl bg-brand-500 px-6 py-2.5 text-sm font-bold text-white shadow-lg transition-all hover:bg-brand-600 active:scale-95">
+                <span class="w-4 h-4" x-icon="'plus'"></span>
+                Create New Project
+            </button>
+        </div>
+
+        <div
+            class="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden dark:border-gray-800 dark:bg-white/[0.03]">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr
+                        class="bg-gray-50/50 dark:bg-black/20 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                        <th class="px-6 py-4">Project Name</th>
+                        <th class="px-6 py-4">Hotspots</th>
+                        <th class="px-6 py-4">Last Modified</th>
+                        <th class="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                    <template x-if="isLoading">
+                        <tr>
+                            <td colspan="4" class="px-6 py-10 text-center">
+                                <span
+                                    class="animate-spin inline-block w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full"></span>
+                                <div class="mt-2 text-xs text-gray-400 font-bold uppercase tracking-widest">Loading
+                                    Projects...</div>
+                            </td>
+                        </tr>
+                    </template>
+                    <template x-if="!isLoading && projects.length === 0">
+                        <tr>
+                            <td colspan="4" class="px-6 py-10 text-center text-gray-400">No projects found. Create your
+                                first one!</td>
+                        </tr>
+                    </template>
+                    <template x-for="p in projects" :key="p.id">
+                        <tr class="group hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+                            <td class="px-6 py-5">
+                                <div class="font-bold text-gray-900 dark:text-white"
+                                    x-text="p.title || 'Untitled Project'"></div>
+                            </td>
+                            <td class="px-6 py-5">
+                                <span
+                                    class="rounded-lg bg-gray-100 px-2.5 py-1 text-[10px] font-bold text-gray-600 dark:bg-white/5"
+                                    x-text="(p.hotspots ? p.hotspots.length : 0) + ' Points'"></span>
+                            </td>
+                            <td class="px-6 py-5 text-sm font-medium text-gray-500"
+                                x-text="new Date(p.lastModified).toLocaleDateString()"></td>
+                            <td class="px-6 py-5 text-right space-x-2">
+                                <button type="button" @click.prevent="editProject(p)"
+                                    class="h-8 w-8 rounded-lg border border-gray-100 bg-white text-gray-400 hover:text-brand-500 hover:border-brand-500 transition-all dark:bg-slate-900 dark:border-gray-800">
+                                    <span class="w-4 h-4 mx-auto" x-icon="'pencil'"></span>
+                                </button>
+                                <button type="button" @click.prevent="deleteProject(p.id)"
+                                    class="h-8 w-8 rounded-lg border border-gray-100 bg-white text-gray-400 hover:text-error-500 hover:border-error-500 transition-all dark:bg-slate-900 dark:border-gray-800">
+                                    <span class="w-4 h-4 mx-auto" x-icon="'trash'"></span>
+                                </button>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Tab 2: Studio -->
+    <div x-show="activeTab === 'studio'" x-transition x-cloak>
+        <!-- Header -->
+        <div class="mb-8 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div class="flex-1">
+                <input type="text" x-model="project.title" placeholder="Project Title..."
+                    class="w-full border-none bg-transparent p-0 text-3xl font-extrabold tracking-tight text-gray-900 placeholder:text-gray-200 focus:ring-0 dark:text-white dark:placeholder:text-gray-800 lg:text-4xl" />
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button type="button" @click="cancelEdit()"
+                    class="group flex items-center gap-2 rounded-2xl border border-gray-200 bg-white px-5 py-3 text-sm font-bold text-gray-600 transition-all hover:border-gray-300 hover:bg-gray-50 active:scale-95 dark:border-gray-800 dark:bg-white/5 dark:text-gray-400 dark:hover:bg-white/10">
+                    Cancel
+                </button>
+                <button type="button" @click="saveProject($el)" :disabled="isUploadingImage"
+                    :class="isUploadingImage ? 'opacity-50 cursor-not-allowed' : 'hover:bg-brand-600 hover:scale-[1.02] active:scale-95'"
+                    class="flex items-center gap-2 rounded-2xl bg-brand-500 px-8 py-3 text-sm font-bold text-white shadow-xl shadow-brand-500/25 transition-all">
+                    <span class="w-4 h-4" :class="isUploadingImage ? 'animate-spin' : ''"
+                        x-icon="isUploadingImage ? 'refresh' : 'refresh'"></span>
+                    <span x-text="isUploadingImage ? 'Saving...' : 'Save Project'"></span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Workspace -->
+        <div class="flex flex-col gap-8 lg:flex-row">
+
+            <!-- Left: Canvas Area -->
+            <div class="flex-1 min-w-0">
+                <div
+                    class="group relative min-h-[600px] rounded-2xl border border-gray-200 bg-white shadow-sm transition-all dark:border-gray-800 dark:bg-white/[0.01] overflow-hidden flex flex-col">
+
+                    <!-- Toolbar -->
+                    <div
+                        class="sticky top-0 z-40 flex flex-wrap items-center gap-1 border-b border-gray-200 bg-gray-50/70 p-2 backdrop-blur-2xl dark:border-gray-800 dark:bg-gray-900/50">
+
+                        <button @click="$refs.imageInput.click()" :disabled="isUploadingImage"
+                            :class="isUploadingImage ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-100 dark:hover:bg-white/5'"
+                            class="group relative flex h-9 w-9 items-center justify-center rounded-xl text-gray-500">
+                            <span class="w-4 h-4" x-icon="'image'"></span>
+                            <div class="tooltip">Upload Image</div>
+                        </button>
+
+                        <div class="h-6 w-px bg-gray-200 dark:bg-gray-800 mx-1"></div>
+
+                        <button @click="setTool('select')"
+                            :class="tool === 'select' ? 'bg-brand-50 text-brand-500 dark:bg-brand-900/20 dark:text-brand-400' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5'"
+                            class="group relative flex h-9 w-9 items-center justify-center rounded-xl transition-colors">
+                            <span class="w-4 h-4" x-icon="'navigation'"></span>
+                            <div class="tooltip">Select Tool</div>
+                        </button>
+
+                        <button @click="setTool('point')"
+                            :class="tool === 'point' ? 'bg-brand-50 text-brand-500 dark:bg-brand-900/20 dark:text-brand-400' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5'"
+                            class="group relative flex h-9 w-9 items-center justify-center rounded-xl transition-colors">
+                            <span class="w-4 h-4" x-icon="'map-pin'"></span>
+                            <div class="tooltip">Add Hotspot</div>
+                        </button>
+
+                        <button @click="setTool('polygon')"
+                            :class="tool === 'polygon' ? 'bg-brand-50 text-brand-500 dark:bg-brand-900/20 dark:text-brand-400' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5'"
+                            class="group relative flex h-9 w-9 items-center justify-center rounded-xl transition-colors">
+                            <span class="w-4 h-4" x-icon="'hexagon'"></span>
+                            <div class="tooltip">Add Area</div>
+                        </button>
+
+                        <button @click="setTool('hand')"
+                            :class="tool === 'hand' ? 'bg-brand-50 text-brand-500 dark:bg-brand-900/20 dark:text-brand-400' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5'"
+                            class="group relative flex h-9 w-9 items-center justify-center rounded-xl transition-colors">
+                            <span class="w-4 h-4" x-icon="'hand'"></span>
+                            <div class="tooltip">Drag Tool</div>
+                        </button>
+
+                        <div class="h-6 w-px bg-gray-200 dark:bg-gray-800 mx-1"></div>
+
+                        <button @click="undo()" :disabled="historyIndex <= 0"
+                            :class="historyIndex <= 0 ? 'text-gray-300 cursor-not-allowed dark:text-gray-700' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5'"
+                            class="group relative flex h-9 w-9 items-center justify-center rounded-xl transition-colors">
+                            <span class="w-4 h-4" x-icon="'undo'"></span>
+                            <div class="tooltip">Undo</div>
+                        </button>
+                        <button @click="redo()" :disabled="historyIndex >= history.length - 1"
+                            :class="historyIndex >= history.length - 1 ? 'text-gray-300 cursor-not-allowed dark:text-gray-700' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5'"
+                            class="group relative flex h-9 w-9 items-center justify-center rounded-xl transition-colors">
+                            <span class="w-4 h-4" x-icon="'redo'"></span>
+                            <div class="tooltip">Redo</div>
+                        </button>
+
+                        <div class="h-6 w-px bg-gray-200 dark:bg-gray-800 mx-1"></div>
+
+                        <button @click="zoomIn()"
+                            class="group relative flex h-9 w-9 items-center justify-center rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5">
+                            <span class="w-4 h-4" x-icon="'plus'"></span>
+                            <div class="tooltip">Zoom In</div>
+                        </button>
+                        <button @click="zoomOut()"
+                            class="group relative flex h-9 w-9 items-center justify-center rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5">
+                            <span class="w-4 h-4" x-icon="'minus'"></span>
+                            <div class="tooltip">Zoom Out</div>
+                        </button>
+                        <button @click="resetView()"
+                            class="group relative flex h-9 w-9 items-center justify-center rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5">
+                            <span class="w-4 h-4" x-icon="'refresh'"></span>
+                            <div class="tooltip">Reset View</div>
+                        </button>
+
+                        <div class="flex-1"></div>
+                        <div class="px-3 text-xs font-medium text-gray-500" x-text="hotspots.length + ' Points'"></div>
+                    </div>
+
+                    <!-- Canvas -->
+                    <div class="relative flex-1 overflow-hidden bg-gray-100 dark:bg-black/50 flex items-center justify-center"
+                        :class="{
+                            'cursor-crosshair': tool === 'point' || tool === 'polygon',
+                            'cursor-default': tool === 'select' && !isPanning,
+                            'cursor-grab': tool === 'hand' && !isPanning,
+                            'cursor-grabbing': isPanning
+                        }" @mousedown="startPan($event)" @mousemove="handleMouseMove($event)" @mouseup="endPan()"
+                        @mouseleave="endPan()" @wheel.prevent="handleWheel($event)">
+
+                        <div x-show="!imageUrl && !isUploadingImage" class="text-center p-10 pointer-events-none">
+                            <div
+                                class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-800">
+                                <span class="w-8 h-8 text-gray-400" x-icon="'image'"></span>
+                            </div>
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-white">No Image</h3>
+                            <p class="mt-1 text-sm text-gray-500">Upload an image to start</p>
+                        </div>
+
+                        <div x-show="isUploadingImage"
+                            class="text-center p-10 pointer-events-none absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/80 dark:bg-black/80 backdrop-blur-sm">
+                            <span
+                                class="animate-spin inline-block w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full mb-4"></span>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white uppercase tracking-widest">
+                                Uploading Image...</h3>
+                            <p class="mt-1 text-sm text-gray-500">Storing image to cloud storage</p>
+                        </div>
+
+                        <div x-show="imageUrl"
+                            class="relative transition-transform duration-75 ease-linear origin-center"
+                            :style="`transform: translate(${pan.x}px, ${pan.y}px) scale(${scale})`">
+
+                            <!-- Pending Upload Badge -->
+                            <div x-show="pendingImageData"
+                                class="absolute -top-10 left-0 z-50 rounded-lg bg-warning-500 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-white shadow-lg animate-bounce">
+                                <span class="flex items-center gap-1.5">
+                                    <span class="w-3 h-3" x-icon="'alert-circle'"></span>
+                                    Local Preview - Tap Save to Upload
+                                </span>
+                            </div>
+
+                            <img x-ref="img" :src="imageUrl"
+                                class="max-w-none shadow-2xl pointer-events-none select-none" draggable="false">
+
+                            <!-- Click Layer for Adding Points -->
+                            <div class="absolute inset-0 z-10" @click="handleCanvasClick($event)"></div>
+
+                            <!-- SVG Layer for Polygons -->
+                            <div class="absolute inset-0 w-full h-full pointer-events-none z-10">
+                                <template x-for="spot in hotspots.filter(h => h.type === 'polygon')" :key="spot.id">
+                                    <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100"
+                                        preserveAspectRatio="none">
+                                        <polygon :points="spot.points.map(p => p.x + ',' + p.y).join(' ')"
+                                            class="fill-none stroke-brand-500 hover:stroke-brand-600 transition-colors pointer-events-auto cursor-pointer"
+                                            style="stroke-width: 1.5; stroke-dasharray: 2 4; vector-effect: non-scaling-stroke;"
+                                            :class="selectedId === spot.id ? 'stroke-brand-600' : ''"
+                                            @click.stop="selectHotspot(spot.id)"></polygon>
+                                    </svg>
+                                </template>
+                            </div>
+
+                            <!-- Polygon Handles / Icons (Only for polygons) -->
+                            <template x-for="spot in hotspots.filter(h => h.type === 'polygon')" :key="spot.id">
+                                <div class="absolute inset-0 w-full h-full pointer-events-none z-20">
+                                    <template x-for="(point, pIndex) in spot.points" :key="pIndex">
+                                        <div class="absolute -translate-x-1/2 -translate-y-1/2 cursor-move pointer-events-auto group"
+                                            :style="`left: ${point.x}%; top: ${point.y}%;`"
+                                            @mousedown.stop.prevent="startDragHotspot($event, spot.id, pIndex)"
+                                            @click.stop="selectHotspot(spot.id)">
+
+                                            <div
+                                                class="relative flex items-center justify-center w-7 h-7 transition-transform duration-200 hover:scale-125">
+                                                <span class="w-7 h-7 drop-shadow-md filter"
+                                                    :class="selectedId === spot.id ? 'text-brand-500' : 'text-white'"
+                                                    x-icon="'map-pin'"></span>
+                                                <!-- Only show index on the first point of a polygon to identify the item -->
+                                                <span x-show="pIndex === 0"
+                                                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[60%] text-[10px] font-bold text-black"
+                                                    x-text="hotspots.findIndex(h => h.id === spot.id) + 1"></span>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+
+                            <!-- Hotspots Layer (Points Only) -->
+                            <template x-for="(spot, index) in hotspots.filter(h => h.type === 'point')" :key="spot.id">
+                                <div class="absolute -translate-x-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing group z-20"
+                                    :style="`left: ${spot.x}%; top: ${spot.y}%;`"
+                                    @mousedown.stop.prevent="startDragHotspot($event, spot.id)"
+                                    @click.stop="selectHotspot(spot.id)">
+
+                                    <div
+                                        class="relative flex items-center justify-center w-8 h-8 transition-transform duration-200 hover:scale-110">
+                                        <span class="w-8 h-8 drop-shadow-md filter"
+                                            :class="selectedId === spot.id ? 'text-brand-500' : 'text-white'"
+                                            x-icon="'map-pin'"></span>
+                                        <span
+                                            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[60%] text-[10px] font-bold text-black"
+                                            x-text="hotspots.indexOf(spot) + 1"></span>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Sidebar -->
+            <div class="w-full lg:w-80 flex-shrink-0 space-y-4">
+                <!-- Properties Panel -->
+                <div
+                    class="bg-white dark:bg-slate-900/50 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
+                    <div
+                        class="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-white/5">
+                        <h3 class="text-sm font-bold text-gray-900 dark:text-white">Properties</h3>
+                        <div class="flex items-center gap-3">
+                            <button x-show="selectedId" @click.stop="deleteHotspot(selectedId)"
+                                class="text-gray-400 hover:text-red-500 transition-colors" title="Delete Selected">
+                                <span class="w-4 h-4" x-icon="'trash'"></span>
+                            </button>
+                            <div class="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                List (<span x-text="hotspots.length"></span>)
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hotspot List with Integrated Properties -->
+                    <div class="border-t border-gray-100 dark:border-gray-800">
+                        <div class="max-h-[500px] overflow-y-auto custom-scrollbar bg-gray-50/30 dark:bg-black/20">
+                            <ul class="divide-y divide-gray-100 dark:divide-gray-800">
+                                <template x-for="(spot, index) in hotspots" :key="spot.id">
+                                    <li class="group cursor-pointer transition-colors"
+                                        :class="selectedId === spot.id ? 'bg-white dark:bg-slate-900 shadow-sm' : 'hover:bg-gray-100 dark:hover:bg-white/10'">
+
+                                        <!-- Item Header -->
+                                        <div class="flex items-center gap-3 px-4 py-3"
+                                            @click="selectHotspot(spot.id, true)">
+                                            <span
+                                                class="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-gray-200 text-[10px] font-bold text-gray-600 dark:bg-gray-700 dark:text-gray-300"
+                                                :class="selectedId === spot.id ? '!bg-brand-500 !text-white' : ''"
+                                                x-text="index + 1"></span>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="truncate text-xs font-bold text-gray-900 dark:text-white"
+                                                    x-text="spot.title || 'Untitled'"></p>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <button x-show="selectedId === spot.id"
+                                                    @click.stop="deleteHotspot(spot.id)"
+                                                    class="text-gray-400 hover:text-red-500 p-1 rounded transition-colors">
+                                                    <span class="w-3.5 h-3.5" x-icon="'trash'"></span>
+                                                </button>
+                                                <span class="w-4 h-4 text-gray-400 transition-transform duration-200"
+                                                    :class="selectedId === spot.id ? 'rotate-180' : ''"
+                                                    x-icon="'chevron-down'"></span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Integrated Properties (Accordion Content) -->
+                                        <div x-show="selectedId === spot.id" x-collapse
+                                            class="px-4 pb-4 space-y-5 border-t border-gray-100 dark:border-gray-800 pt-4">
+
+                                            <!-- Content Section -->
+                                            <div class="space-y-3">
+                                                <div class="flex items-center gap-2 mb-2">
+                                                    <span
+                                                        class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Content</span>
+                                                    <div class="h-px flex-1 bg-gray-100 dark:bg-gray-800"></div>
+                                                </div>
+                                                <div>
+                                                    <label
+                                                        class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Label</label>
+                                                    <input type="text" x-model="spot.title"
+                                                        class="w-full rounded-lg border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:border-brand-500 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-black/50 dark:text-white"
+                                                        placeholder="Label" @click.stop>
+                                                </div>
+                                                <div>
+                                                    <label
+                                                        class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Description</label>
+                                                    <textarea x-model="spot.description" rows="2"
+                                                        class="w-full rounded-lg border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:border-brand-500 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-black/50 dark:text-white"
+                                                        placeholder="Description..." @click.stop></textarea>
+                                                </div>
+                                                <div>
+                                                    <label
+                                                        class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Link</label>
+                                                    <input type="text" x-model="spot.url"
+                                                        class="w-full rounded-lg border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:border-brand-500 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-black/50 dark:text-white"
+                                                        placeholder="https://..." @click.stop>
+                                                </div>
+                                                <div>
+                                                    <label
+                                                        class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Animation</label>
+                                                    <select x-model="spot.animation" @click.stop
+                                                        class="w-full rounded-lg border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:border-brand-500 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-black/50 dark:text-white">
+                                                        <option value="none">None</option>
+                                                        <option value="pulse">Pulse</option>
+                                                        <option value="bounce">Bounce</option>
+                                                        <option value="ripple">Ripple</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label
+                                                        class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Size</label>
+                                                    <select x-model="spot.animationSize" @click.stop
+                                                        class="w-full rounded-lg border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:border-brand-500 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-black/50 dark:text-white">
+                                                        <option value="sm">Small</option>
+                                                        <option value="md">Medium</option>
+                                                        <option value="lg">Large</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <!-- Configuration Section -->
+                                            <div class="space-y-3">
+                                                <div class="flex items-center gap-2 mb-2">
+                                                    <span
+                                                        class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Config</span>
+                                                    <div class="h-px flex-1 bg-gray-100 dark:bg-gray-800"></div>
+                                                </div>
+                                                <div x-show="!spot.type || spot.type === 'point'"
+                                                    class="flex justify-between text-[10px] font-medium text-gray-400">
+                                                    <span>X: <span x-text="spot.x?.toFixed(2) + '%'"></span></span>
+                                                    <span>Y: <span x-text="spot.y?.toFixed(2) + '%'"></span></span>
+                                                </div>
+                                                <div x-show="spot.type === 'polygon'">
+                                                    <div
+                                                        class="flex justify-between text-[10px] font-bold text-gray-400 uppercase mb-2">
+                                                        <span>Type: Area</span>
+                                                        <span>Points: <span x-text="spot.points?.length"></span></span>
+                                                    </div>
+                                                    <div class="space-y-2 max-h-[120px] overflow-y-auto custom-scrollbar pr-1"
+                                                        @click.stop>
+                                                        <template x-for="(point, pIdx) in spot.points" :key="pIdx">
+                                                            <div
+                                                                class="rounded-lg border border-gray-100 bg-gray-50/50 p-2 dark:border-gray-800 dark:bg-white/5">
+                                                                <div class="flex items-center gap-2">
+                                                                    <div class="flex-1 grid grid-cols-2 gap-2">
+                                                                        <div class="relative">
+                                                                            <span
+                                                                                class="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">X</span>
+                                                                            <input type="number" x-model="point.x"
+                                                                                step="0.1"
+                                                                                class="w-full rounded border border-gray-200 bg-white py-1 pl-5 pr-1 text-[10px] focus:border-brand-500 focus:ring-0 dark:border-gray-700 dark:bg-black/50 dark:text-white">
+                                                                        </div>
+                                                                        <div class="relative">
+                                                                            <span
+                                                                                class="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">Y</span>
+                                                                            <input type="number" x-model="point.y"
+                                                                                step="0.1"
+                                                                                class="w-full rounded border border-gray-200 bg-white py-1 pl-5 pr-1 text-[10px] focus:border-brand-500 focus:ring-0 dark:border-gray-700 dark:bg-black/50 dark:text-white">
+                                                                        </div>
+                                                                    </div>
+                                                                    <button @click.stop="removePolygonPoint(pIdx)"
+                                                                        class="text-gray-400 hover:text-red-500 transition-colors">
+                                                                        <span class="w-3 h-3" x-icon="'close'"></span>
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                                <div class="pt-2">
+                                                    <button x-show="!spot.type || spot.type === 'point'"
+                                                        @click.stop="convertToPolygon()" type="button"
+                                                        class="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 py-2 text-[10px] font-bold text-gray-500 transition-colors hover:border-brand-500 hover:text-brand-500 dark:border-gray-700 dark:text-gray-400 dark:hover:border-brand-400 dark:hover:text-brand-400">
+                                                        <span class="w-3 h-3" x-icon="'hexagon'"></span> Convert to Area
+                                                    </button>
+                                                    <button x-show="spot.type === 'polygon'"
+                                                        @click.stop="toggleDrawing()" type="button"
+                                                        class="flex w-full items-center justify-center gap-2 rounded-lg py-2 text-[10px] font-bold transition-colors"
+                                                        :class="isDrawing ? 'bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400' : 'bg-brand-50 text-brand-600 hover:bg-brand-100 dark:bg-brand-900/20 dark:text-brand-400'">
+                                                        <span class="w-3 h-3"
+                                                            x-icon="isDrawing ? 'close' : 'plus'"></span>
+                                                        <span x-text="isDrawing ? 'Stop Drawing' : 'Add Points'"></span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </template>
+                                <li x-show="hotspots.length === 0" class="px-4 py-8 text-center text-gray-400 text-xs">
+                                    No hotspots added yet.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 3: Preview -->
+    <div x-show="activeTab === 'preview'" x-transition x-cloak class="space-y-6 pb-20">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white">Preview Mode</h2>
+            <button type="button" @click="activeTab = 'studio'"
+                class="flex items-center gap-2 rounded-2xl border border-gray-200 bg-white px-6 py-2.5 text-sm font-bold text-gray-600 transition-all hover:bg-gray-50 active:scale-95 dark:border-gray-800 dark:bg-white/5 dark:text-gray-400">
+                <span class="w-4 h-4" x-icon="'pencil'"></span>
+                Back to Editor
+            </button>
+        </div>
+
+        <div
+            class="relative min-h-[600px] flex items-center justify-center bg-gray-100 rounded-3xl overflow-hidden shadow-inner dark:bg-black/40 border border-gray-200 dark:border-gray-800">
+            <div class="relative inline-block m-10">
+                <template x-if="imageUrl">
+                    <div class="relative shadow-2xl rounded-xl overflow-hidden group/preview">
+                        <img :src="imageUrl" class="max-w-full block">
+
+                        <!-- SVG Layer for Polygons in Preview -->
+                        <div class="absolute inset-0 w-full h-full pointer-events-none">
+                            <template x-for="spot in hotspots.filter(h => h.type === 'polygon')" :key="spot.id">
+                                <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100"
+                                    preserveAspectRatio="none">
+                                    <polygon
+                                        :points="spot.points ? spot.points.map(p => p.x + ',' + p.y).join(' ') : ''"
+                                        class="fill-blue-500/10 stroke-brand-500 transition-all pointer-events-auto cursor-pointer hover:fill-blue-500/30"
+                                        @click="if(spot.url) window.open(spot.url, '_blank')"
+                                        style="stroke-width: 1.5; stroke-dasharray: 2 4; vector-effect: non-scaling-stroke;">
+                                    </polygon>
+                                </svg>
+                            </template>
+                        </div>
+
+                        <!-- Hotspots Rendering -->
+                        <template x-for="spot in hotspots" :key="spot.id">
+                            <div class="contents">
+                                <!-- Point Hotspot -->
+                                <template x-if="!spot.type || spot.type === 'point'">
+                                    <div class="absolute"
+                                        :style="`left: ${spot.x}%; top: ${spot.y}%; transform: translate(-50%, -50%);`"
+                                        @click="if(spot.url) window.open(spot.url, '_blank')"
+                                        :class="spot.url ? 'cursor-pointer' : ''">
+                                        <div class="group relative">
+                                            <div class="flex items-center justify-center rounded-full bg-brand-500 text-white shadow-lg transition-transform hover:scale-125"
+                                                :class="{
+                                                    'w-4 h-4': spot.animationSize === 'sm',
+                                                    'w-6 h-6': spot.animationSize === 'md',
+                                                    'w-9 h-9': spot.animationSize === 'lg',
+                                                    'animate-pulse': spot.animation === 'pulse',
+                                                    'animate-bounce-soft': spot.animation === 'bounce',
+                                                    'animate-ripple text-brand-500': spot.animation === 'ripple'
+                                                }">
+                                                <span :class="{
+                                                    'w-2 h-2': spot.animationSize === 'sm',
+                                                    'w-3 h-3': spot.animationSize === 'md',
+                                                    'w-5 h-5': spot.animationSize === 'lg'
+                                                }" x-icon="'zap'"></span>
+                                            </div>
+                                            <!-- Tooltip -->
+                                            <div
+                                                class="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-2 bg-gray-900/95 backdrop-blur-md text-white text-[10px] rounded-xl opacity-0 group-hover:opacity-100 transition-all pointer-events-none whitespace-nowrap z-50 shadow-2xl scale-75 group-hover:scale-100">
+                                                <div class="font-bold border-b border-white/10 pb-1 mb-1"
+                                                    x-text="spot.title || 'Info'"></div>
+                                                <div class="opacity-80" x-text="spot.description || 'No description'">
+                                                </div>
+                                                <div
+                                                    class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900/95">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <!-- Polygon Vertices -->
+                                <template x-if="spot.type === 'polygon'">
+                                    <template x-for="p in (spot.points || [])">
+                                        <div class="absolute"
+                                            :style="`left: ${p.x}%; top: ${p.y}%; transform: translate(-50%, -50%);`"
+                                            @click="if(spot.url) window.open(spot.url, '_blank')"
+                                            :class="spot.url ? 'cursor-pointer' : ''">
+                                            <div class="group relative">
+                                                <div class="flex items-center justify-center rounded-full bg-brand-500 text-white shadow-lg transition-transform hover:scale-125"
+                                                    :class="{
+                                                        'w-4 h-4': spot.animationSize === 'sm',
+                                                        'w-6 h-6': spot.animationSize === 'md',
+                                                        'w-9 h-9': spot.animationSize === 'lg',
+                                                        'animate-pulse': spot.animation === 'pulse',
+                                                        'animate-bounce-soft': spot.animation === 'bounce',
+                                                        'animate-ripple text-brand-500': spot.animation === 'ripple'
+                                                    }">
+                                                    <span :class="{
+                                                        'w-2 h-2': spot.animationSize === 'sm',
+                                                        'w-3 h-3': spot.animationSize === 'md',
+                                                        'w-5 h-5': spot.animationSize === 'lg'
+                                                    }" x-icon="'zap'"></span>
+                                                </div>
+                                                <!-- Tooltip -->
+                                                <div
+                                                    class="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-2 bg-gray-900/95 backdrop-blur-md text-white text-[10px] rounded-xl opacity-0 group-hover:opacity-100 transition-all pointer-events-none whitespace-nowrap z-50 shadow-2xl scale-75 group-hover:scale-100">
+                                                    <div class="font-bold border-b border-white/10 pb-1 mb-1"
+                                                        x-text="spot.title || 'Area Info'"></div>
+                                                    <div class="opacity-80"
+                                                        x-text="spot.description || 'No description'"></div>
+                                                    <div
+                                                        class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900/95">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+    </div>
