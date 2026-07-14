@@ -102,6 +102,20 @@
                     reader.readAsDataURL(file);
                 },
 
+                imageUrlPrompt() {
+                    const url = prompt('Enter image URL:');
+                    if (!url) return;
+                    this.imageUrl = url;
+                    this.pendingImageData = null;
+                    this.pendingFileName = null;
+                    this.hotspots = [];
+                    this.selectedId = null;
+                    this.resetView();
+                    this.history = [];
+                    this.historyIndex = -1;
+                    this.addToHistory();
+                },
+
                 newProject() {
                     this.project = { id: null, title: '', lastModified: Date.now() };
                     this.hotspots = [];
