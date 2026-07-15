@@ -18,6 +18,10 @@
 
           <!-- Transform wrapper -->
           <div class="relative transition-transform duration-150 ease-out origin-top-left" :style="transformStyle"
+            :class="{
+              'cursor-grab': isZoomed && !isPanning,
+              'cursor-grabbing': isPanning
+            }"
             style="transform-origin: 0 0;">
 
             <!-- Figure Image -->
@@ -75,7 +79,8 @@
                           <img :src="h._imageUrl" class="w-full h-full object-cover" loading="lazy" />
                         </template>
                         <template x-if="!h._imageUrl || !h._imageUrl.startsWith('http')">
-                          <div class="w-full h-full flex items-start justify-start p-1.5 text-gray-300 text-[10px] font-bold">
+                          <div
+                            class="w-full h-full flex items-start justify-start p-1.5 text-gray-300 text-[10px] font-bold">
                             N/A</div>
                         </template>
                       </div>
@@ -185,7 +190,8 @@
                   </td>
                   <td class="py-2.5 px-3 text-center">
                     <template x-if="h._slug">
-                      <button @click.stop="$store.cart.add({ id: h._product?.id || h.sku, name: h.label, price: h._price || 0, sku: h.sku || '', imageurl: h._imageUrl || '', weight: h._product?.weight || 0, weightunit: h._product?.weightunit || 'gram' }, 1); window.showToast && window.showToast('Ditambahkan ke keranjang', 'success')"
+                      <button
+                        @click.stop="$store.cart.add({ id: h._product?.id || h.sku, name: h.label, price: h._price || 0, sku: h.sku || '', imageurl: h._imageUrl || '', weight: h._product?.weight || 0, weightunit: h._product?.weightunit || 'gram' }, 1); window.showToast && window.showToast('Ditambahkan ke keranjang', 'success')"
                         class="inline-flex items-center justify-center text-brand-600 hover:text-brand-700 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/20 p-1 rounded transition-all duration-200"
                         title="Tambah ke Keranjang">
                         <span class="w-4 h-4" x-icon="'shopping-cart'"></span>
