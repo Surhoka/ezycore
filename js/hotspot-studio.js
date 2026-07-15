@@ -11,7 +11,8 @@
                 isLoading: false,
                 projects: [],
                 categories: [],
-                project: { id: null, title: '', category: '', created: Date.now(), lastModified: Date.now() },
+                vehicleModels: [],
+                project: { id: null, title: '', model: '', category: '', created: Date.now(), lastModified: Date.now() },
                 hotspots: [],
                 imageUrl: null,
                 selectedId: null,
@@ -51,6 +52,14 @@
                         this.isLoading = false;
                         if (response.status === 'success') {
                             this.projects = response.data || [];
+                            // Extract unique vehicle models from projects for datalist
+                            var models = [];
+                            for (var i = 0; i < this.projects.length; i++) {
+                                if (this.projects[i].model && models.indexOf(this.projects[i].model) === -1) {
+                                    models.push(this.projects[i].model);
+                                }
+                            }
+                            this.vehicleModels = models.sort();
                         } else {
                             window.showToast('Failed to load projects: ' + response.message, 'error');
                         }
@@ -128,7 +137,7 @@
                 },
 
                 newProject() {
-                    this.project = { id: null, title: '', category: '', created: Date.now(), lastModified: Date.now() };
+                    this.project = { id: null, title: '', model: '', category: '', created: Date.now(), lastModified: Date.now() };
                     this.hotspots = [];
                     this.imageUrl = null;
                     this.pendingImageData = null;
@@ -155,7 +164,7 @@
                 },
 
                 cancelEdit() {
-                    this.project = { id: null, title: '', category: '', created: Date.now(), lastModified: Date.now() };
+                    this.project = { id: null, title: '', model: '', category: '', created: Date.now(), lastModified: Date.now() };
                     this.hotspots = [];
                     this.imageUrl = null;
                     this.pendingImageData = null;
@@ -434,6 +443,7 @@
                     const payload = {
                         id: this.project.id,
                         title: this.project.title,
+                        model: this.project.model || '',
                         category: derivedCategory,
                         imageUrl: this.imageUrl,
                         hotspots: this.hotspots,
