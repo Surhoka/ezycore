@@ -48,7 +48,7 @@
                         class="bg-brand-50 dark:bg-brand-500/5 text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-800">
                         <th class="px-6 py-4 w-12">Images</th>
                         <th class="px-6 py-4">Project Name</th>
-                        <th class="px-6 py-4">Category</th>
+                        <th class="px-6 py-4">Model</th>
                         <th class="px-6 py-4">Hotspots</th>
                         <th class="px-6 py-4">Created</th>
                         <th class="px-6 py-4">Last Modified</th>
@@ -90,10 +90,10 @@
                                     x-text="p.title || 'Untitled Project'"></div>
                             </td>
                             <td class="px-6 py-5">
-                                <span x-show="p.category"
+                                <span x-show="p.model"
                                     class="rounded-lg bg-brand-50 px-2.5 py-1 text-[10px] font-bold text-brand-600 dark:bg-brand-900/20 dark:text-brand-400"
-                                    x-text="p.category"></span>
-                                <span x-show="!p.category" class="text-xs text-gray-400">-</span>
+                                    x-text="p.model"></span>
+                                <span x-show="!p.model" class="text-xs text-gray-400">-</span>
                             </td>
                             <td class="px-6 py-5">
                                 <span
@@ -366,6 +366,19 @@
                                 List (<span x-text="hotspots.length"></span>)
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Model Kendaraan (Project-Level) -->
+                    <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Model Kendaraan</label>
+                        <input type="text" x-model="project.model" list="vehicle-model-list"
+                            class="w-full rounded-lg border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:border-brand-500 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-black/50 dark:text-white"
+                            placeholder="Contoh: Honda Beat, Toyota Avanza...">
+                        <datalist id="vehicle-model-list">
+                            <template x-for="m in vehicleModels" :key="m">
+                                <option :value="m"></option>
+                            </template>
+                        </datalist>
                     </div>
 
                     <!-- Hotspot List with Integrated Properties -->
