@@ -44,7 +44,7 @@
             </template>
 
             <!-- Hotspot Points & Polygon Center Markers -->
-            <template x-for="h in hotspots" :key="h.id">
+            <template x-for="(h, hIdx) in hotspots" :key="h.id">
               <button :id="'hotspot-' + h.id" class="absolute z-10 group/hotspot" :style="'left:' + h.x + '%; top:' + h.y + '%'"
                 @mouseenter="openHotspotHover(h)"
                 @mouseleave="scheduleCloseHotspot(h)"
@@ -54,8 +54,9 @@
                 <span class="absolute inset-0 -m-2 rounded-full bg-brand-500/20 animate-ping"></span>
                 <!-- Dot -->
                 <span
-                  class="relative flex items-center justify-center w-5 h-5 rounded-full border-2 border-white bg-brand-500 shadow-lg cursor-pointer transition-transform group-hover/hotspot:scale-125"
+                  class="relative flex items-center justify-center w-6 h-6 rounded-full border-2 border-white bg-brand-500 shadow-lg cursor-pointer transition-transform group-hover/hotspot:scale-125"
                   :class="activeHotspot && activeHotspot.id === h.id ? 'ring-2 ring-brand-300 scale-125' : ''">
+                  <span class="text-[10px] font-extrabold text-white leading-none" x-text="hIdx + 1"></span>
                 </span>
 
                 <!-- Hotspot Card (kiri-atas) -->
