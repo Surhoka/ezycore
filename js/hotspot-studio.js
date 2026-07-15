@@ -224,6 +224,7 @@
                         x,
                         y,
                         type: 'point',
+                        category: '',
                         animation: 'none',
                         animationSize: 'md',
                         title: '',
@@ -260,7 +261,7 @@
 
                     if (this.tool === 'polygon' && (!spot || spot.type !== 'polygon')) {
                         const id = Date.now();
-                        spot = { id, x, y, title: 'New Area', type: 'polygon', animation: 'none', animationSize: 'md', points: [], description: '', url: '' };
+                        spot = { id, x, y, title: 'New Area', type: 'polygon', category: '', animation: 'none', animationSize: 'md', points: [], description: '', url: '' };
                         this.hotspots.push(spot);
                         this.selectedId = id;
                         this.isDrawing = true;
@@ -420,10 +421,20 @@
                 },
 
                 executeSave(button) {
+                    // Derive project category dari hotspot pertama yang punya category
+                    var derivedCategory = this.project.category || '';
+                    if (!derivedCategory) {
+                        for (var i = 0; i < this.hotspots.length; i++) {
+                            if (this.hotspots[i].category) {
+                                derivedCategory = this.hotspots[i].category;
+                                break;
+                            }
+                        }
+                    }
                     const payload = {
                         id: this.project.id,
                         title: this.project.title,
-                        category: this.project.category || '',
+                        category: derivedCategory,
                         imageUrl: this.imageUrl,
                         hotspots: this.hotspots,
                         created: this.project.created || Date.now()
