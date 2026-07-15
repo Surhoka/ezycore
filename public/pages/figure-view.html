@@ -45,10 +45,9 @@
 
             <!-- Hotspot Points & Polygon Center Markers -->
             <template x-for="(h, hIdx) in hotspots" :key="h.id">
-              <button :id="'hotspot-' + h.id" class="absolute z-10 group/hotspot" :style="'left:' + h.x + '%; top:' + h.y + '%'"
-                @mouseenter="openHotspotHover(h)"
-                @mouseleave="scheduleCloseHotspot(h)"
-                @click.stop="scrollToTableRow(h)">
+              <button :id="'hotspot-' + h.id" class="absolute z-10 group/hotspot"
+                :style="'left:' + h.x + '%; top:' + h.y + '%'" @mouseenter="openHotspotHover(h)"
+                @mouseleave="scheduleCloseHotspot(h)" @click.stop="scrollToTableRow(h)">
 
                 <!-- Pulse ring -->
                 <span class="absolute inset-0 -m-2 rounded-full bg-brand-500/20 animate-ping"></span>
@@ -63,9 +62,7 @@
                 <div x-show="h._open" x-transition:enter="transition ease-out duration-200"
                   x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
                   x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 scale-100"
-                  x-transition:leave-end="opacity-0 scale-95"
-                  @click.stop
-                  @mouseenter="cancelCloseHotspot()"
+                  x-transition:leave-end="opacity-0 scale-95" @click.stop @mouseenter="cancelCloseHotspot()"
                   @mouseleave="scheduleCloseHotspot(h)"
                   class="absolute z-20 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
                   :style="'right: calc(100% + 8px); bottom: calc(100% - 8px);'" x-cloak>
@@ -78,7 +75,7 @@
                           <img :src="h._imageUrl" class="w-full h-full object-cover" loading="lazy" />
                         </template>
                         <template x-if="!h._imageUrl || !h._imageUrl.startsWith('http')">
-                          <div class="w-full h-full flex items-center justify-start text-left text-gray-300 text-xs font-bold">
+                          <div class="w-full h-full flex items-start justify-start p-1.5 text-gray-300 text-[10px] font-bold">
                             N/A</div>
                         </template>
                       </div>
@@ -160,8 +157,7 @@
             </thead>
             <tbody>
               <template x-for="(h, idx) in hotspots" :key="h.id">
-                <tr
-                  :id="'comp-row-' + h.id"
+                <tr :id="'comp-row-' + h.id"
                   class="border-b border-theme-border/50 hover:bg-brand-50/30 dark:hover:bg-brand-900/10 cursor-pointer transition-colors"
                   @click="scrollToHotspot(h)">
                   <td class="py-2.5 px-3 text-theme-text-sub" x-text="idx + 1"></td>
@@ -189,9 +185,10 @@
                   </td>
                   <td class="py-2.5 px-3 text-center">
                     <template x-if="h._slug">
-                      <button @click.stop="goToProduct(h)"
-                        class="text-xs font-bold text-brand-600 hover:text-brand-700 dark:text-brand-400 hover:underline transition-colors">
-                        Lihat &rarr;
+                      <button @click.stop="$store.cart.add({ id: h._product?.id || h.sku, name: h.label, price: h._price || 0, sku: h.sku || '', imageurl: h._imageUrl || '', weight: h._product?.weight || 0, weightunit: h._product?.weightunit || 'gram' }, 1); window.showToast && window.showToast('Ditambahkan ke keranjang', 'success')"
+                        class="inline-flex items-center justify-center text-brand-600 hover:text-brand-700 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/20 p-1 rounded transition-all duration-200"
+                        title="Tambah ke Keranjang">
+                        <span class="w-4 h-4" x-icon="'shopping-cart'"></span>
                       </button>
                     </template>
                     <template x-if="!h._slug">
