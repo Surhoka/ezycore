@@ -10,7 +10,8 @@
                 activeTab: 'list',
                 isLoading: false,
                 projects: [],
-                project: { id: null, title: '', created: Date.now(), lastModified: Date.now() },
+                categories: [],
+                project: { id: null, title: '', category: '', created: Date.now(), lastModified: Date.now() },
                 hotspots: [],
                 imageUrl: null,
                 selectedId: null,
@@ -33,6 +34,15 @@
                 init() {
                     console.log("Hotspot Studio Initialized");
                     this.fetchProjects();
+                    this.fetchCategories();
+                },
+
+                fetchCategories() {
+                    window.sendDataToGoogle('getCategories', {}, (response) => {
+                        if (response.status === 'success') {
+                            this.categories = (response.data || []).filter(function(c) { return c.active !== 'FALSE'; });
+                        }
+                    });
                 },
 
                 fetchProjects() {
@@ -118,7 +128,7 @@
                 },
 
                 newProject() {
-                    this.project = { id: null, title: '', created: Date.now(), lastModified: Date.now() };
+                    this.project = { id: null, title: '', category: '', created: Date.now(), lastModified: Date.now() };
                     this.hotspots = [];
                     this.imageUrl = null;
                     this.pendingImageData = null;
@@ -145,7 +155,7 @@
                 },
 
                 cancelEdit() {
-                    this.project = { id: null, title: '', created: Date.now(), lastModified: Date.now() };
+                    this.project = { id: null, title: '', category: '', created: Date.now(), lastModified: Date.now() };
                     this.hotspots = [];
                     this.imageUrl = null;
                     this.pendingImageData = null;
@@ -413,6 +423,7 @@
                     const payload = {
                         id: this.project.id,
                         title: this.project.title,
+                        category: this.project.category || '',
                         imageUrl: this.imageUrl,
                         hotspots: this.hotspots,
                         created: this.project.created || Date.now()
