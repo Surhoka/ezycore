@@ -151,6 +151,7 @@
               <tr class="border-b border-theme-border">
                 <th class="text-left py-2 px-3 text-xs font-semibold text-theme-text-sub">No</th>
                 <th class="text-left py-2 px-3 text-xs font-semibold text-theme-text-sub">Nama Komponen</th>
+                <th class="text-left py-2 px-3 text-xs font-semibold text-theme-text-sub">Kategori</th>
                 <th class="text-left py-2 px-3 text-xs font-semibold text-theme-text-sub">SKU</th>
                 <th class="text-right py-2 px-3 text-xs font-semibold text-theme-text-sub">Harga</th>
                 <th class="text-center py-2 px-3 text-xs font-semibold text-theme-text-sub">Aksi</th>
@@ -168,6 +169,12 @@
                     <span x-show="h.type === 'polygon'"
                       class="ml-1.5 text-[9px] font-bold text-brand-600 bg-brand-50 px-1.5 py-0.5 rounded dark:bg-brand-900/20 dark:text-brand-400">Area</span>
                     <span x-show="h.note" class="block text-[11px] text-theme-text-sub mt-0.5" x-text="h.note"></span>
+                  </td>
+                  <td class="py-2.5 px-3">
+                    <span x-show="h.category"
+                      class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded"
+                      x-text="h.category"></span>
+                    <span x-show="!h.category" class="text-theme-text-sub">—</span>
                   </td>
                   <td class="py-2.5 px-3 font-mono text-xs text-theme-text-sub" x-text="h.sku || '—'"></td>
                   <td class="py-2.5 px-3 text-right">
