@@ -78,7 +78,7 @@
                           <img :src="h._imageUrl" class="w-full h-full object-cover" loading="lazy" />
                         </template>
                         <template x-if="!h._imageUrl || !h._imageUrl.startsWith('http')">
-                          <div class="w-full h-full flex items-center justify-center text-gray-300 text-xs font-bold">
+                          <div class="w-full h-full flex items-center justify-start text-left text-gray-300 text-xs font-bold">
                             N/A</div>
                         </template>
                       </div>
@@ -86,7 +86,7 @@
                       <div class="flex-1 min-w-0">
                         <p class="text-sm font-bold text-theme-text truncate" x-text="h.label"></p>
                         <template x-if="h.sku">
-                          <p class="text-[11px] text-theme-text-sub font-mono" x-text="'SKU: ' + h.sku"></p>
+                          <p class="text-[11px] text-theme-text-sub font-mono" x-text="h.sku"></p>
                         </template>
                         <template x-if="h._price">
                           <p class="text-sm font-extrabold text-red-600 dark:text-red-400 mt-0.5"
