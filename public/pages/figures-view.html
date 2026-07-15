@@ -1,18 +1,10 @@
 <div x-data='figureSearchData()' x-init='init()' class='min-h-[60vh] px-4 py-8 max-w-7xl mx-auto'>
 
-  <!-- Header -->
-  <div class='text-center mb-10'>
-    <h1 class='text-3xl md:text-4xl font-extrabold text-theme-text tracking-tight'>Figure & Diagram</h1>
-    <p class='mt-2 text-theme-text-sub text-sm md:text-base'>Cari diagram interaktif berdasarkan model kendaraan, nomor parts,
-      atau nama produk.</p>
-  </div>
-
-  <!-- 2-Column Layout: Sidebar + Grid -->
   <div class='flex flex-col lg:flex-row gap-8'>
 
-    <!-- Sidebar: Search Panel (sticky on desktop) -->
-    <aside class='w-full lg:w-72 flex-shrink-0'>
-      <div class='lg:sticky lg:top-24 bg-theme-secondary border border-theme-border rounded-2xl p-5 md:p-6 shadow-xl space-y-5'>
+    <!-- Sidebar: Filter (left, sticky) -->
+    <aside class='w-full lg:w-64 flex-shrink-0 order-2 lg:order-1'>
+      <div class='lg:sticky lg:top-24 bg-theme-secondary border border-theme-border rounded-2xl p-5 shadow-xl space-y-5'>
 
         <h2 class='text-xs font-bold text-theme-text-sub uppercase tracking-widest'>Filter</h2>
 
@@ -28,8 +20,7 @@
               </template>
             </select>
             <svg class='absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-text-sub pointer-events-none'
-              viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round'
-              stroke-linejoin='round'>
+              viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
               <polyline points='6 9 12 15 18 9' />
             </svg>
           </div>
@@ -47,8 +38,7 @@
               </template>
             </select>
             <svg class='absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-text-sub pointer-events-none'
-              viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round'
-              stroke-linejoin='round'>
+              viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
               <polyline points='6 9 12 15 18 9' />
             </svg>
           </div>
@@ -76,8 +66,14 @@
       </div>
     </aside>
 
-    <!-- Main: Results -->
-    <div class='flex-1 min-w-0'>
+    <!-- Main: Header + Grid (right) -->
+    <div class='flex-1 min-w-0 order-1 lg:order-2'>
+
+      <!-- Header -->
+      <div class='mb-8'>
+        <h1 class='text-3xl md:text-4xl font-extrabold text-theme-text tracking-tight'>Figure & Diagram</h1>
+        <p class='mt-2 text-theme-text-sub text-sm md:text-base'>Cari diagram interaktif berdasarkan model kendaraan, nomor parts, atau nama produk.</p>
+      </div>
 
       <!-- Loading -->
       <template x-if='isLoading'>
@@ -101,32 +97,53 @@
 
       <!-- Results Grid -->
       <template x-if='!isLoading && filteredResults.length > 0'>
-        <div class='grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5'>
-          <template x-for='item in filteredResults' :key='item.slug'>
-            <button type='button' x-on:click='openFigure(item)'
-              class='group bg-theme-secondary rounded-xl overflow-hidden shadow-lg border border-theme-border hover:border-brand-600/60 transition-all duration-200 hover:scale-[1.02] hover:shadow-xl text-left cursor-pointer'>
+        <div>
+          <div class='grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5'>
+            <template x-for='item in paginatedResults' :key='item.slug'>
+              <button type='button' x-on:click='openFigure(item)'
+                class='group bg-theme-secondary rounded-xl overflow-hidden shadow-lg border border-theme-border hover:border-brand-600/60 transition-all duration-200 hover:scale-[1.02] hover:shadow-xl text-left cursor-pointer'>
 
-              <!-- Thumbnail -->
-              <div class='relative aspect-video bg-gray-800 overflow-hidden'>
-                <img :src='item.thumbnail' :alt='item.title'
-                  class='w-full h-full object-cover' loading='lazy'
-                  onerror="this.style.display='none'" />
-                <div class='absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent'></div>
-                <div class='absolute bottom-2 left-2'>
-                  <span x-show='item.model' x-text='item.model'
-                    class='inline-block bg-brand-600/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wide'></span>
+                <!-- Thumbnail -->
+                <div class='relative aspect-video bg-gray-800 overflow-hidden'>
+                  <img :src='item.thumbnail' :alt='item.title'
+                    class='w-full h-full object-cover' loading='lazy'
+                    onerror="this.style.display='none'" />
+                  <div class='absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent'></div>
+                  <div class='absolute bottom-2 left-2'>
+                    <span x-show='item.model' x-text='item.model'
+                      class='inline-block bg-brand-600/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wide'></span>
+                  </div>
                 </div>
-              </div>
 
-              <!-- Info -->
-              <div class='p-4'>
-                <h3 class='text-sm font-bold text-theme-text truncate group-hover:text-brand-400 transition-colors'
-                  x-text='item.title'></h3>
-                <p class='text-xs text-theme-text-sub mt-1 truncate'
-                  x-text='item.description || "Klik untuk melihat diagram interaktif"'></p>
-              </div>
+                <!-- Info -->
+                <div class='p-4'>
+                  <h3 class='text-sm font-bold text-theme-text truncate group-hover:text-brand-400 transition-colors'
+                    x-text='item.title'></h3>
+                  <p class='text-xs text-theme-text-sub mt-1 truncate'
+                    x-text='item.description || "Klik untuk melihat diagram interaktif"'></p>
+                </div>
+              </button>
+            </template>
+          </div>
+
+          <!-- Pagination -->
+          <div x-show='totalPages > 1' class='flex items-center justify-center gap-1.5 mt-8'>
+            <button type='button' x-on:click='goToPage(currentPage - 1)' :disabled='currentPage <= 1'
+              class='w-9 h-9 flex items-center justify-center rounded-lg border border-theme-border text-theme-text-sub hover:bg-theme-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm font-bold'>
+              &lsaquo;
             </button>
-          </template>
+            <template x-for='p in totalPages' :key='p'>
+              <button type='button' x-on:click='goToPage(p)'
+                class='w-9 h-9 flex items-center justify-center rounded-lg text-sm font-bold transition-colors'
+                :class='p === currentPage ? "bg-brand-600 text-white shadow-lg shadow-brand-600/25" : "border border-theme-border text-theme-text-sub hover:bg-theme-secondary"'>
+                <span x-text='p'></span>
+              </button>
+            </template>
+            <button type='button' x-on:click='goToPage(currentPage + 1)' :disabled='currentPage >= totalPages'
+              class='w-9 h-9 flex items-center justify-center rounded-lg border border-theme-border text-theme-text-sub hover:bg-theme-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm font-bold'>
+              &rsaquo;
+            </button>
+          </div>
         </div>
       </template>
 
