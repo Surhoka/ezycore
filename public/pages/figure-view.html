@@ -1,6 +1,24 @@
 <div x-data="figureViewData()" x-init="init()">
   <template x-if="figure">
-    <div class="space-y-6">
+    <div class="flex flex-col lg:flex-row gap-6">
+
+      <!-- Sidebar Model Figures (kiri - desktop only) -->
+      <aside x-show="relatedFigures.length > 0" class="hidden lg:block w-64 shrink-0" x-cloak>
+        <div class="sticky top-4 bg-theme-secondary border border-theme-border rounded-xl p-4 max-h-[calc(100vh-2rem)] overflow-y-auto">
+          <h3 class="text-[11px] font-bold text-theme-text-sub uppercase tracking-wider mb-3" x-text="figure.model || 'Model'"></h3>
+          <nav class="space-y-0.5">
+            <div class="px-3 py-2 text-sm font-semibold text-brand-600 bg-brand-50 rounded-lg dark:bg-brand-900/20 dark:text-brand-400 truncate" x-text="figure.title"></div>
+            <template x-for="f in relatedFigures" :key="f.slug">
+              <button @click="navigateToFigure(f)"
+                class="w-full text-left px-3 py-2 text-sm text-theme-text hover:bg-brand-50 hover:text-brand-600 rounded-lg transition-colors dark:hover:bg-brand-900/20 dark:hover:text-brand-400 truncate"
+                x-text="f.title"></button>
+            </template>
+          </nav>
+        </div>
+      </aside>
+
+      <!-- Konten Utama (kanan) -->
+      <div class="flex-1 min-w-0 space-y-6">
 
       <!-- Figure Title -->
       <div>
@@ -10,7 +28,7 @@
 
       <!-- Figure Image + Hotspot Container -->
       <div class="bg-theme-secondary border border-theme-border rounded-xl p-4 md:p-6">
-        <div class="relative overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 select-none"
+        <div class="relative overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 select-none aspect-video"
           style="touch-action: none;" @wheel.prevent="onWheel($event)" @pointerdown="onPointerDown($event)"
           @pointermove="onPointerMove($event)" @pointerup="onPointerUp()" @pointerleave="onPointerUp()"
           @touchstart="onTouchStart($event)" @touchmove="onTouchMove($event)" @touchend="onTouchEnd()"
@@ -26,11 +44,11 @@
 
             <!-- Figure Image -->
             <template x-if="figure.figureImage && figure.figureImage.startsWith('http')">
-              <img :src="figure.figureImage" :alt="figure.title" class="w-full h-auto block pointer-events-none"
+              <img :src="figure.figureImage" :alt="figure.title" class="w-full h-full object-contain block pointer-events-none"
                 draggable="false" loading="lazy" />
             </template>
             <template x-if="!figure.figureImage || !figure.figureImage.startsWith('http')">
-              <div class="w-full aspect-video flex items-center justify-center text-gray-400 text-sm font-bold">
+              <div class="w-full h-full flex items-center justify-center text-gray-400 text-sm font-bold">
                 Gambar figure tidak tersedia
               </div>
             </template>
@@ -214,6 +232,7 @@
         <p class="text-sm text-theme-text-sub">Tidak ada hotspot yang tersedia untuk figure ini.</p>
       </div>
 
+      </div><!-- /Konten Utama -->
     </div>
   </template>
 
