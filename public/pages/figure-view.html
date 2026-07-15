@@ -3,8 +3,8 @@
     <div class="flex flex-col lg:flex-row gap-6">
 
       <!-- Sidebar Model Figures (kiri - desktop only) -->
-      <aside x-show="relatedFigures.length > 0" class="hidden lg:block w-64 shrink-0" x-cloak>
-        <div class="sticky top-4 bg-theme-secondary border border-theme-border rounded-xl p-4 max-h-[calc(100vh-2rem)] overflow-y-auto">
+      <aside x-show="relatedFigures.length > 0" class="w-full lg:w-64 shrink-0 order-2 lg:order-1" x-cloak>
+        <div class="lg:sticky lg:top-4 bg-theme-secondary border border-theme-border rounded-xl p-4 max-h-[calc(100vh-2rem)] overflow-y-auto">
           <h3 class="text-[11px] font-bold text-theme-text-sub uppercase tracking-wider mb-3" x-text="figure.model || 'Model'"></h3>
           <nav class="space-y-0.5">
             <div class="px-3 py-2 text-sm font-semibold text-brand-600 bg-brand-50 rounded-lg dark:bg-brand-900/20 dark:text-brand-400 truncate" x-text="figure.title"></div>
@@ -18,7 +18,7 @@
       </aside>
 
       <!-- Konten Utama (kanan) -->
-      <div class="flex-1 min-w-0 space-y-6">
+      <div class="flex-1 min-w-0 space-y-6 order-1 lg:order-2">
 
       <!-- Figure Title -->
       <div>
