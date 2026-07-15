@@ -48,6 +48,7 @@
                         class="bg-brand-50 dark:bg-brand-500/5 text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-800">
                         <th class="px-6 py-4 w-12">Images</th>
                         <th class="px-6 py-4">Project Name</th>
+                        <th class="px-6 py-4">Category</th>
                         <th class="px-6 py-4">Hotspots</th>
                         <th class="px-6 py-4">Created</th>
                         <th class="px-6 py-4">Last Modified</th>
@@ -57,7 +58,7 @@
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                     <template x-if="isLoading">
                         <tr>
-                            <td colspan="6" class="px-6 py-10 text-center">
+                            <td colspan="7" class="px-6 py-10 text-center">
                                 <span
                                     class="animate-spin inline-block w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full"></span>
                                 <div class="mt-2 text-xs text-gray-400 font-bold uppercase tracking-widest">Loading
@@ -67,7 +68,7 @@
                     </template>
                     <template x-if="!isLoading && projects.length === 0">
                         <tr>
-                            <td colspan="6" class="px-6 py-10 text-center text-gray-400">No projects found. Create your
+                            <td colspan="7" class="px-6 py-10 text-center text-gray-400">No projects found. Create your
                                 first one!</td>
                         </tr>
                     </template>
@@ -87,6 +88,12 @@
                             <td class="px-6 py-5">
                                 <div class="font-bold text-gray-900 dark:text-white"
                                     x-text="p.title || 'Untitled Project'"></div>
+                            </td>
+                            <td class="px-6 py-5">
+                                <span x-show="p.category"
+                                    class="rounded-lg bg-brand-50 px-2.5 py-1 text-[10px] font-bold text-brand-600 dark:bg-brand-900/20 dark:text-brand-400"
+                                    x-text="p.category"></span>
+                                <span x-show="!p.category" class="text-xs text-gray-400">-</span>
                             </td>
                             <td class="px-6 py-5">
                                 <span
@@ -359,6 +366,18 @@
                                 List (<span x-text="hotspots.length"></span>)
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Category Selector -->
+                    <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Category</label>
+                        <select x-model="project.category"
+                            class="w-full rounded-lg border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:border-brand-500 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-black/50 dark:text-white">
+                            <option value="">No Category</option>
+                            <template x-for="cat in categories" :key="cat.id">
+                                <option :value="cat.name" x-text="cat.name"></option>
+                            </template>
+                        </select>
                     </div>
 
                     <!-- Hotspot List with Integrated Properties -->
