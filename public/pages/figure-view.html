@@ -3,10 +3,11 @@
     <div class="flex flex-col lg:flex-row gap-6">
 
       <!-- Sidebar Model Figures (kiri - desktop only) -->
-      <aside x-show="relatedFigures.length > 0" class="w-full lg:w-64 shrink-0 order-2 lg:order-1 flex flex-col" x-cloak>
+      <aside x-show="relatedFigures.length > 0" class="w-full lg:w-64 shrink-0 order-2 lg:order-1 flex flex-col"
+        x-cloak>
         <span x-show="figure.model" x-text="figure.model"
-          class="inline-block bg-brand-600/90 text-white text-[12px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wide"></span>
-        <nav class="space-y-0.5">
+          class="inline-block bg-brand-600/90 text-white text-[13px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wide"></span>
+        <nav class="mt-3 space-y-0.5">
           <template x-for="f in relatedFigures" :key="f.slug">
             <button @click="f.slug !== figure.slug && navigateToFigure(f)"
               :class="f.slug === figure.slug ? 'px-2 py-1.5 text-sm font-semibold text-brand-600 dark:text-brand-400 truncate cursor-default' : 'w-full text-left px-2 py-1.5 text-sm text-theme-text hover:text-brand-600 dark:hover:text-brand-400 truncate transition-colors'"
@@ -18,235 +19,230 @@
       <!-- Konten Utama (kanan) -->
       <div class="flex-1 min-w-0 space-y-6 order-1 lg:order-2">
 
-      <!-- Figure Title -->
-      <div>
-        <h1 class="text-lg md:text-xl font-bold text-theme-text leading-snug" x-text="figure.title"></h1>
-        <p x-show="figure.description" class="mt-1 text-sm text-theme-text-sub" x-text="figure.description"></p>
-      </div>
+        <!-- Figure Title -->
+        <div>
+          <h1 class="text-lg md:text-xl font-bold text-theme-text leading-snug" x-text="figure.title"></h1>
+          <p x-show="figure.description" class="mt-1 text-sm text-theme-text-sub" x-text="figure.description"></p>
+        </div>
 
-      <!-- Figure Image + Hotspot Container -->
-      <div class="bg-theme-secondary border border-theme-border rounded-xl p-4 md:p-6">
-        <div class="relative rounded-lg bg-gray-100 dark:bg-gray-800 select-none"
-          :class="fullscreenImageOpen ? 'overflow-auto' : 'overflow-hidden aspect-video'"
-          :style="fullscreenImageOpen ? '' : 'touch-action: none;'"
-          @wheel.passive="fullscreenImageOpen ? undefined : onWheel($event)"
-          @pointerdown="if(!fullscreenImageOpen) onPointerDown($event)"
-          @pointermove="if(!fullscreenImageOpen) onPointerMove($event)"
-          @pointerup="if(!fullscreenImageOpen) onPointerUp()"
-          @pointerleave="if(!fullscreenImageOpen) onPointerUp()"
-          @touchstart="if(!fullscreenImageOpen) onTouchStart($event)"
-          @touchmove="if(!fullscreenImageOpen) onTouchMove($event)"
-          @touchend="if(!fullscreenImageOpen) onTouchEnd()"
-          @dblclick="if(!fullscreenImageOpen) onDblClick()">
+        <!-- Figure Image + Hotspot Container -->
+        <div class="bg-theme-secondary border border-theme-border rounded-xl p-4 md:p-6">
+          <div class="relative rounded-lg bg-gray-100 dark:bg-gray-800 select-none"
+            :class="fullscreenImageOpen ? 'overflow-auto' : 'overflow-hidden aspect-video'"
+            :style="fullscreenImageOpen ? '' : 'touch-action: none;'"
+            @wheel.passive="fullscreenImageOpen ? undefined : onWheel($event)"
+            @pointerdown="if(!fullscreenImageOpen) onPointerDown($event)"
+            @pointermove="if(!fullscreenImageOpen) onPointerMove($event)"
+            @pointerup="if(!fullscreenImageOpen) onPointerUp()" @pointerleave="if(!fullscreenImageOpen) onPointerUp()"
+            @touchstart="if(!fullscreenImageOpen) onTouchStart($event)"
+            @touchmove="if(!fullscreenImageOpen) onTouchMove($event)" @touchend="if(!fullscreenImageOpen) onTouchEnd()"
+            @dblclick="if(!fullscreenImageOpen) onDblClick()">
 
-          <!-- Transform wrapper -->
-          <div class="relative transition-transform duration-150 ease-out origin-top-left"
-            :style="fullscreenImageOpen ? '' : transformStyle"
-            :class="{
+            <!-- Transform wrapper -->
+            <div class="relative transition-transform duration-150 ease-out origin-top-left"
+              :style="fullscreenImageOpen ? '' : transformStyle" :class="{
               'cursor-grab': !fullscreenImageOpen && isZoomed && !isPanning,
               'cursor-grabbing': !fullscreenImageOpen && isPanning
-            }"
-            style="transform-origin: 0 0;">
+            }" style="transform-origin: 0 0;">
 
-            <!-- Figure Image -->
-            <template x-if="figure.figureImage && figure.figureImage.startsWith('http')">
-              <img :src="figure.figureImage" :alt="figure.title"
-                :class="fullscreenImageOpen ? 'block pointer-events-auto' : 'w-full h-full object-contain block pointer-events-none'"
-                draggable="false" loading="lazy" />
-            </template>
-            <template x-if="!figure.figureImage || !figure.figureImage.startsWith('http')">
-              <div class="w-full h-full flex items-center justify-center text-gray-400 text-sm font-bold">
-                Gambar figure tidak tersedia
-              </div>
-            </template>
-
-            <!-- Polygon SVG Areas -->
-            <template x-for="h in hotspots.filter(h => h.type === 'polygon')" :key="'svg-' + h.id">
-              <svg class="absolute inset-0 w-full h-full z-[5]" viewBox="0 0 100 100" preserveAspectRatio="none">
-                <polygon :points="(h.points || []).map(p => p.x + ',' + p.y).join(' ')"
-                  class="fill-brand-500/10 stroke-brand-500/60 hover:fill-brand-500/20 hover:stroke-brand-600 cursor-pointer transition-all"
-                  style="stroke-width: 1.5; stroke-dasharray: 3 5; vector-effect: non-scaling-stroke;"
-                  :class="activeHotspot && activeHotspot.id === h.id ? 'fill-brand-500/20 stroke-brand-600' : ''"
-                  @click.stop="toggleHotspot(h)">
-                </polygon>
-              </svg>
-            </template>
-
-            <!-- Hotspot Points & Polygon Center Markers -->
-            <template x-for="(h, hIdx) in hotspots" :key="h.id">
-              <button :id="'hotspot-' + h.id" class="absolute z-10 group/hotspot"
-                :style="'left:' + h.x + '%; top:' + h.y + '%'" @mouseenter="openHotspotHover(h)"
-                @mouseleave="scheduleCloseHotspot(h)" @click.stop="scrollToTableRow(h)">
-
-                <!-- Pulse ring -->
-                <span class="absolute inset-0 -m-2 rounded-full bg-brand-500/20 animate-ping"></span>
-                <!-- Dot -->
-                <span
-                  class="relative flex items-center justify-center w-6 h-6 rounded-full border-2 border-white bg-brand-500 shadow-lg cursor-pointer transition-transform group-hover/hotspot:scale-125"
-                  :class="activeHotspot && activeHotspot.id === h.id ? 'ring-2 ring-brand-300 scale-125' : ''">
-                  <span class="text-[10px] font-extrabold text-white leading-none" x-text="hIdx + 1"></span>
-                </span>
-
-                <!-- Hotspot Card (kiri-atas) -->
-                <div x-show="h._open" x-transition:enter="transition ease-out duration-200"
-                  x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-                  x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 scale-100"
-                  x-transition:leave-end="opacity-0 scale-95" @click.stop @mouseenter="cancelCloseHotspot()"
-                  @mouseleave="scheduleCloseHotspot(h)"
-                  class="absolute z-20 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
-                  :style="'right: calc(100% + 8px); bottom: calc(100% - 8px);'" x-cloak>
-
-                  <div class="p-3">
-                    <div class="flex gap-3">
-                      <!-- Product Image -->
-                      <div class="w-14 h-14 shrink-0 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
-                        <template x-if="h._imageUrl && h._imageUrl.startsWith('http')">
-                          <img :src="h._imageUrl" class="w-full h-full object-cover" loading="lazy" />
-                        </template>
-                        <template x-if="!h._imageUrl || !h._imageUrl.startsWith('http')">
-                          <div
-                            class="w-full h-full flex items-start justify-start p-1.5 text-gray-300 text-[10px] font-bold">
-                            N/A</div>
-                        </template>
-                      </div>
-                      <!-- Info -->
-                      <div class="flex-1 min-w-0 text-left">
-                        <p class="text-sm font-bold text-theme-text truncate text-left" x-text="h.label"></p>
-                        <template x-if="h.sku">
-                          <p class="text-[11px] text-theme-text-sub font-mono text-left" x-text="h.sku"></p>
-                        </template>
-                        <template x-if="h._price">
-                          <p class="text-sm font-extrabold text-red-600 dark:text-red-400 mt-0.5 text-left"
-                            x-text="formatPrice(h._price)"></p>
-                        </template>
-                      </div>
-                    </div>
-                    <template x-if="h.note">
-                      <p class="text-[11px] text-theme-text-sub mt-2 leading-relaxed" x-text="h.note"></p>
-                    </template>
-                    <template x-if="h._slug">
-                      <button @click="goToProduct(h)"
-                        class="mt-2 w-full text-xs font-bold py-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 text-white transition-colors flex items-center justify-center gap-1">
-                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-                          <line x1="3" y1="6" x2="21" y2="6" />
-                          <path d="M16 10a4 4 0 0 1-8 0" />
-                        </svg>
-                        Lihat Produk
-                      </button>
-                    </template>
-                  </div>
-                </div>
-              </button>
-            </template>
-          </div>
-        </div>
-
-        <!-- Zoom Controls -->
-        <div class="flex items-center gap-2 mt-3">
-          <div class="flex items-center border border-theme-border rounded-lg overflow-hidden">
-            <button @click="zoomIn()"
-              class="w-8 h-8 flex items-center justify-center text-theme-text-sub hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors text-sm font-bold"
-              :class="fullscreenImageOpen ? 'opacity-30 cursor-not-allowed' : ''"
-              :disabled="fullscreenImageOpen"
-              title="Zoom In">+</button>
-            <span
-              class="px-2 text-xs font-medium text-theme-text-sub border-x border-theme-border min-w-[3rem] text-center"
-              x-text="fullscreenImageOpen ? '100%' : Math.round(zoomScale * 100) + '%'"></span>
-            <button @click="zoomOut()"
-              class="w-8 h-8 flex items-center justify-center text-theme-text-sub hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors text-sm font-bold"
-              :class="(fullscreenImageOpen || zoomScale <= 1) ? 'opacity-30 cursor-not-allowed' : ''"
-              :disabled="fullscreenImageOpen"
-              title="Zoom Out">&minus;</button>
-          </div>
-          <button x-show="isZoomed && !fullscreenImageOpen" @click="resetZoom()"
-            class="text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400 transition-colors"
-            x-cloak>Reset</button>
-          <button @click="toggleFullscreenImage()"
-            class="w-8 h-8 flex items-center justify-center text-theme-text-sub hover:bg-brand-50 dark:hover:bg-brand-900/20 rounded-lg transition-colors"
-            :title="fullscreenImageOpen ? 'Kembali ke Tampilan Normal' : 'Lihat Gambar Ukuran Asli'">
-            <span class="w-4 h-4" x-icon="fullscreenImageOpen ? 'minimize' : 'maximize'"></span>
-          </button>
-          <span class="text-[10px] text-theme-text-sub ml-auto hidden sm:inline">
-            <template x-if="isMobile">
-              <span>Pinch to zoom &middot; Double-tap to toggle</span>
-            </template>
-            <template x-if="!isMobile">
-              <span>Scroll to zoom &middot; Double-click to toggle &middot; Drag to pan</span>
-            </template>
-          </span>
-        </div>
-      </div>
-
-      <!-- Daftar Komponen -->
-      <div x-show="hotspots.length > 0" class="bg-theme-secondary border border-theme-border rounded-xl p-4 md:p-6"
-        x-cloak>
-        <h2 class="text-base font-bold text-theme-text mb-4">Daftar Komponen</h2>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="border-b border-theme-border">
-                <th class="text-left py-2 px-3 text-xs font-semibold text-theme-text-sub">No</th>
-                <th class="text-left py-2 px-3 text-xs font-semibold text-theme-text-sub">Nama Komponen</th>
-                <th class="text-left py-2 px-3 text-xs font-semibold text-theme-text-sub">Kategori</th>
-                <th class="text-left py-2 px-3 text-xs font-semibold text-theme-text-sub">SKU</th>
-                <th class="text-right py-2 px-3 text-xs font-semibold text-theme-text-sub">Harga</th>
-                <th class="text-center py-2 px-3 text-xs font-semibold text-theme-text-sub">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              <template x-for="(h, idx) in hotspots" :key="h.id">
-                <tr :id="'comp-row-' + h.id"
-                  class="border-b border-theme-border/50 hover:bg-brand-50/30 dark:hover:bg-brand-900/10 cursor-pointer transition-colors"
-                  @click="scrollToHotspot(h)">
-                  <td class="py-2.5 px-3 text-theme-text-sub" x-text="idx + 1"></td>
-                  <td class="py-2.5 px-3">
-                    <span class="font-medium text-theme-text" x-text="h.label"></span>
-                    <span x-show="h.type === 'polygon'"
-                      class="ml-1.5 text-[9px] font-bold text-brand-600 bg-brand-50 px-1.5 py-0.5 rounded dark:bg-brand-900/20 dark:text-brand-400">Area</span>
-                    <span x-show="h.note" class="block text-[11px] text-theme-text-sub mt-0.5" x-text="h.note"></span>
-                  </td>
-                  <td class="py-2.5 px-3">
-                    <span x-show="h.category"
-                      class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded"
-                      x-text="h.category"></span>
-                    <span x-show="!h.category" class="text-theme-text-sub">—</span>
-                  </td>
-                  <td class="py-2.5 px-3 font-mono text-xs text-theme-text-sub" x-text="h.sku || '—'"></td>
-                  <td class="py-2.5 px-3 text-right">
-                    <template x-if="h._price">
-                      <span class="font-bold text-brand-600 dark:text-brand-400 text-sm"
-                        x-text="formatPrice(h._price)"></span>
-                    </template>
-                    <template x-if="!h._price">
-                      <span class="text-theme-text-sub">—</span>
-                    </template>
-                  </td>
-                  <td class="py-2.5 px-3 text-center">
-                    <template x-if="h._slug">
-                      <button
-                        @click.stop="$store.cart.add({ id: h._product?.id || h.sku, name: h.label, price: h._price || 0, sku: h.sku || '', imageurl: h._imageUrl || '', weight: h._product?.weight || 0, weightunit: h._product?.weightunit || 'gram' }, 1); window.showToast && window.showToast('Ditambahkan ke keranjang', 'success')"
-                        class="inline-flex items-center justify-center text-brand-600 hover:text-brand-700 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/20 p-1 rounded transition-all duration-200"
-                        title="Tambah ke Keranjang">
-                        <span class="w-4 h-4" x-icon="'shopping-cart'"></span>
-                      </button>
-                    </template>
-                    <template x-if="!h._slug">
-                      <span class="text-xs text-theme-text-sub">—</span>
-                    </template>
-                  </td>
-                </tr>
+              <!-- Figure Image -->
+              <template x-if="figure.figureImage && figure.figureImage.startsWith('http')">
+                <img :src="figure.figureImage" :alt="figure.title"
+                  :class="fullscreenImageOpen ? 'block pointer-events-auto' : 'w-full h-full object-contain block pointer-events-none'"
+                  draggable="false" loading="lazy" />
               </template>
-            </tbody>
-          </table>
-        </div>
-      </div>
+              <template x-if="!figure.figureImage || !figure.figureImage.startsWith('http')">
+                <div class="w-full h-full flex items-center justify-center text-gray-400 text-sm font-bold">
+                  Gambar figure tidak tersedia
+                </div>
+              </template>
 
-      <!-- Hotspot kosong -->
-      <div x-show="hotspots.length === 0"
-        class="bg-theme-secondary border border-theme-border rounded-xl p-8 text-center" x-cloak>
-        <p class="text-sm text-theme-text-sub">Tidak ada hotspot yang tersedia untuk figure ini.</p>
-      </div>
+              <!-- Polygon SVG Areas -->
+              <template x-for="h in hotspots.filter(h => h.type === 'polygon')" :key="'svg-' + h.id">
+                <svg class="absolute inset-0 w-full h-full z-[5]" viewBox="0 0 100 100" preserveAspectRatio="none">
+                  <polygon :points="(h.points || []).map(p => p.x + ',' + p.y).join(' ')"
+                    class="fill-brand-500/10 stroke-brand-500/60 hover:fill-brand-500/20 hover:stroke-brand-600 cursor-pointer transition-all"
+                    style="stroke-width: 1.5; stroke-dasharray: 3 5; vector-effect: non-scaling-stroke;"
+                    :class="activeHotspot && activeHotspot.id === h.id ? 'fill-brand-500/20 stroke-brand-600' : ''"
+                    @click.stop="toggleHotspot(h)">
+                  </polygon>
+                </svg>
+              </template>
+
+              <!-- Hotspot Points & Polygon Center Markers -->
+              <template x-for="(h, hIdx) in hotspots" :key="h.id">
+                <button :id="'hotspot-' + h.id" class="absolute z-10 group/hotspot"
+                  :style="'left:' + h.x + '%; top:' + h.y + '%'" @mouseenter="openHotspotHover(h)"
+                  @mouseleave="scheduleCloseHotspot(h)" @click.stop="scrollToTableRow(h)">
+
+                  <!-- Pulse ring -->
+                  <span class="absolute inset-0 -m-2 rounded-full bg-brand-500/20 animate-ping"></span>
+                  <!-- Dot -->
+                  <span
+                    class="relative flex items-center justify-center w-6 h-6 rounded-full border-2 border-white bg-brand-500 shadow-lg cursor-pointer transition-transform group-hover/hotspot:scale-125"
+                    :class="activeHotspot && activeHotspot.id === h.id ? 'ring-2 ring-brand-300 scale-125' : ''">
+                    <span class="text-[10px] font-extrabold text-white leading-none" x-text="hIdx + 1"></span>
+                  </span>
+
+                  <!-- Hotspot Card (kiri-atas) -->
+                  <div x-show="h._open" x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                    x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                    @click.stop @mouseenter="cancelCloseHotspot()" @mouseleave="scheduleCloseHotspot(h)"
+                    class="absolute z-20 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+                    :style="'right: calc(100% + 8px); bottom: calc(100% - 8px);'" x-cloak>
+
+                    <div class="p-3">
+                      <div class="flex gap-3">
+                        <!-- Product Image -->
+                        <div class="w-14 h-14 shrink-0 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
+                          <template x-if="h._imageUrl && h._imageUrl.startsWith('http')">
+                            <img :src="h._imageUrl" class="w-full h-full object-cover" loading="lazy" />
+                          </template>
+                          <template x-if="!h._imageUrl || !h._imageUrl.startsWith('http')">
+                            <div
+                              class="w-full h-full flex items-start justify-start p-1.5 text-gray-300 text-[10px] font-bold">
+                              N/A</div>
+                          </template>
+                        </div>
+                        <!-- Info -->
+                        <div class="flex-1 min-w-0 text-left">
+                          <p class="text-sm font-bold text-theme-text truncate text-left" x-text="h.label"></p>
+                          <template x-if="h.sku">
+                            <p class="text-[11px] text-theme-text-sub font-mono text-left" x-text="h.sku"></p>
+                          </template>
+                          <template x-if="h._price">
+                            <p class="text-sm font-extrabold text-red-600 dark:text-red-400 mt-0.5 text-left"
+                              x-text="formatPrice(h._price)"></p>
+                          </template>
+                        </div>
+                      </div>
+                      <template x-if="h.note">
+                        <p class="text-[11px] text-theme-text-sub mt-2 leading-relaxed" x-text="h.note"></p>
+                      </template>
+                      <template x-if="h._slug">
+                        <button @click="goToProduct(h)"
+                          class="mt-2 w-full text-xs font-bold py-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 text-white transition-colors flex items-center justify-center gap-1">
+                          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                            <line x1="3" y1="6" x2="21" y2="6" />
+                            <path d="M16 10a4 4 0 0 1-8 0" />
+                          </svg>
+                          Lihat Produk
+                        </button>
+                      </template>
+                    </div>
+                  </div>
+                </button>
+              </template>
+            </div>
+          </div>
+
+          <!-- Zoom Controls -->
+          <div class="flex items-center gap-2 mt-3">
+            <div class="flex items-center border border-theme-border rounded-lg overflow-hidden">
+              <button @click="zoomIn()"
+                class="w-8 h-8 flex items-center justify-center text-theme-text-sub hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors text-sm font-bold"
+                :class="fullscreenImageOpen ? 'opacity-30 cursor-not-allowed' : ''" :disabled="fullscreenImageOpen"
+                title="Zoom In">+</button>
+              <span
+                class="px-2 text-xs font-medium text-theme-text-sub border-x border-theme-border min-w-[3rem] text-center"
+                x-text="fullscreenImageOpen ? '100%' : Math.round(zoomScale * 100) + '%'"></span>
+              <button @click="zoomOut()"
+                class="w-8 h-8 flex items-center justify-center text-theme-text-sub hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors text-sm font-bold"
+                :class="(fullscreenImageOpen || zoomScale <= 1) ? 'opacity-30 cursor-not-allowed' : ''"
+                :disabled="fullscreenImageOpen" title="Zoom Out">&minus;</button>
+            </div>
+            <button x-show="isZoomed && !fullscreenImageOpen" @click="resetZoom()"
+              class="text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400 transition-colors"
+              x-cloak>Reset</button>
+            <button @click="toggleFullscreenImage()"
+              class="w-8 h-8 flex items-center justify-center text-theme-text-sub hover:bg-brand-50 dark:hover:bg-brand-900/20 rounded-lg transition-colors"
+              :title="fullscreenImageOpen ? 'Kembali ke Tampilan Normal' : 'Lihat Gambar Ukuran Asli'">
+              <span class="w-4 h-4" x-icon="fullscreenImageOpen ? 'minimize' : 'maximize'"></span>
+            </button>
+            <span class="text-[10px] text-theme-text-sub ml-auto hidden sm:inline">
+              <template x-if="isMobile">
+                <span>Pinch to zoom &middot; Double-tap to toggle</span>
+              </template>
+              <template x-if="!isMobile">
+                <span>Scroll to zoom &middot; Double-click to toggle &middot; Drag to pan</span>
+              </template>
+            </span>
+          </div>
+        </div>
+
+        <!-- Daftar Komponen -->
+        <div x-show="hotspots.length > 0" class="bg-theme-secondary border border-theme-border rounded-xl p-4 md:p-6"
+          x-cloak>
+          <h2 class="text-base font-bold text-theme-text mb-4">Daftar Komponen</h2>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-theme-border">
+                  <th class="text-left py-2 px-3 text-xs font-semibold text-theme-text-sub">No</th>
+                  <th class="text-left py-2 px-3 text-xs font-semibold text-theme-text-sub">Nama Komponen</th>
+                  <th class="text-left py-2 px-3 text-xs font-semibold text-theme-text-sub">Kategori</th>
+                  <th class="text-left py-2 px-3 text-xs font-semibold text-theme-text-sub">SKU</th>
+                  <th class="text-right py-2 px-3 text-xs font-semibold text-theme-text-sub">Harga</th>
+                  <th class="text-center py-2 px-3 text-xs font-semibold text-theme-text-sub">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template x-for="(h, idx) in hotspots" :key="h.id">
+                  <tr :id="'comp-row-' + h.id"
+                    class="border-b border-theme-border/50 hover:bg-brand-50/30 dark:hover:bg-brand-900/10 cursor-pointer transition-colors"
+                    @click="scrollToHotspot(h)">
+                    <td class="py-2.5 px-3 text-theme-text-sub" x-text="idx + 1"></td>
+                    <td class="py-2.5 px-3">
+                      <span class="font-medium text-theme-text" x-text="h.label"></span>
+                      <span x-show="h.type === 'polygon'"
+                        class="ml-1.5 text-[9px] font-bold text-brand-600 bg-brand-50 px-1.5 py-0.5 rounded dark:bg-brand-900/20 dark:text-brand-400">Area</span>
+                      <span x-show="h.note" class="block text-[11px] text-theme-text-sub mt-0.5" x-text="h.note"></span>
+                    </td>
+                    <td class="py-2.5 px-3">
+                      <span x-show="h.category"
+                        class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded"
+                        x-text="h.category"></span>
+                      <span x-show="!h.category" class="text-theme-text-sub">—</span>
+                    </td>
+                    <td class="py-2.5 px-3 font-mono text-xs text-theme-text-sub" x-text="h.sku || '—'"></td>
+                    <td class="py-2.5 px-3 text-right">
+                      <template x-if="h._price">
+                        <span class="font-bold text-brand-600 dark:text-brand-400 text-sm"
+                          x-text="formatPrice(h._price)"></span>
+                      </template>
+                      <template x-if="!h._price">
+                        <span class="text-theme-text-sub">—</span>
+                      </template>
+                    </td>
+                    <td class="py-2.5 px-3 text-center">
+                      <template x-if="h._slug">
+                        <button
+                          @click.stop="$store.cart.add({ id: h._product?.id || h.sku, name: h.label, price: h._price || 0, sku: h.sku || '', imageurl: h._imageUrl || '', weight: h._product?.weight || 0, weightunit: h._product?.weightunit || 'gram' }, 1); window.showToast && window.showToast('Ditambahkan ke keranjang', 'success')"
+                          class="inline-flex items-center justify-center text-brand-600 hover:text-brand-700 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/20 p-1 rounded transition-all duration-200"
+                          title="Tambah ke Keranjang">
+                          <span class="w-4 h-4" x-icon="'shopping-cart'"></span>
+                        </button>
+                      </template>
+                      <template x-if="!h._slug">
+                        <span class="text-xs text-theme-text-sub">—</span>
+                      </template>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Hotspot kosong -->
+        <div x-show="hotspots.length === 0"
+          class="bg-theme-secondary border border-theme-border rounded-xl p-8 text-center" x-cloak>
+          <p class="text-sm text-theme-text-sub">Tidak ada hotspot yang tersedia untuk figure ini.</p>
+        </div>
 
       </div><!-- /Konten Utama -->
     </div>
