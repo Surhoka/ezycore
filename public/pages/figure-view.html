@@ -30,17 +30,23 @@
       <div class="bg-theme-secondary border border-theme-border rounded-xl p-4 md:p-6">
         <div class="relative rounded-lg bg-gray-100 dark:bg-gray-800 select-none"
           :class="fullscreenImageOpen ? 'overflow-auto' : 'overflow-hidden aspect-video'"
-          style="touch-action: none;" @wheel.prevent="onWheel($event)" @pointerdown="onPointerDown($event)"
-          @pointermove="onPointerMove($event)" @pointerup="onPointerUp()" @pointerleave="onPointerUp()"
-          @touchstart="onTouchStart($event)" @touchmove="onTouchMove($event)" @touchend="onTouchEnd()"
-          @dblclick="onDblClick()">
+          :style="fullscreenImageOpen ? '' : 'touch-action: none;'"
+          @wheel.prevent="if(!fullscreenImageOpen) onWheel($event)"
+          @pointerdown="if(!fullscreenImageOpen) onPointerDown($event)"
+          @pointermove="if(!fullscreenImageOpen) onPointerMove($event)"
+          @pointerup="if(!fullscreenImageOpen) onPointerUp()"
+          @pointerleave="if(!fullscreenImageOpen) onPointerUp()"
+          @touchstart="if(!fullscreenImageOpen) onTouchStart($event)"
+          @touchmove="if(!fullscreenImageOpen) onTouchMove($event)"
+          @touchend="if(!fullscreenImageOpen) onTouchEnd()"
+          @dblclick="if(!fullscreenImageOpen) onDblClick()">
 
           <!-- Transform wrapper -->
           <div class="relative transition-transform duration-150 ease-out origin-top-left"
             :style="fullscreenImageOpen ? '' : transformStyle"
             :class="{
-              'cursor-grab': isZoomed && !isPanning,
-              'cursor-grabbing': isPanning
+              'cursor-grab': !fullscreenImageOpen && isZoomed && !isPanning,
+              'cursor-grabbing': !fullscreenImageOpen && isPanning
             }"
             style="transform-origin: 0 0;">
 
