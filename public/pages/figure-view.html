@@ -4,17 +4,15 @@
 
       <!-- Sidebar Model Figures (kiri - desktop only) -->
       <aside x-show="relatedFigures.length > 0" class="w-full lg:w-64 shrink-0 order-2 lg:order-1 flex flex-col" x-cloak>
-        <h3 class="text-lg md:text-xl font-bold text-theme-text leading-snug mb-3" x-text="figure.model || 'Model'"></h3>
-        <div class="lg:sticky lg:top-4 bg-theme-secondary border border-theme-border rounded-xl p-4 flex-1 max-h-[calc(100vh-6rem)] overflow-y-auto">
-          <nav class="space-y-0.5">
-            <div class="px-3 py-2 text-sm font-semibold text-brand-600 bg-brand-50 rounded-lg dark:bg-brand-900/20 dark:text-brand-400 truncate" x-text="figure.title"></div>
-            <template x-for="f in relatedFigures" :key="f.slug">
-              <button @click="navigateToFigure(f)"
-                class="w-full text-left px-3 py-2 text-sm text-theme-text hover:bg-brand-50 hover:text-brand-600 rounded-lg transition-colors dark:hover:bg-brand-900/20 dark:hover:text-brand-400 truncate"
-                x-text="f.title"></button>
-            </template>
-          </nav>
-        </div>
+        <h3 class="text-lg md:text-xl font-bold text-theme-text leading-snug" x-text="figure.model || 'Model'"></h3>
+        <div class="border-b border-theme-border my-3"></div>
+        <nav class="space-y-0.5">
+          <template x-for="f in relatedFigures" :key="f.slug">
+            <button @click="f.slug !== figure.slug && navigateToFigure(f)"
+              :class="f.slug === figure.slug ? 'px-2 py-1.5 text-sm font-semibold text-brand-600 dark:text-brand-400 truncate cursor-default' : 'w-full text-left px-2 py-1.5 text-sm text-theme-text hover:text-brand-600 dark:hover:text-brand-400 truncate transition-colors'"
+              x-text="f.title"></button>
+          </template>
+        </nav>
       </aside>
 
       <!-- Konten Utama (kanan) -->
