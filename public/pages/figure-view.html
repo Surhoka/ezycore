@@ -143,15 +143,19 @@
           <div class="flex items-center border border-theme-border rounded-lg overflow-hidden">
             <button @click="zoomIn()"
               class="w-8 h-8 flex items-center justify-center text-theme-text-sub hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors text-sm font-bold"
+              :class="fullscreenImageOpen ? 'opacity-30 cursor-not-allowed' : ''"
+              :disabled="fullscreenImageOpen"
               title="Zoom In">+</button>
             <span
               class="px-2 text-xs font-medium text-theme-text-sub border-x border-theme-border min-w-[3rem] text-center"
-              x-text="Math.round(zoomScale * 100) + '%'"></span>
+              x-text="fullscreenImageOpen ? '100%' : Math.round(zoomScale * 100) + '%'"></span>
             <button @click="zoomOut()"
               class="w-8 h-8 flex items-center justify-center text-theme-text-sub hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors text-sm font-bold"
-              :class="zoomScale <= 1 ? 'opacity-30 cursor-not-allowed' : ''" title="Zoom Out">&minus;</button>
+              :class="(fullscreenImageOpen || zoomScale <= 1) ? 'opacity-30 cursor-not-allowed' : ''"
+              :disabled="fullscreenImageOpen"
+              title="Zoom Out">&minus;</button>
           </div>
-          <button x-show="isZoomed" @click="resetZoom()"
+          <button x-show="isZoomed && !fullscreenImageOpen" @click="resetZoom()"
             class="text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400 transition-colors"
             x-cloak>Reset</button>
           <button @click="toggleFullscreenImage()"
