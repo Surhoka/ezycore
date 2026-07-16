@@ -3,9 +3,9 @@
     <div class="flex flex-col lg:flex-row gap-6">
 
       <!-- Sidebar Model Figures (kiri - desktop only) -->
-      <aside x-show="relatedFigures.length > 0" class="w-full lg:w-64 shrink-0 order-2 lg:order-1" x-cloak>
+      <aside x-show="relatedFigures.length > 0" class="w-full lg:w-64 shrink-0 order-2 lg:order-1 flex flex-col" x-cloak>
         <h3 class="text-lg md:text-xl font-bold text-theme-text leading-snug mb-3" x-text="figure.model || 'Model'"></h3>
-        <div class="lg:sticky lg:top-4 bg-theme-secondary border border-theme-border rounded-xl p-4 max-h-[calc(100vh-6rem)] overflow-y-auto">
+        <div class="lg:sticky lg:top-4 bg-theme-secondary border border-theme-border rounded-xl p-4 flex-1 max-h-[calc(100vh-6rem)] overflow-y-auto">
           <nav class="space-y-0.5">
             <div class="px-3 py-2 text-sm font-semibold text-brand-600 bg-brand-50 rounded-lg dark:bg-brand-900/20 dark:text-brand-400 truncate" x-text="figure.title"></div>
             <template x-for="f in relatedFigures" :key="f.slug">
@@ -151,6 +151,11 @@
           <button x-show="isZoomed" @click="resetZoom()"
             class="text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400 transition-colors"
             x-cloak>Reset</button>
+          <button @click="openFullscreenImage()"
+            class="w-8 h-8 flex items-center justify-center text-theme-text-sub hover:bg-brand-50 dark:hover:bg-brand-900/20 rounded-lg transition-colors"
+            title="Lihat Gambar Ukuran Asli">
+            <span class="w-4 h-4" x-icon="'maximize'"></span>
+          </button>
           <span class="text-[10px] text-theme-text-sub ml-auto hidden sm:inline">
             <template x-if="isMobile">
               <span>Pinch to zoom &middot; Double-tap to toggle</span>
@@ -247,4 +252,22 @@
       </button>
     </div>
   </template>
+
+  <!-- Fullscreen Image Overlay -->
+  <div x-show="fullscreenImageOpen" x-transition:enter="transition ease-out duration-200"
+    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+    x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100"
+    x-transition:leave-end="opacity-0"
+    @click="closeFullscreenImage()" @keydown.escape.window="closeFullscreenImage()"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 cursor-zoom-out" x-cloak>
+    <button @click.stop="closeFullscreenImage()"
+      class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-10">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+    <img @click.stop :src="figure.figureImage" :alt="figure.title"
+      class="max-w-full max-h-full object-contain rounded-lg shadow-2xl select-none" draggable="false" />
+  </div>
 </div>
