@@ -325,20 +325,32 @@
                         return;
                     }
                     const img = this.$refs.img;
-                    const canvas = img.parentElement?.parentElement;
+                    const wrapper = img.parentElement;
+                    if (!wrapper) {
+                        this.scale = 1;
+                        this.pan = { x: 0, y: 0 };
+                        return;
+                    }
+                    const canvas = wrapper.parentElement;
                     if (!canvas) {
                         this.scale = 1;
                         this.pan = { x: 0, y: 0 };
                         return;
                     }
+                    const imgW = img.naturalWidth || img.width;
+                    const imgH = img.naturalHeight || img.height;
+                    if (!imgW || !imgH) {
+                        this.scale = 1;
+                        this.pan = { x: 0, y: 0 };
+                        return;
+                    }
                     const canvasRect = canvas.getBoundingClientRect();
-                    const imgRect = img.getBoundingClientRect();
                     const pad = 40;
                     const availableW = canvasRect.width - pad * 2;
                     const availableH = canvasRect.height - pad * 2;
-                    const scaleX = availableW / imgRect.width;
-                    const scaleY = availableH / imgRect.height;
-                    this.scale = Math.min(scaleX, scaleY, 2);
+                    const scaleX = availableW / imgW;
+                    const scaleY = availableH / imgH;
+                    this.scale = Math.min(scaleX, scaleY, 1);
                     this.pan = { x: 0, y: 0 };
                 },
 
