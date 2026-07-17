@@ -319,7 +319,26 @@
                 },
 
                 resetView() {
-                    this.scale = 1;
+                    if (!this.imageUrl || !this.$refs.img) {
+                        this.scale = 1;
+                        this.pan = { x: 0, y: 0 };
+                        return;
+                    }
+                    const img = this.$refs.img;
+                    const canvas = img.parentElement?.parentElement;
+                    if (!canvas) {
+                        this.scale = 1;
+                        this.pan = { x: 0, y: 0 };
+                        return;
+                    }
+                    const canvasRect = canvas.getBoundingClientRect();
+                    const imgRect = img.getBoundingClientRect();
+                    const pad = 40;
+                    const availableW = canvasRect.width - pad * 2;
+                    const availableH = canvasRect.height - pad * 2;
+                    const scaleX = availableW / imgRect.width;
+                    const scaleY = availableH / imgRect.height;
+                    this.scale = Math.min(scaleX, scaleY, 2);
                     this.pan = { x: 0, y: 0 };
                 },
 
