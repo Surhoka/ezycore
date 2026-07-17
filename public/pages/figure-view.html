@@ -40,7 +40,7 @@
               <!-- Figure Image -->
               <template x-if="figure.figureImage && figure.figureImage.startsWith('http')">
                 <img :src="figure.figureImage" :alt="figure.title"
-                  :class="viewMode === 'actual' ? 'block pointer-events-auto' : 'w-full block pointer-events-none'"
+                  :class="viewMode === 'actual' ? 'block pointer-events-auto max-w-none' : 'w-full block pointer-events-none'"
                   draggable="false" loading="lazy" />
               </template>
               <template x-if="!figure.figureImage || !figure.figureImage.startsWith('http')">
