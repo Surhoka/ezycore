@@ -29,9 +29,9 @@
         <div class="bg-theme-secondary border border-theme-border rounded-xl p-4 md:p-6">
           <div class="relative rounded-lg bg-gray-100 dark:bg-gray-800 select-none"
             :class="{
-              'overflow-hidden': viewMode !== 'actual',
-              'overflow-auto': viewMode === 'actual',
-              'max-w-[50%]': viewMode === 'half'
+              'overflow-hidden aspect-[9/16]': viewMode === 'actual',
+              'overflow-hidden max-w-[50%]': viewMode === 'half',
+              'overflow-hidden': viewMode === 'fit'
             }">
 
             <!-- Transform wrapper -->
@@ -40,7 +40,7 @@
               <!-- Figure Image -->
               <template x-if="figure.figureImage && figure.figureImage.startsWith('http')">
                 <img :src="figure.figureImage" :alt="figure.title"
-                  :class="viewMode === 'actual' ? 'block pointer-events-auto max-w-none' : 'w-full block pointer-events-none'"
+                  :class="viewMode === 'actual' ? 'w-full h-full object-contain block pointer-events-auto' : 'w-full block pointer-events-none'"
                   draggable="false" loading="lazy" />
               </template>
               <template x-if="!figure.figureImage || !figure.figureImage.startsWith('http')">
