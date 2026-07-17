@@ -28,22 +28,10 @@
         <!-- Figure Image + Hotspot Container -->
         <div class="bg-theme-secondary border border-theme-border rounded-xl p-4 md:p-6">
           <div class="relative rounded-lg bg-gray-100 dark:bg-gray-800 select-none"
-            :class="fullscreenImageOpen ? 'overflow-auto' : 'overflow-hidden aspect-video'"
-            :style="fullscreenImageOpen ? '' : 'touch-action: none;'"
-            @wheel.passive="fullscreenImageOpen ? undefined : onWheel($event)"
-            @pointerdown="if(!fullscreenImageOpen) onPointerDown($event)"
-            @pointermove="if(!fullscreenImageOpen) onPointerMove($event)"
-            @pointerup="if(!fullscreenImageOpen) onPointerUp()" @pointerleave="if(!fullscreenImageOpen) onPointerUp()"
-            @touchstart="if(!fullscreenImageOpen) onTouchStart($event)"
-            @touchmove="if(!fullscreenImageOpen) onTouchMove($event)" @touchend="if(!fullscreenImageOpen) onTouchEnd()"
-            @dblclick="if(!fullscreenImageOpen) onDblClick()">
+            :class="fullscreenImageOpen ? 'overflow-auto' : 'overflow-hidden aspect-video'">
 
             <!-- Transform wrapper -->
-            <div class="relative transition-transform duration-150 ease-out origin-top-left"
-              :style="fullscreenImageOpen ? '' : transformStyle" :class="{
-              'cursor-grab': !fullscreenImageOpen && isZoomed && !isPanning,
-              'cursor-grabbing': !fullscreenImageOpen && isPanning
-            }" style="transform-origin: 0 0;">
+            <div class="relative">
 
               <!-- Figure Image -->
               <template x-if="figure.figureImage && figure.figureImage.startsWith('http')">
@@ -140,37 +128,13 @@
             </div>
           </div>
 
-          <!-- Zoom Controls -->
-          <div class="flex items-center gap-2 mt-3">
-            <div class="flex items-center border border-theme-border rounded-lg overflow-hidden">
-              <button @click="zoomIn()"
-                class="w-8 h-8 flex items-center justify-center text-theme-text-sub hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors text-sm font-bold"
-                :class="fullscreenImageOpen ? 'opacity-30 cursor-not-allowed' : ''" :disabled="fullscreenImageOpen"
-                title="Zoom In">+</button>
-              <span
-                class="px-2 text-xs font-medium text-theme-text-sub border-x border-theme-border min-w-[3rem] text-center"
-                x-text="fullscreenImageOpen ? '100%' : Math.round(zoomScale * 100) + '%'"></span>
-              <button @click="zoomOut()"
-                class="w-8 h-8 flex items-center justify-center text-theme-text-sub hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors text-sm font-bold"
-                :class="(fullscreenImageOpen || zoomScale <= 1) ? 'opacity-30 cursor-not-allowed' : ''"
-                :disabled="fullscreenImageOpen" title="Zoom Out">&minus;</button>
-            </div>
-            <button x-show="isZoomed && !fullscreenImageOpen" @click="resetZoom()"
-              class="text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400 transition-colors"
-              x-cloak>Reset</button>
+          <!-- Fullscreen Toggle -->
+          <div class="flex items-center justify-end mt-3">
             <button @click="toggleFullscreenImage()"
               class="w-8 h-8 flex items-center justify-center text-theme-text-sub hover:bg-brand-50 dark:hover:bg-brand-900/20 rounded-lg transition-colors"
               :title="fullscreenImageOpen ? 'Kembali ke Tampilan Normal' : 'Lihat Gambar Ukuran Asli'">
               <span class="w-4 h-4" x-icon="fullscreenImageOpen ? 'minimize' : 'maximize'"></span>
             </button>
-            <span class="text-[10px] text-theme-text-sub ml-auto hidden sm:inline">
-              <template x-if="isMobile">
-                <span>Pinch to zoom &middot; Double-tap to toggle</span>
-              </template>
-              <template x-if="!isMobile">
-                <span>Scroll to zoom &middot; Double-click to toggle &middot; Drag to pan</span>
-              </template>
-            </span>
           </div>
         </div>
 
