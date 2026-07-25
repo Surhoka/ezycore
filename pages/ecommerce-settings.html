@@ -8,7 +8,8 @@
       class="tab-nav-btn">Storefront</button>
     <button @click="activeTab = 'homedata'" :class="{ 'active': activeTab === 'homedata' }" class="tab-nav-btn">Home
       Data</button>
-    <button @click="activeTab = 'accesstrade'" :class="{ 'active': activeTab === 'accesstrade' }" class="tab-nav-btn">Accesstrade</button>
+    <button @click="activeTab = 'accesstrade'" :class="{ 'active': activeTab === 'accesstrade' }"
+      class="tab-nav-btn">Accesstrade</button>
   </div>
 
   <div class="rounded-2xl border border-primary bg-secondary relative min-h-[500px] shadow-sm overflow-hidden">
@@ -168,16 +169,20 @@
         <!-- Accesstrade Tab -->
         <div x-show="activeTab === 'accesstrade'" x-cloak>
           <h4 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-4">Accesstrade API Configuration</h4>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Konfigurasi ini diperlukan untuk mengambil produk dari feed dan men-generate link affiliate. Menggunakan API <code>gurkha.accesstrade.global</code>.</p>
-          
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Konfigurasi ini diperlukan untuk mengambil produk
+            dari feed dan men-generate link affiliate. Menggunakan API <code>gurkha.accesstrade.global</code>.</p>
+
           <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            
-            <div class="lg:col-span-2 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
-              <h5 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-4">Generator Authorization Header</h5>
+
+            <div
+              class="lg:col-span-2 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
+              <h5 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-4">Generator Authorization Header
+              </h5>
               <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
-                  <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Email (Username)</label>
-                  <input type="email" x-model="accesstradeEmail" placeholder="email@anda.com"
+                  <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Email
+                    (Username)</label>
+                  <input type="email" x-model="settings.accesstradeEmail" placeholder="email@anda.com"
                     class="w-full h-11 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-600 dark:bg-gray-900 dark:text-white/90">
                 </div>
                 <div>
@@ -195,12 +200,13 @@
             </div>
 
             <div class="lg:col-span-2">
-              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Authorization HTTP header Value (Access Key)</label>
-              <input type="text" x-model="settings.accesstradeApiKey" placeholder="Paste Access Key dari dashboard Accesstrade..."
+              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Authorization HTTP header
+                Value</label>
+              <input type="text" x-model="settings.accesstradeApiKey" placeholder="Access key..." readonly
                 class="w-full h-11 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-600 dark:bg-gray-900 dark:text-white/90">
-              <p class="mt-1 text-xs text-gray-500">Bisa langsung paste Access Key dari dashboard (<code>pub.accesstrade.co.id</code> &rarr; Profile &rarr; Access Key), atau gunakan generator di atas.</p>
+              <p class="mt-1 text-xs text-gray-500">Access Key.</p>
             </div>
-            
+
             <div class="lg:col-span-2">
               <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Site ID</label>
               <input type="text" x-model="settings.accesstradeSiteId" placeholder="Contoh: 12345"
