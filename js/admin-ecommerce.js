@@ -1052,6 +1052,7 @@ Alpine.data('ecommerceSettings', () => ({
   activeTab: 'general',
   accesstradePass: '',
   showPassword: false,
+  isTestingAt: false,
   settings: {
     blogId: '', blogUrl: '', webAppUrl: '', pageIdShop: '', pageIdAlbum: '', pageIdHomeData: '',
     pageIdSystemConfig: '',
@@ -1138,16 +1139,44 @@ Alpine.data('ecommerceSettings', () => ({
         });
       }
       
+      const email = this.settings.accesstradeEmail.trim();
       const passwordMd5 = CryptoJS.MD5(this.accesstradePass).toString();
-      const stringToHash = this.settings.accesstradeEmail.trim() + ':' + passwordMd5;
+      const stringToHash = email + ':' + passwordMd5;
       const finalHash = CryptoJS.SHA256(stringToHash).toString();
       
+      console.log('[Accesstrade Gen] email:', email);
+      console.log('[Accesstrade Gen] MD5(password):', passwordMd5);
+      console.log('[Accesstrade Gen] string:', stringToHash);
+      console.log('[Accesstrade Gen] SHA256:', finalHash);
+      
       this.settings.accesstradeApiKey = finalHash;
-      if (window.showToast) window.showToast('Header berhasil di-generate! Silakan Save Settings.', 'success');
+      if (window.showToast) window.showToast('Header berhasil di-generate! (SHA256: ' + finalHash.substring(0, 8) + '...) Silakan Save Settings.', 'success');
     } catch (e) {
+      console.error('[Accesstrade Gen] Error:', e);
       if (window.showToast) window.showToast('Gagal memuat crypto-js', 'error');
     }
     this.isGeneratingAuth = false;
+  },
+
+  async testAtProvisioning() {
+    this.isTestingAt = true;
+    try {
+      const res = await ecomApi('testAccesstradeConnection', {
+        apiKey: this.settings.accesstradeApiKey,
+        email: this.settings.accesstradeEmail,
+        countryCode: this.settings.accesstradeCountryCode
+      });
+      console.log('[AT Test] Result:', res);
+      if (res.status === 'success') {
+        if (window.showToast) window.showToast('Connection OK! Sites: ' + JSON.stringify(res.data).substring(0, 100), 'success');
+      } else {
+        if (window.showToast) window.showToast(res.message || 'Test failed', 'error');
+      }
+    } catch (e) {
+      console.error('[AT Test] Error:', e);
+      if (window.showToast) window.showToast('Test error: ' + e.message, 'error');
+    }
+    this.isTestingAt = false;
   },
 
   async loadHomeData() {
