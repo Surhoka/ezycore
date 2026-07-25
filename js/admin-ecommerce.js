@@ -1098,7 +1098,8 @@ Alpine.data('ecommerceSettings', () => ({
       siteKey: this.settings.siteKey,
       accesstradeApiKey: this.settings.accesstradeApiKey,
       accesstradeSiteId: this.settings.accesstradeSiteId,
-      accesstradeEmail: this.accesstradeEmail || this.settings.accesstradeEmail
+      accesstradeEmail: this.accesstradeEmail || this.settings.accesstradeEmail,
+      accesstradeCountryCode: this.settings.accesstradeCountryCode || 'ID'
     };
     try {
       const res = await Promise.race([
@@ -1189,6 +1190,7 @@ Alpine.data('ecommerceSettings', () => ({
     config.accesstradeApiKey = this.settings.accesstradeApiKey;
     config.accesstradeSiteId = this.settings.accesstradeSiteId;
     config.accesstradeEmail = this.settings.accesstradeEmail;
+    config.accesstradeCountryCode = this.settings.accesstradeCountryCode;
     localStorage.setItem(storageKey, JSON.stringify(config));
   },
 
