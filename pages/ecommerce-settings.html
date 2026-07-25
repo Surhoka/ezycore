@@ -8,6 +8,7 @@
       class="tab-nav-btn">Storefront</button>
     <button @click="activeTab = 'homedata'" :class="{ 'active': activeTab === 'homedata' }" class="tab-nav-btn">Home
       Data</button>
+    <button @click="activeTab = 'accesstrade'" :class="{ 'active': activeTab === 'accesstrade' }" class="tab-nav-btn">Accesstrade</button>
   </div>
 
   <div class="rounded-2xl border border-primary bg-secondary relative min-h-[500px] shadow-sm overflow-hidden">
@@ -153,11 +154,33 @@
                     <span class="text-gray-700 dark:text-gray-300 truncate" x-text="settings.siteKey || '—'"></span>
                   </div>
                   <div class="flex items-center gap-2">
-                    <span class="text-gray-500 dark:text-gray-400 font-medium min-w-[180px]">System Config Page ID :</span>
-                    <span class="text-gray-700 dark:text-gray-300 truncate" x-text="settings.pageIdSystemConfig || '—'"></span>
+                    <span class="text-gray-500 dark:text-gray-400 font-medium min-w-[180px]">System Config Page
+                      ID:</span>
+                    <span class="text-gray-700 dark:text-gray-300 truncate"
+                      x-text="settings.pageIdSystemConfig || '—'"></span>
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Accesstrade Tab -->
+        <div x-show="activeTab === 'accesstrade'" x-cloak>
+          <h4 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-4">Accesstrade API Configuration</h4>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Konfigurasi ini diperlukan untuk mengambil produk dari feed dan men-generate link affiliate.</p>
+          <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div class="lg:col-span-2">
+              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Accesstrade API Key (Token)</label>
+              <input type="text" x-model="settings.accesstradeApiKey" placeholder="Contoh: eyJhbGciOiJIUzI1NiIsIn..."
+                class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+              <p class="mt-1 text-xs text-gray-500">Dapatkan token dari dashboard Accesstrade Anda (Publisher &rarr; API).</p>
+            </div>
+            <div class="lg:col-span-2">
+              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Site ID</label>
+              <input type="text" x-model="settings.accesstradeSiteId" placeholder="Contoh: 12345"
+                class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+              <p class="mt-1 text-xs text-gray-500">ID Website yang didaftarkan di Accesstrade.</p>
             </div>
           </div>
         </div>
