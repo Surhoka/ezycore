@@ -1185,6 +1185,8 @@ Alpine.data('ecommerceSettings', () => ({
     config.blogUrl = this.settings.blogUrl;
     config.webUrl = this.settings.blogUrl;
     config.siteKey = this.settings.siteKey;
+    config.accesstradeApiKey = this.settings.accesstradeApiKey;
+    config.accesstradeSiteId = this.settings.accesstradeSiteId;
     localStorage.setItem(storageKey, JSON.stringify(config));
   },
 
