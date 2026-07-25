@@ -1,4 +1,4 @@
-﻿// ================================================================
+// ================================================================
 // HELPER: Promise-based sendDataToGoogle untuk ecommerce
 // ================================================================
 function ecomApi(action, data) {
@@ -1052,7 +1052,8 @@ Alpine.data('ecommerceSettings', () => ({
   settings: {
     blogId: '', blogUrl: '', webAppUrl: '', pageIdShop: '', pageIdAlbum: '', pageIdHomeData: '',
     pageIdSystemConfig: '',
-    currency: 'IDR', taxRate: '11', midtransClientKey: '', siteKey: ''
+    currency: 'IDR', taxRate: '11', midtransClientKey: '', siteKey: '',
+    accesstradeApiKey: '', accesstradeSiteId: ''
   },
   homeData: {
     companyName: '', supportPhone: '', supportEmail: '', storeAddress: '',
@@ -1091,7 +1092,9 @@ Alpine.data('ecommerceSettings', () => ({
       currency: this.settings.currency,
       taxRate: this.settings.taxRate,
       midtransClientKey: this.settings.midtransClientKey,
-      siteKey: this.settings.siteKey
+      siteKey: this.settings.siteKey,
+      accesstradeApiKey: this.settings.accesstradeApiKey,
+      accesstradeSiteId: this.settings.accesstradeSiteId
     };
     try {
       const res = await Promise.race([
@@ -1395,5 +1398,117 @@ Alpine.data('ecommercePromotions', () => ({
     if (!this.featuredSearch) return this.allProducts;
     var q = this.featuredSearch.toLowerCase();
     return this.allProducts.filter(function (p) { return (p.Name || '').toLowerCase().indexOf(q) !== -1; });
+  }
+}));
+
+// ================================================================
+// ECOMMERCE AFFILIATE
+// ================================================================
+Alpine.data('ecommerceAffiliate', () => ({
+  activeTab: 'browse', // 'browse' | 'deeplink'
+  isLoading: false,
+  sites: [], 
+  campaigns: [], 
+  feedProducts: [],
+  selectedSite: '', 
+  selectedCampaign: '',
+  
+  deepLinkInput: '', 
+  deepLinkResult: '', 
+  deepLinkLoading: false,
+
+  async init() {
+    await this.loadSites();
+  },
+
+  async loadSites() {
+    this.isLoading = true;
+    try {
+      const res = await ecomApi('getAccesstradeSites');
+      if (res.status === 'success' && res.data && res.data.data) {
+        this.sites = res.data.data || [];
+      } else {
+        if (window.showToast) window.showToast('Gagal memuat sites: ' + (res.message||''), 'error');
+      }
+    } catch (e) {
+      if (window.showToast) window.showToast('Error koneksi API Accesstrade', 'error');
+    }
+    this.isLoading = false;
+  },
+
+  async loadCampaigns() {
+    if (!this.selectedSite) {
+      this.campaigns = [];
+      return;
+    }
+    this.isLoading = true;
+    try {
+      const res = await ecomApi('getAccesstradeCampaigns', { siteId: this.selectedSite });
+      if (res.status === 'success' && res.data && res.data.data) {
+        this.campaigns = res.data.data || [];
+      } else {
+        if (window.showToast) window.showToast('Gagal memuat campaign: ' + (res.message||''), 'error');
+      }
+    } catch (e) {
+      if (window.showToast) window.showToast('Error koneksi API Accesstrade', 'error');
+    }
+    this.isLoading = false;
+  },
+
+  async loadFeedProducts() {
+    if (!this.selectedCampaign) return;
+    this.isLoading = true;
+    try {
+      const res = await ecomApi('getAccesstradeDatafeeds', { campaignId: this.selectedCampaign });
+      if (res.status === 'success' && res.data && res.data.data) {
+        this.feedProducts = res.data.data || [];
+      } else {
+        if (window.showToast) window.showToast('Gagal memuat produk: ' + (res.message||''), 'error');
+      }
+    } catch (e) {
+      if (window.showToast) window.showToast('Error koneksi API Accesstrade', 'error');
+    }
+    this.isLoading = false;
+  },
+
+  async importProduct(product) {
+    if (!confirm('Import produk ' + (product.name||'') + '?')) return;
+    this.isLoading = true;
+    try {
+      const res = await ecomApi('importAccesstradeProduct', { product: product });
+      if (res.status === 'success') {
+        if (window.showToast) window.showToast('Produk berhasil diimport', 'success');
+      } else {
+        if (window.showToast) window.showToast('Gagal import: ' + (res.message||''), 'error');
+      }
+    } catch (e) {
+      if (window.showToast) window.showToast('Error koneksi server', 'error');
+    }
+    this.isLoading = false;
+  },
+
+  async generateDeepLink() {
+    if (!this.deepLinkInput || !this.selectedCampaign) {
+      if (window.showToast) window.showToast('Masukkan URL dan pilih Campaign', 'error');
+      return;
+    }
+    this.deepLinkLoading = true;
+    this.deepLinkResult = '';
+    try {
+      const res = await ecomApi('createAccesstradeDeepLink', { 
+        campaignId: this.selectedCampaign,
+        siteId: this.selectedSite,
+        url: this.deepLinkInput 
+      });
+      if (res.status === 'success' && res.data && res.data.data) {
+        this.deepLinkResult = res.data.data.shortLink || res.data.data.url || res.data.data.link || '';
+        if (this.deepLinkResult && window.showToast) window.showToast('Link berhasil dibuat', 'success');
+      } else {
+        if (window.showToast) window.showToast('Gagal membuat link: ' + (res.message||''), 'error');
+      }
+    } catch (e) {
+      if (window.showToast) window.showToast('Error koneksi API Accesstrade', 'error');
+    }
+    this.deepLinkLoading = false;
   }
 }));
