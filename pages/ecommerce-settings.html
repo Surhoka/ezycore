@@ -168,7 +168,7 @@
         <!-- Accesstrade Tab -->
         <div x-show="activeTab === 'accesstrade'" x-cloak>
           <h4 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-4">Accesstrade API Configuration</h4>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Konfigurasi ini diperlukan untuk mengambil produk dari feed dan men-generate link affiliate.</p>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Konfigurasi ini diperlukan untuk mengambil produk dari feed dan men-generate link affiliate. Menggunakan API <code>api.accesstrade.co.id</code>.</p>
           
           <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
             
@@ -195,10 +195,10 @@
             </div>
 
             <div class="lg:col-span-2">
-              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Authorization HTTP header Value</label>
-              <input type="text" x-model="settings.accesstradeApiKey" placeholder="Hasil enkripsi SHA256 akan muncul di sini..." readonly
-                class="w-full h-11 rounded-lg border border-gray-300 bg-gray-100 px-4 py-2.5 text-sm text-gray-600 shadow-theme-xs focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 cursor-not-allowed select-all">
-              <p class="mt-1 text-xs text-gray-500">Nilai ini adalah <code>SHA256(USERNAME + ':' + MD5(PASSWORD))</code>.</p>
+              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Authorization HTTP header Value (Access Key)</label>
+              <input type="text" x-model="settings.accesstradeApiKey" placeholder="Paste Access Key dari dashboard Accesstrade..."
+                class="w-full h-11 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-600 dark:bg-gray-900 dark:text-white/90">
+              <p class="mt-1 text-xs text-gray-500">Bisa langsung paste Access Key dari dashboard (<code>pub.accesstrade.co.id</code> &rarr; Profile &rarr; Access Key), atau gunakan generator di atas.</p>
             </div>
             
             <div class="lg:col-span-2">
