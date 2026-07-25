@@ -187,8 +187,14 @@
                 </div>
                 <div>
                   <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Password</label>
-                  <input type="password" x-model="accesstradePass" placeholder="Password Akun Accesstrade"
-                    class="w-full h-11 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-600 dark:bg-gray-900 dark:text-white/90">
+                  <div class="relative">
+                    <input :type="showPassword ? 'text' : 'password'" x-model="accesstradePass" placeholder="Password Akun Accesstrade"
+                      class="w-full h-11 rounded-lg border border-gray-300 bg-white px-4 py-2.5 pr-10 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-600 dark:bg-gray-900 dark:text-white/90">
+                    <button type="button" @click="showPassword = !showPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                      <span x-show="!showPassword" class="block w-5 h-5" x-icon="'eye-off'"></span>
+                      <span x-show="showPassword" class="block w-5 h-5" x-icon="'eye'"></span>
+                    </button>
+                  </div>
                 </div>
               </div>
               <div class="mt-4">
