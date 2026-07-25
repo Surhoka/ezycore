@@ -11,6 +11,16 @@ function ecomApi(action, data) {
   });
 }
 
+// Parse Accesstrade API response array from various envelope formats
+function parseAtList_(resData) {
+  if (!resData) return [];
+  // atFetch_ wraps AT response: { data: { data: [...] } } or { data: [...] }
+  if (resData.data && Array.isArray(resData.data)) return resData.data;
+  if (resData.data && resData.data.data && Array.isArray(resData.data.data)) return resData.data.data;
+  if (Array.isArray(resData)) return resData;
+  return [];
+}
+
 // ================================================================
 // ECOMMERCE DASHBOARD
 // ================================================================
@@ -1521,15 +1531,24 @@ Alpine.data('ecommerceAffiliate', () => ({
 
   async loadSites() {
     this.isLoading = true;
+    this.sites = [];
     try {
       const res = await ecomApi('getAccesstradeSites');
-      if (res.status === 'success' && res.data && res.data.data) {
-        this.sites = res.data.data || [];
+      console.log('[Affiliate] loadSites response:', JSON.stringify(res).substring(0, 500));
+      if (res.status === 'success') {
+        this.sites = parseAtList_(res.data);
+        console.log('[Affiliate] Parsed sites count: ' + this.sites.length);
+        if (this.sites.length === 0) {
+          if (window.showToast) window.showToast('Tidak ada site terdaftar. Daftarkan site di dashboard Accesstrade.', 'warning');
+        }
       } else {
-        if (window.showToast) window.showToast('Gagal memuat sites: ' + (res.message||''), 'error');
+        var errMsg = res.message || 'Unknown error';
+        console.error('[Affiliate] loadSites failed:', errMsg);
+        if (window.showToast) window.showToast('Gagal memuat sites: ' + errMsg, 'error');
       }
     } catch (e) {
-      if (window.showToast) window.showToast('Error koneksi API Accesstrade', 'error');
+      console.error('[Affiliate] loadSites exception:', e.message);
+      if (window.showToast) window.showToast('Error: ' + e.message, 'error');
     }
     this.isLoading = false;
   },
@@ -1564,8 +1583,11 @@ Alpine.data('ecommerceAffiliate', () => ({
     this.isLoading = true;
     try {
       const res = await ecomApi('getAccesstradeCampaigns', { siteId: this.selectedSite });
-      if (res.status === 'success' && res.data && res.data.data) {
-        this.campaigns = res.data.data || [];
+      if (res.status === 'success') {
+        this.campaigns = parseAtList_(res.data);
+        if (this.campaigns.length === 0) {
+          if (window.showToast) window.showToast('Tidak ada campaign aktif untuk site ini.', 'warning');
+        }
       } else {
         if (window.showToast) window.showToast('Gagal memuat campaign: ' + (res.message||''), 'error');
       }
@@ -1580,8 +1602,8 @@ Alpine.data('ecommerceAffiliate', () => ({
     this.isLoading = true;
     try {
       const res = await ecomApi('getAccesstradeDatafeeds', { campaignId: this.selectedCampaign });
-      if (res.status === 'success' && res.data && res.data.data) {
-        this.feedProducts = res.data.data || [];
+      if (res.status === 'success') {
+        this.feedProducts = parseAtList_(res.data);
       } else {
         if (window.showToast) window.showToast('Gagal memuat produk: ' + (res.message||''), 'error');
       }
