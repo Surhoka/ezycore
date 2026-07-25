@@ -1050,13 +1050,12 @@ Alpine.data('ecommerceSettings', () => ({
   isPublishing: false,
   isGeneratingAuth: false,
   activeTab: 'general',
-  accesstradeEmail: '',
   accesstradePass: '',
   settings: {
     blogId: '', blogUrl: '', webAppUrl: '', pageIdShop: '', pageIdAlbum: '', pageIdHomeData: '',
     pageIdSystemConfig: '',
     currency: 'IDR', taxRate: '11', midtransClientKey: '', siteKey: '',
-    accesstradeApiKey: '', accesstradeSiteId: ''
+    accesstradeApiKey: '', accesstradeSiteId: '', accesstradeEmail: '', accesstradeCountryCode: 'ID'
   },
   homeData: {
     companyName: '', supportPhone: '', supportEmail: '', storeAddress: '',
@@ -1098,7 +1097,7 @@ Alpine.data('ecommerceSettings', () => ({
       siteKey: this.settings.siteKey,
       accesstradeApiKey: this.settings.accesstradeApiKey,
       accesstradeSiteId: this.settings.accesstradeSiteId,
-      accesstradeEmail: this.accesstradeEmail || this.settings.accesstradeEmail,
+      accesstradeEmail: this.settings.accesstradeEmail,
       accesstradeCountryCode: this.settings.accesstradeCountryCode || 'ID'
     };
     try {
@@ -1121,7 +1120,7 @@ Alpine.data('ecommerceSettings', () => ({
   },
 
   async generateAccesstradeHeader() {
-    if (!this.accesstradeEmail || !this.accesstradePass) {
+    if (!this.settings.accesstradeEmail || !this.accesstradePass) {
       if (window.showToast) window.showToast('Mohon isi email dan password!', 'error');
       return;
     }
@@ -1138,7 +1137,7 @@ Alpine.data('ecommerceSettings', () => ({
       }
       
       const passwordMd5 = CryptoJS.MD5(this.accesstradePass).toString();
-      const stringToHash = this.accesstradeEmail.trim() + ':' + passwordMd5;
+      const stringToHash = this.settings.accesstradeEmail.trim() + ':' + passwordMd5;
       const finalHash = CryptoJS.SHA256(stringToHash).toString();
       
       this.settings.accesstradeApiKey = finalHash;
