@@ -1511,6 +1511,9 @@ Alpine.data('ecommerceAffiliate', () => ({
   deepLinkInput: '', 
   deepLinkResult: '', 
   deepLinkLoading: false,
+  
+  isDebugging: false,
+  debugOutput: '',
 
   async init() {
     await this.loadSites();
@@ -1529,6 +1532,28 @@ Alpine.data('ecommerceAffiliate', () => ({
       if (window.showToast) window.showToast('Error koneksi API Accesstrade', 'error');
     }
     this.isLoading = false;
+  },
+
+  async runDebug() {
+    this.isDebugging = true;
+    this.debugOutput = 'Running debug from affiliate page...\n';
+    try {
+      const res = await ecomApi('debugAccesstrade', {});
+      if (res.status === 'success' && res.data && res.data.log) {
+        var lines = [];
+        res.data.log.forEach(function(entry) {
+          lines.push('--- ' + entry.step + ' [' + entry.status.toUpperCase() + '] ---');
+          lines.push(JSON.stringify(entry.detail, null, 2));
+          lines.push('');
+        });
+        this.debugOutput = lines.join('\n');
+      } else {
+        this.debugOutput = 'Error: ' + (res.message || JSON.stringify(res));
+      }
+    } catch (e) {
+      this.debugOutput = 'Exception: ' + e.message;
+    }
+    this.isDebugging = false;
   },
 
   async loadCampaigns() {
