@@ -1049,6 +1049,8 @@ Alpine.data('ecommerceSettings', () => ({
   isSaving: false,
   isPublishing: false,
   isGeneratingAuth: false,
+  isDebugging: false,
+  debugOutput: '',
   activeTab: 'general',
   accesstradePass: '',
   showPassword: false,
@@ -1177,6 +1179,30 @@ Alpine.data('ecommerceSettings', () => ({
       if (window.showToast) window.showToast('Test error: ' + e.message, 'error');
     }
     this.isTestingAt = false;
+  },
+
+  async runDebug() {
+    this.isDebugging = true;
+    this.debugOutput = 'Running debug...\n';
+    try {
+      const res = await ecomApi('debugAccesstrade', {});
+      if (res.status === 'success' && res.data && res.data.log) {
+        var lines = [];
+        res.data.log.forEach(function(entry) {
+          lines.push('--- ' + entry.step + ' [' + entry.status.toUpperCase() + '] ---');
+          lines.push(JSON.stringify(entry.detail, null, 2));
+          lines.push('');
+        });
+        this.debugOutput = lines.join('\n');
+      } else {
+        this.debugOutput = 'Error: ' + (res.message || JSON.stringify(res));
+      }
+      console.log('[Debug AT] Full result:', res);
+    } catch (e) {
+      this.debugOutput = 'Exception: ' + e.message;
+      console.error('[Debug AT] Error:', e);
+    }
+    this.isDebugging = false;
   },
 
   async loadHomeData() {
