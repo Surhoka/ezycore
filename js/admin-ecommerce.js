@@ -1048,7 +1048,10 @@ Alpine.data('ecommerceSettings', () => ({
   isLoading: true,
   isSaving: false,
   isPublishing: false,
+  isGeneratingAuth: false,
   activeTab: 'general',
+  accesstradeEmail: '',
+  accesstradePass: '',
   settings: {
     blogId: '', blogUrl: '', webAppUrl: '', pageIdShop: '', pageIdAlbum: '', pageIdHomeData: '',
     pageIdSystemConfig: '',
@@ -1113,6 +1116,35 @@ Alpine.data('ecommerceSettings', () => ({
       if (window.showToast) window.showToast(e.message === 'Timeout' ? 'Server tidak merespon, coba lagi' : 'Failed to save settings', 'error');
     }
     this.isSaving = false;
+  },
+
+  async generateAccesstradeHeader() {
+    if (!this.accesstradeEmail || !this.accesstradePass) {
+      if (window.showToast) window.showToast('Mohon isi email dan password!', 'error');
+      return;
+    }
+    this.isGeneratingAuth = true;
+    try {
+      if (typeof CryptoJS === 'undefined') {
+        await new Promise((resolve, reject) => {
+          let script = document.createElement('script');
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js';
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+      }
+      
+      const passwordMd5 = CryptoJS.MD5(this.accesstradePass).toString();
+      const stringToHash = this.accesstradeEmail.trim() + ':' + passwordMd5;
+      const finalHash = CryptoJS.SHA256(stringToHash).toString();
+      
+      this.settings.accesstradeApiKey = finalHash;
+      if (window.showToast) window.showToast('Header berhasil di-generate! Silakan Save Settings.', 'success');
+    } catch (e) {
+      if (window.showToast) window.showToast('Gagal memuat crypto-js', 'error');
+    }
+    this.isGeneratingAuth = false;
   },
 
   async loadHomeData() {
