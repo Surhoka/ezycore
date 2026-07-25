@@ -1051,6 +1051,7 @@ Alpine.data('ecommerceSettings', () => ({
   isGeneratingAuth: false,
   activeTab: 'general',
   accesstradePass: '',
+  showPassword: false,
   settings: {
     blogId: '', blogUrl: '', webAppUrl: '', pageIdShop: '', pageIdAlbum: '', pageIdHomeData: '',
     pageIdSystemConfig: '',
