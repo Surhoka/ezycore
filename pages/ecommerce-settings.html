@@ -197,10 +197,14 @@
                   </div>
                 </div>
               </div>
-              <div class="mt-4">
+              <div class="mt-4 flex gap-2">
                 <button @click="generateAccesstradeHeader()" :disabled="isGeneratingAuth"
                   class="px-4 py-2 text-sm font-medium text-white bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50">
                   <span x-text="isGeneratingAuth ? 'Memproses...' : 'Generate Header'"></span>
+                </button>
+                <button @click="testAtProvisioning()" :disabled="isTestingAt"
+                  class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50">
+                  <span x-text="isTestingAt ? 'Testing...' : 'Test Provisioning'"></span>
                 </button>
               </div>
             </div>
