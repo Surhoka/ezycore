@@ -81,26 +81,15 @@
             </div>
 
             <!-- API Key -->
-            <div class="lg:col-span-2">
+            <div>
               <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Authorization HTTP header Value</label>
               <input type="text" x-model="settings.accesstradeApiKey" placeholder="Access key..." readonly
                 class="w-full h-11 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-600 dark:bg-gray-900 dark:text-white/90">
               <p class="mt-1 text-xs text-gray-500">Access Key.</p>
             </div>
 
-            <!-- Site ID -->
-            <div class="lg:col-span-2">
-              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Site ID</label>
-              <input type="text" x-model="settings.accesstradeSiteId" placeholder="Contoh: 12345"
-                class="w-full h-11 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-600 dark:bg-gray-900 dark:text-white/90">
-              <p class="mt-1 text-xs text-gray-500">ID Website yang didaftarkan di Accesstrade. Lihat di
-                <a href="https://db.accesstrade.co.id/my-account/properties" target="_blank"
-                  class="underline text-brand-500 hover:text-brand-600">Properties</a>.
-              </p>
-            </div>
-
             <!-- Country Code -->
-            <div class="lg:col-span-2">
+            <div>
               <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Country Code</label>
               <select x-model="settings.accesstradeCountryCode"
                 class="w-full h-11 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-600 dark:bg-gray-900 dark:text-white/90">
@@ -114,8 +103,19 @@
               <p class="mt-1 text-xs text-gray-500">Negara akun Accesstrade Publisher Anda.</p>
             </div>
 
+            <!-- Site ID -->
+            <div>
+              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Site ID</label>
+              <input type="text" x-model="settings.accesstradeSiteId" placeholder="Contoh: 12345"
+                class="w-full h-11 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-600 dark:bg-gray-900 dark:text-white/90">
+              <p class="mt-1 text-xs text-gray-500">ID Website yang didaftarkan di Accesstrade. Lihat di
+                <a href="https://db.accesstrade.co.id/my-account/properties" target="_blank"
+                  class="underline text-brand-500 hover:text-brand-600">Properties</a>.
+              </p>
+            </div>
+
             <!-- API Base URL -->
-            <div class="lg:col-span-2">
+            <div>
               <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">API Base URL</label>
               <input type="text" x-model="settings.accesstradeApiUrl" placeholder="https://gurkha.accesstrade.global"
                 class="w-full h-11 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-600 dark:bg-gray-900 dark:text-white/90">
