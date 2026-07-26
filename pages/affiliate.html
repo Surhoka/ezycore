@@ -1,0 +1,225 @@
+<div x-data="affiliateMain" class="w-full px-1 sm:px-0">
+
+  <!-- Header Section -->
+  <div class="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+    <div>
+      <h2 class="text-xl font-bold text-gray-800 dark:text-white/90">Affiliate</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Multi-platform affiliate: Accesstrade & Shopee.</p>
+    </div>
+    <div class="flex gap-2">
+      <button @click="loadSites()"
+        class="px-4 py-2 text-xs font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600 transition-colors">
+        Reload Sites
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-nav-container tab-nav-borderless mb-6">
+    <button @click="activeTab = 'browse'" :class="{ 'active': activeTab === 'browse' }" class="tab-nav-btn">
+      Browse Products
+    </button>
+    <button @click="activeTab = 'deeplink'" :class="{ 'active': activeTab === 'deeplink' }" class="tab-nav-btn">
+      Deep Link Generator
+    </button>
+    <button @click="activeTab = 'shopee'" :class="{ 'active': activeTab === 'shopee' }" class="tab-nav-btn">
+      Shopee
+    </button>
+  </div>
+
+  <!-- Content Container -->
+  <div class="rounded-2xl border border-primary bg-secondary relative min-h-[500px] shadow-sm overflow-hidden">
+
+    <!-- Loading Overlay -->
+    <div x-show="isLoading" x-cloak class="absolute inset-0 z-10 flex items-center justify-center bg-secondary/80 backdrop-blur-sm rounded-lg">
+      <svg class="h-8 w-8 animate-spin text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+      </svg>
+    </div>
+
+    <div class="p-4 md:p-6 transition-opacity duration-500">
+
+      <!-- Empty Sites Banner -->
+      <div x-show="!isLoading && sites.length === 0" x-cloak class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-900/50 dark:bg-amber-900/20">
+        <div class="flex items-start gap-3">
+          <div class="flex-shrink-0 mt-0.5">
+            <span x-icon="'alert-triangle'" class="w-5 h-5 text-amber-500"></span>
+          </div>
+          <div>
+            <h4 class="text-sm font-semibold text-amber-800 dark:text-amber-300">Belum ada Site yang Terdaftar</h4>
+            <p class="mt-1 text-sm text-amber-700 dark:text-amber-400">
+              Anda perlu mendaftarkan website/blog Anda sebagai "Site" di dashboard Accesstrade Publisher terlebih dahulu.
+              <br><span class="font-medium">Langkah:</span> Login ke
+              <a href="https://publisher.accesstrade.co.id" target="_blank" class="underline font-medium hover:text-amber-900 dark:hover:text-amber-200">publisher.accesstrade.co.id</a>
+              &rarr; Lihat Site ID di
+              <a href="https://db.accesstrade.co.id/my-account/properties" target="_blank" class="underline font-medium hover:text-amber-900 dark:hover:text-amber-200">Properties</a>
+              &rarr; Isi Site ID di halaman Settings, lalu Reload.
+            </p>
+            <button @click="loadSites()" class="mt-3 px-3 py-1.5 text-xs font-medium text-amber-800 bg-amber-100 rounded-lg hover:bg-amber-200 dark:bg-amber-900/50 dark:text-amber-300 dark:hover:bg-amber-800/50 transition-colors">
+              Coba Muat Ulang
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Browse Products Tab -->
+      <div x-show="activeTab === 'browse'" x-cloak class="space-y-6">
+
+        <!-- Filter Section -->
+        <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] p-5">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Pilih Site</label>
+              <select x-model="selectedSite" @change="loadCampaigns()" class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 text-sm text-gray-800 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white/90">
+                <option value="">-- Pilih Site --</option>
+                <template x-for="site in sites" :key="site.id">
+                  <option :value="site.id" x-text="site.name || site.id"></option>
+                </template>
+              </select>
+            </div>
+            <div>
+              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Pilih Campaign</label>
+              <select x-model="selectedCampaign" @change="loadFeedProducts()" :disabled="!selectedSite" class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 text-sm text-gray-800 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white/90 disabled:opacity-50">
+                <option value="">-- Pilih Campaign --</option>
+                <template x-for="campaign in campaigns" :key="campaign.id">
+                  <option :value="campaign.id" x-text="campaign.name || campaign.id"></option>
+                </template>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Data Source Indicator -->
+        <div x-show="feedProducts.length > 0 && dataSource" x-cloak class="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+          <span :class="getSourceBadgeClass()" class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full">
+            <span x-icon="getSourceIcon()" class="w-3.5 h-3.5"></span>
+            <span x-text="dataSourceLabel"></span>
+          </span>
+          <span class="text-xs text-gray-400 dark:text-gray-500">&bull;</span>
+          <span class="text-xs text-gray-500 dark:text-gray-400" x-text="feedProducts.length + ' item ditemukan'"></span>
+        </div>
+
+        <!-- Products List -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <template x-for="product in feedProducts" :key="product.product_id || product.sku">
+            <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] overflow-hidden flex flex-col hover:shadow-lg transition-shadow">
+              <div class="aspect-square bg-gray-100 dark:bg-gray-800 relative">
+                <img :src="product.image" class="w-full h-full object-cover" alt="Product Image" @error="$el.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNlMGUwZTAiLz48L3N2Zz4='">
+              </div>
+              <div class="p-4 flex flex-col flex-1">
+                <h4 class="font-semibold text-gray-800 dark:text-white/90 text-sm line-clamp-2 mb-2" x-text="product.name"></h4>
+                <div class="mt-auto">
+                  <div class="flex items-center gap-2 mb-3">
+                    <span class="text-brand-500 font-bold text-sm" x-text="'Rp ' + (product.discount || product.price).toLocaleString('id-ID')"></span>
+                    <span x-show="product.discount" class="text-xs text-gray-400 line-through" x-text="'Rp ' + (product.price).toLocaleString('id-ID')"></span>
+                  </div>
+                  <button @click="importProduct(product)" class="w-full px-3 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600 transition-colors flex items-center justify-center gap-2">
+                    <span x-icon="'download'" class="w-4 h-4"></span> Import
+                  </button>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Empty State -->
+        <div x-show="feedProducts.length === 0 && !isLoading && selectedCampaign" class="text-center py-12">
+          <div class="inline-flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
+            <span x-icon="'box'" class="h-8 w-8 text-gray-400"></span>
+          </div>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white/90">Tidak ada produk ditemukan</h3>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            <template x-if="sourceAttempts.length > 0">
+              <span>Dicoba melalui <span x-text="sourceAttempts.length"></span> sumber data, namun tidak ada yang tersedia untuk campaign ini.</span>
+            </template>
+            <template x-if="sourceAttempts.length === 0">
+              <span>Merchant ini mungkin tidak menyediakan product feed atau promosi data.</span>
+            </template>
+          </p>
+          <div x-show="sourceAttempts.length > 0" class="mt-3 text-xs text-gray-400 dark:text-gray-500 space-y-0.5">
+            <template x-for="(attempt, idx) in sourceAttempts" :key="idx">
+              <div>
+                <span :class="attempt.count > 0 ? 'text-green-500' : (attempt.error ? 'text-red-400' : 'text-amber-500')"
+                      class="w-3 h-3 inline-block mr-1"
+                      x-icon="attempt.count > 0 ? 'check-circle' : (attempt.error ? 'x-circle' : 'minus-circle')"></span>
+                <span x-text="attempt.source + ': ' + (attempt.count > 0 ? attempt.count + ' item' : (attempt.error || 'tidak ada data'))"></span>
+              </div>
+            </template>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Deep Link Tab -->
+      <div x-show="activeTab === 'deeplink'" x-cloak>
+        <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] p-5 lg:p-6 max-w-2xl mx-auto">
+          <h4 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-6">Buat Affiliate Link (Deep Link)</h4>
+
+          <div class="space-y-4">
+            <div>
+              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Site</label>
+              <select x-model="selectedSite" @change="loadCampaigns()" class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 text-sm text-gray-800 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white/90">
+                <option value="">-- Pilih Site --</option>
+                <template x-for="site in sites" :key="site.id">
+                  <option :value="site.id" x-text="site.name || site.id"></option>
+                </template>
+              </select>
+            </div>
+
+            <div>
+              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Campaign (Merchant)</label>
+              <select x-model="selectedCampaign" :disabled="!selectedSite" class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 text-sm text-gray-800 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white/90 disabled:opacity-50">
+                <option value="">-- Pilih Campaign --</option>
+                <template x-for="campaign in campaigns" :key="campaign.id">
+                  <option :value="campaign.id" x-text="campaign.name || campaign.id"></option>
+                </template>
+              </select>
+            </div>
+
+            <div>
+              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">URL Produk Asli (contoh: Tokopedia/Shopee)</label>
+              <input type="url" x-model="deepLinkInput" placeholder="https://..." class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+            </div>
+
+            <button @click="generateDeepLink()" :disabled="deepLinkLoading || !deepLinkInput || !selectedCampaign" class="w-full px-5 py-3 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+              <span x-show="deepLinkLoading" x-cloak class="w-4 h-4 animate-spin text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+              </span>
+              <span x-text="deepLinkLoading ? 'Memproses...' : 'Generate Link'"></span>
+            </button>
+
+            <div x-show="deepLinkResult" x-cloak class="mt-6 p-4 rounded-xl border border-green-200 bg-green-50 dark:border-green-900/50 dark:bg-green-900/20">
+              <label class="block text-xs font-semibold text-green-800 dark:text-green-400 mb-2 uppercase tracking-wider">Hasil Affiliate Link</label>
+              <div class="flex items-center gap-2">
+                <input type="text" readonly :value="deepLinkResult" class="flex-1 h-10 rounded border border-green-300 bg-white px-3 text-sm text-gray-800 dark:border-green-800 dark:bg-gray-900 dark:text-white/90 select-all focus:outline-none">
+                <button @click="navigator.clipboard.writeText(deepLinkResult); window.showToast('Tersalin ke clipboard!', 'success');" class="px-3 h-10 text-sm font-medium text-green-700 bg-green-100 rounded hover:bg-green-200 dark:bg-green-900/50 dark:text-green-300 dark:hover:bg-green-800 transition-colors">
+                  Copy
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Shopee Tab (Placeholder) -->
+      <div x-show="activeTab === 'shopee'" x-cloak>
+        <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] p-5 lg:p-6 text-center py-16">
+          <div class="inline-flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30 mb-4">
+            <span x-icon="'shopping-bag'" class="h-8 w-8 text-orange-500"></span>
+          </div>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white/90 mb-2">Shopee Affiliate</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+            Integrasi Shopee Affiliate Open API akan segera hadir.
+            Fitur ini memungkinkan pencarian produk, pembuatan short link, dan impor produk langsung dari Shopee.
+          </p>
+          <div class="mt-6 px-4 py-3 rounded-xl border border-dashed border-orange-300 dark:border-orange-700 bg-orange-50/50 dark:bg-orange-900/10 max-w-sm mx-auto">
+            <p class="text-xs text-orange-600 dark:text-orange-400 font-medium">Coming Soon &mdash; Shopee Affiliate Open API</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

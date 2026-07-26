@@ -1,0 +1,127 @@
+<div x-data="affiliateSettings" class="w-full px-1 sm:px-0">
+
+  <!-- Header Section -->
+  <div class="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+    <div>
+      <h2 class="text-xl font-bold text-gray-800 dark:text-white/90">Affiliate Settings</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Konfigurasi kredensial API affiliate (Accesstrade, Shopee).</p>
+    </div>
+  </div>
+
+  <!-- Content Container -->
+  <div class="rounded-2xl border border-primary bg-secondary relative min-h-[500px] shadow-sm overflow-hidden">
+
+    <!-- Loading Overlay -->
+    <div x-show="isLoading" x-cloak class="absolute inset-0 z-10 flex items-center justify-center bg-secondary/80 backdrop-blur-sm rounded-lg">
+      <svg class="h-8 w-8 animate-spin text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+      </svg>
+    </div>
+
+    <div x-show="!isLoading" class="p-4 md:p-6 transition-opacity duration-500">
+
+      <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] p-5 lg:p-6">
+
+        <h4 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-4">Accesstrade API Configuration</h4>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Konfigurasi ini diperlukan untuk mengambil produk
+          dari feed dan men-generate link affiliate. Menggunakan API <code>gurkha.accesstrade.global</code>.</p>
+
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+
+          <!-- Auth Generator -->
+          <div class="lg:col-span-2 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
+            <h5 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-4">Generator Authorization Header</h5>
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Email (Username)</label>
+                <input type="email" x-model="settings.accesstradeEmail" placeholder="email@anda.com"
+                  class="w-full h-11 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-600 dark:bg-gray-900 dark:text-white/90">
+              </div>
+              <div>
+                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Password</label>
+                <div class="relative">
+                  <input :type="showPassword ? 'text' : 'password'" x-model="accesstradePass"
+                    placeholder="Password Akun Accesstrade"
+                    class="w-full h-11 rounded-lg border border-gray-300 bg-white px-4 py-2.5 pr-10 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-600 dark:bg-gray-900 dark:text-white/90">
+                  <button type="button" @click="showPassword = !showPassword"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <span x-show="!showPassword" class="block w-5 h-5" x-icon="'eye-off'"></span>
+                    <span x-show="showPassword" class="block w-5 h-5" x-icon="'eye'"></span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="mt-4 flex gap-3">
+              <button @click="generateAccesstradeHeader()" :disabled="isGeneratingAuth"
+                class="px-4 py-2 text-sm font-medium text-white bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50">
+                <span x-text="isGeneratingAuth ? 'Memproses...' : 'Generate Header'"></span>
+              </button>
+              <button @click="testAtProvisioning()" :disabled="isTestingAt"
+                class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-500 transition-colors disabled:opacity-50">
+                <span x-text="isTestingAt ? 'Menguji...' : 'Test Connection'"></span>
+              </button>
+            </div>
+          </div>
+
+          <!-- API Key -->
+          <div class="lg:col-span-2">
+            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Authorization HTTP header Value</label>
+            <input type="text" x-model="settings.accesstradeApiKey" placeholder="Access key..." readonly
+              class="w-full h-11 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-600 dark:bg-gray-900 dark:text-white/90">
+            <p class="mt-1 text-xs text-gray-500">Access Key.</p>
+          </div>
+
+          <!-- Site ID -->
+          <div class="lg:col-span-2">
+            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Site ID</label>
+            <input type="text" x-model="settings.accesstradeSiteId" placeholder="Contoh: 12345"
+              class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+            <p class="mt-1 text-xs text-gray-500">ID Website yang didaftarkan di Accesstrade. Lihat di
+              <a href="https://db.accesstrade.co.id/my-account/properties" target="_blank"
+                class="underline text-brand-500 hover:text-brand-600">Properties</a>.
+            </p>
+          </div>
+
+          <!-- Country Code -->
+          <div class="lg:col-span-2">
+            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Country Code</label>
+            <select x-model="settings.accesstradeCountryCode"
+              class="w-full h-11 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-600 dark:bg-gray-900 dark:text-white/90">
+              <option value="ID">Indonesia (ID)</option>
+              <option value="MY">Malaysia (MY)</option>
+              <option value="SG">Singapore (SG)</option>
+              <option value="TH">Thailand (TH)</option>
+              <option value="VN">Vietnam (VN)</option>
+              <option value="JP">Japan (JP)</option>
+            </select>
+            <p class="mt-1 text-xs text-gray-500">Negara akun Accesstrade Publisher Anda.</p>
+          </div>
+
+          <!-- API Base URL -->
+          <div class="lg:col-span-2">
+            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">API Base URL</label>
+            <input type="text" x-model="settings.accesstradeApiUrl" placeholder="https://gurkha.accesstrade.global"
+              class="w-full h-11 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-600 dark:bg-gray-900 dark:text-white/90">
+            <p class="mt-1 text-xs text-gray-500">Kosongkan untuk default (<code>gurkha.accesstrade.global</code>).
+              Ganti jika menggunakan region lain.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Save Button -->
+      <div class="mt-6 flex justify-end gap-3">
+        <button @click="saveSettings()" :disabled="isSaving"
+          class="px-5 py-2.5 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2">
+          <svg x-show="isSaving" x-cloak class="w-4 h-4 animate-spin text-white" xmlns="http://www.w3.org/2000/svg"
+            fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <span x-text="isSaving ? 'Menyimpan...' : 'Simpan Pengaturan'"></span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
