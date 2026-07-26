@@ -8,8 +8,6 @@
       class="tab-nav-btn">Storefront</button>
     <button @click="activeTab = 'homedata'" :class="{ 'active': activeTab === 'homedata' }" class="tab-nav-btn">Home
       Data</button>
-    <button @click="activeTab = 'accesstrade'" :class="{ 'active': activeTab === 'accesstrade' }"
-      class="tab-nav-btn">Accesstrade</button>
   </div>
 
   <div class="rounded-2xl border border-primary bg-secondary relative min-h-[500px] shadow-sm overflow-hidden">
@@ -162,84 +160,6 @@
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Accesstrade Tab -->
-        <div x-show="activeTab === 'accesstrade'" x-cloak>
-          <h4 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-4">Accesstrade API Configuration</h4>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Konfigurasi ini diperlukan untuk mengambil produk
-            dari feed dan men-generate link affiliate. Menggunakan API <code>gurkha.accesstrade.global</code>.</p>
-
-          <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-
-            <div
-              class="lg:col-span-2 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
-              <h5 class="text-sm font-semibold text-gray-800 dark:text-white/90 mb-4">Generator Authorization Header
-              </h5>
-              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div>
-                  <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Email
-                    (Username)</label>
-                  <input type="email" x-model="settings.accesstradeEmail" placeholder="email@anda.com"
-                    class="w-full h-11 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-600 dark:bg-gray-900 dark:text-white/90">
-                </div>
-                <div>
-                  <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Password</label>
-                  <div class="relative">
-                    <input :type="showPassword ? 'text' : 'password'" x-model="accesstradePass" placeholder="Password Akun Accesstrade"
-                      class="w-full h-11 rounded-lg border border-gray-300 bg-white px-4 py-2.5 pr-10 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-600 dark:bg-gray-900 dark:text-white/90">
-                    <button type="button" @click="showPassword = !showPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                      <span x-show="!showPassword" class="block w-5 h-5" x-icon="'eye-off'"></span>
-                      <span x-show="showPassword" class="block w-5 h-5" x-icon="'eye'"></span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <div class="mt-4">
-                <button @click="generateAccesstradeHeader()" :disabled="isGeneratingAuth"
-                  class="px-4 py-2 text-sm font-medium text-white bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50">
-                  <span x-text="isGeneratingAuth ? 'Memproses...' : 'Generate Header'"></span>
-                </button>
-              </div>
-            </div>
-
-            <div class="lg:col-span-2">
-              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Authorization HTTP header
-                Value</label>
-              <input type="text" x-model="settings.accesstradeApiKey" placeholder="Access key..." readonly
-                class="w-full h-11 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-600 dark:bg-gray-900 dark:text-white/90">
-              <p class="mt-1 text-xs text-gray-500">Access Key.</p>
-            </div>
-
-            <div class="lg:col-span-2">
-              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Site ID</label>
-              <input type="text" x-model="settings.accesstradeSiteId" placeholder="Contoh: 12345"
-                class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
-              <p class="mt-1 text-xs text-gray-500">ID Website yang didaftarkan di Accesstrade. Lihat di
-                <a href="https://db.accesstrade.co.id/my-account/properties" target="_blank" class="underline text-brand-500 hover:text-brand-600">Properties</a>.</p>
-            </div>
-
-            <div class="lg:col-span-2">
-              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Country Code</label>
-              <select x-model="settings.accesstradeCountryCode"
-                class="w-full h-11 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-600 dark:bg-gray-900 dark:text-white/90">
-                <option value="ID">Indonesia (ID)</option>
-                <option value="MY">Malaysia (MY)</option>
-                <option value="SG">Singapore (SG)</option>
-                <option value="TH">Thailand (TH)</option>
-                <option value="VN">Vietnam (VN)</option>
-                <option value="JP">Japan (JP)</option>
-              </select>
-              <p class="mt-1 text-xs text-gray-500">Negara akun Accesstrade Publisher Anda.</p>
-            </div>
-
-            <div class="lg:col-span-2">
-              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">API Base URL</label>
-              <input type="text" x-model="settings.accesstradeApiUrl" placeholder="https://gurkha.accesstrade.global"
-                class="w-full h-11 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-600 dark:bg-gray-900 dark:text-white/90">
-              <p class="mt-1 text-xs text-gray-500">Kosongkan untuk default (<code>gurkha.accesstrade.global</code>). Ganti jika menggunakan region lain.</p>
             </div>
           </div>
         </div>
