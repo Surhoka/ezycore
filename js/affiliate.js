@@ -197,21 +197,29 @@ Alpine.data('affiliateMain', () => ({
 }));
 
 // ================================================================
-// AFFILIATE SETTINGS — Accesstrade Credentials
+// AFFILIATE SETTINGS — Accesstrade + Shopee Credentials
 // ================================================================
 Alpine.data('affiliateSettings', () => ({
+  activeTab: 'accesstrade',
   isLoading: true,
   isSaving: false,
   isTestingAt: false,
+  isTestingShopee: false,
   isGeneratingAuth: false,
   showPassword: false,
+  showShopeeSecret: false,
   accesstradePass: '',
   settings: {
     accesstradeApiKey: '',
     accesstradeSiteId: '',
     accesstradeEmail: '',
     accesstradeCountryCode: 'ID',
-    accesstradeApiUrl: ''
+    accesstradeApiUrl: '',
+    shopeeAppId: '',
+    shopeeAppSecret: '',
+    shopeeAccessToken: '',
+    shopeeSubId: '',
+    shopeeApiUrl: ''
   },
 
   init() {
@@ -300,5 +308,31 @@ Alpine.data('affiliateSettings', () => ({
       if (window.showToast) window.showToast('Test error: ' + e.message, 'error');
     }
     this.isTestingAt = false;
+  },
+
+  async testShopeeConnection() {
+    if (!this.settings.shopeeAppId || !this.settings.shopeeAppSecret) {
+      if (window.showToast) window.showToast('Mohon isi App ID dan App Secret!', 'error');
+      return;
+    }
+    this.isTestingShopee = true;
+    try {
+      const res = await affiliateApi('testShopeeConnection', {
+        appId: this.settings.shopeeAppId,
+        appSecret: this.settings.shopeeAppSecret,
+        accessToken: this.settings.shopeeAccessToken,
+        apiUrl: this.settings.shopeeApiUrl
+      });
+      console.log('[Affiliate Shopee] Test result:', res);
+      if (res.status === 'success') {
+        if (window.showToast) window.showToast('Shopee Connection OK!', 'success');
+      } else {
+        if (window.showToast) window.showToast(res.message || 'Test failed', 'error');
+      }
+    } catch (e) {
+      console.error('[Affiliate Shopee] Test error:', e);
+      if (window.showToast) window.showToast('Test error: ' + e.message, 'error');
+    }
+    this.isTestingShopee = false;
   }
 }));
