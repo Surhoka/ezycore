@@ -90,6 +90,16 @@
           </div>
         </div>
 
+        <!-- Data Source Indicator -->
+        <div x-show="feedProducts.length > 0 && dataSource" x-cloak class="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+          <span :class="getSourceBadgeClass()" class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full">
+            <span x-icon="getSourceIcon()" class="w-3.5 h-3.5"></span>
+            <span x-text="dataSourceLabel"></span>
+          </span>
+          <span class="text-xs text-gray-400 dark:text-gray-500">•</span>
+          <span class="text-xs text-gray-500 dark:text-gray-400" x-text="feedProducts.length + ' item ditemukan'"></span>
+        </div>
+
         <!-- Products List -->
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           <template x-for="product in feedProducts" :key="product.product_id || product.sku">
@@ -118,8 +128,25 @@
           <div class="inline-flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
             <span x-icon="'box'" class="h-8 w-8 text-gray-400"></span>
           </div>
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white/90">Tidak ada produk</h3>
-          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Merchant ini mungkin tidak menyediakan product feed.</p>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white/90">Tidak ada produk ditemukan</h3>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            <template x-if="sourceAttempts.length > 0">
+              <span>Dicoba melalui <span x-text="sourceAttempts.length"></span> sumber data, namun tidak ada yang tersedia untuk campaign ini.</span>
+            </template>
+            <template x-if="sourceAttempts.length === 0">
+              <span>Merchant ini mungkin tidak menyediakan product feed atau promosi data.</span>
+            </template>
+          </p>
+          <div x-show="sourceAttempts.length > 0" class="mt-3 text-xs text-gray-400 dark:text-gray-500 space-y-0.5">
+            <template x-for="(attempt, idx) in sourceAttempts" :key="idx">
+              <div>
+                <span :class="attempt.count > 0 ? 'text-green-500' : (attempt.error ? 'text-red-400' : 'text-amber-500')" 
+                      class="w-3 h-3 inline-block mr-1"
+                      x-icon="attempt.count > 0 ? 'check-circle' : (attempt.error ? 'x-circle' : 'minus-circle')"></span>
+                <span x-text="attempt.source + ': ' + (attempt.count > 0 ? attempt.count + ' item' : (attempt.error || 'tidak ada data'))"></span>
+              </div>
+            </template>
+          </div>
         </div>
 
       </div>
