@@ -1489,6 +1489,9 @@ Alpine.data('ecommerceAffiliate', () => ({
   sites: [], 
   campaigns: [], 
   feedProducts: [],
+  dataSource: '',       // 'datafeeds' | 'offers' | 'quicklink' | 'none'
+  dataSourceLabel: '',  // Label friendly: 'Product Feed', 'Offers & Promotions', dll
+  sourceAttempts: [],   // Log percobaan fallback untuk debugging
   selectedSite: '', 
   selectedCampaign: '',
   
@@ -1530,6 +1533,10 @@ Alpine.data('ecommerceAffiliate', () => ({
       return;
     }
     this.isLoading = true;
+    this.feedProducts = [];
+    this.dataSource = '';
+    this.dataSourceLabel = '';
+    this.sourceAttempts = [];
     try {
       const res = await ecomApi('getAccesstradeCampaigns', { siteId: this.selectedSite });
       if (res.status === 'success') {
@@ -1549,14 +1556,34 @@ Alpine.data('ecommerceAffiliate', () => ({
   async loadFeedProducts() {
     if (!this.selectedCampaign) return;
     this.isLoading = true;
+    this.feedProducts = [];
+    this.dataSource = '';
+    this.dataSourceLabel = '';
+    this.sourceAttempts = [];
+    
     try {
-      const res = await ecomApi('getAccesstradeDatafeeds', { campaignId: this.selectedCampaign });
+      // Cascading fallback: datafeeds → offers → quicklink
+      const res = await ecomApi('getAccesstradeProductsWithFallback', { 
+        campaignId: this.selectedCampaign,
+        siteId: this.selectedSite 
+      });
+      
       if (res.status === 'success') {
-        this.feedProducts = parseAtList_(res.data);
+        this.feedProducts = res.data || [];
+        this.dataSource = res.source || 'none';
+        this.dataSourceLabel = res.sourceLabel || '';
+        this.sourceAttempts = res.attempts || [];
+        
+        console.log('[Affiliate] loadFeedProducts source:', this.dataSource, 'count:', this.feedProducts.length);
+        
+        if (res.message && this.feedProducts.length === 0) {
+          if (window.showToast) window.showToast(res.message, 'warning');
+        }
       } else {
-        if (window.showToast) window.showToast('Gagal memuat produk: ' + (res.message||''), 'error');
+        if (window.showToast) window.showToast('Gagal memuat data: ' + (res.message||''), 'error');
       }
     } catch (e) {
+      console.error('[Affiliate] loadFeedProducts error:', e);
       if (window.showToast) window.showToast('Error koneksi API Accesstrade', 'error');
     }
     this.isLoading = false;
@@ -1601,5 +1628,23 @@ Alpine.data('ecommerceAffiliate', () => ({
       if (window.showToast) window.showToast('Error koneksi API Accesstrade', 'error');
     }
     this.deepLinkLoading = false;
+  },
+
+  getSourceBadgeClass() {
+    switch(this.dataSource) {
+      case 'datafeeds': return 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400';
+      case 'offers': return 'bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400';
+      case 'quicklink': return 'bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400';
+      default: return 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400';
+    }
+  },
+
+  getSourceIcon() {
+    switch(this.dataSource) {
+      case 'datafeeds': return 'package';
+      case 'offers': return 'tag';
+      case 'quicklink': return 'link';
+      default: return 'alert-circle';
+    }
   }
 }));
