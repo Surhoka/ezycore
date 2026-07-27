@@ -1,0 +1,113 @@
+<div x-data="postViewData()" x-init="init()">
+  <template x-if="post">
+    <div class="max-w-4xl mx-auto space-y-6">
+
+      <!-- Article Header -->
+      <div class="bg-theme-secondary border border-theme-border rounded-xl p-5 md:p-8">
+        <!-- Category & Date -->
+        <div class="flex items-center gap-3 mb-4">
+          <span x-show="post.category"
+            class="inline-block text-[11px] font-bold bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 px-2.5 py-1 rounded-full"
+            x-text="post.category"></span>
+          <span class="text-xs text-theme-text-sub" x-text="formatDate(post.publishedat)"></span>
+        </div>
+
+        <!-- Title -->
+        <h1 class="text-2xl md:text-3xl font-extrabold text-theme-text leading-tight mb-4" x-text="post.title"></h1>
+
+        <!-- Labels -->
+        <div x-show="post.labels &amp;&amp; post.labels.length > 0" class="flex flex-wrap gap-2 mb-5">
+          <template x-for="label in (post.labels || [])" :key="label">
+            <span class="text-[10px] font-medium bg-theme-primary border border-theme-border text-theme-text-sub px-2 py-0.5 rounded-md"
+              x-text="'#' + label"></span>
+          </template>
+        </div>
+
+        <!-- Featured Image -->
+        <div x-show="post.image &amp;&amp; post.image.startsWith('http')" class="mb-6 rounded-xl overflow-hidden">
+          <img :src="post.image" :alt="post.title" class="w-full object-cover max-h-[400px]" loading="lazy" />
+        </div>
+
+        <!-- Article Body -->
+        <div x-show="post.body" class="prose-custom">
+          <div class="text-sm md:text-base text-theme-text-sub leading-relaxed space-y-4 [&_img]:rounded-lg [&_img]:max-w-full [&_img]:h-auto [&_a]:text-brand-600 [&_a]:dark:text-brand-400 [&_a]:underline [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-theme-text [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-theme-text [&_blockquote]:border-l-4 [&_blockquote]:border-brand-500 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-theme-text-sub [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_pre]:bg-theme-primary [&_pre]:border [&_pre]:border-theme-border [&_pre]:rounded-lg [&_pre]:p-4 [&_pre]:overflow-x-auto [&_code]:text-brand-600 [&_code]:dark:text-brand-400"
+            x-html="post.body"></div>
+        </div>
+
+        <!-- Article Snippet (fallback when no body) -->
+        <div x-show="!post.body &amp;&amp; post.snippet" class="text-sm md:text-base text-theme-text-sub leading-relaxed">
+          <p x-text="post.snippet"></p>
+        </div>
+      </div>
+
+      <!-- Share Section -->
+      <div class="bg-theme-secondary border border-theme-border rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h3 class="text-sm font-bold text-theme-text mb-1">Bagikan Artikel Ini</h3>
+          <p class="text-xs text-theme-text-sub">Bantu orang lain menemukan artikel ini</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="w-9 h-9 flex items-center justify-center rounded-lg bg-blue-500 hover:bg-blue-600 text-white transition-colors"
+            x-on:click="window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(post.postUrl || window.location.href), '_blank', 'width=600,height=400')">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg>
+          </button>
+          <button class="w-9 h-9 flex items-center justify-center rounded-lg bg-sky-500 hover:bg-sky-600 text-white transition-colors"
+            x-on:click="window.open('https://twitter.com/intent/tweet?url=' + encodeURIComponent(post.postUrl || window.location.href) + '&text=' + encodeURIComponent(post.title || ''), '_blank', 'width=600,height=400')">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" /></svg>
+          </button>
+          <button class="w-9 h-9 flex items-center justify-center rounded-lg bg-green-500 hover:bg-green-600 text-white transition-colors"
+            x-on:click="window.open('https://wa.me/?text=' + encodeURIComponent((post.title || '') + ' ' + (post.postUrl || window.location.href)), '_blank')">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
+          </button>
+          <button class="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-theme-text transition-colors"
+            x-on:click="if (navigator.clipboard) { navigator.clipboard.writeText(post.postUrl || window.location.href); if (window.showToast) window.showToast('Link disalin!', 'success'); }">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Related Posts -->
+      <div x-show="relatedPosts.length > 0" class="bg-theme-secondary border border-theme-border rounded-xl p-5 md:p-6">
+        <h2 class="text-base font-bold text-theme-text mb-4">Artikel Terkait</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <template x-for="(rp, idx) in relatedPosts" :key="rp.slug || idx">
+            <div class="bg-theme-primary border border-theme-border rounded-lg overflow-hidden hover:shadow-md hover:border-brand-200 dark:hover:border-brand-700 transition-all cursor-pointer group"
+              x-on:click="navigateToPost(rp)">
+              <!-- Image -->
+              <div class="aspect-[16/10] bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center overflow-hidden">
+                <template x-if="rp.image &amp;&amp; rp.image.startsWith('http')">
+                  <img :src="rp.image" :alt="rp.title" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                </template>
+                <template x-if="!rp.image || !rp.image.startsWith('http')">
+                  <svg class="w-8 h-8 text-gray-300 dark:text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
+                  </svg>
+                </template>
+              </div>
+              <!-- Content -->
+              <div class="p-3">
+                <span x-show="rp.category"
+                  class="inline-block text-[9px] font-bold bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 px-1.5 py-0.5 rounded-full mb-1.5"
+                  x-text="rp.category"></span>
+                <h4 class="text-xs font-semibold text-theme-text line-clamp-2 mb-1 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors" x-text="rp.title"></h4>
+                <p class="text-[11px] text-theme-text-sub" x-text="formatShortDate(rp.publishedat)"></p>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- Back to Blog -->
+      <div class="text-center pt-2">
+        <button class="inline-flex items-center gap-2 text-sm font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors"
+          x-on:click="window.navigate('posts')">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></svg>
+          Kembali ke Blog
+        </button>
+      </div>
+
+    </div>
+  </template>
+</div>
