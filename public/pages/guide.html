@@ -1,0 +1,185 @@
+<div x-data='guideData()'>
+  <div class='max-w-4xl mx-auto'>
+
+    <!-- Header -->
+    <div class='text-center mb-10'>
+      <div class='inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-orange-100 dark:bg-orange-900/30 mb-4'>
+        <span class='w-8 h-8 text-orange-500 dark:text-orange-400' x-icon='"compass"' />
+      </div>
+      <h1 class='text-3xl sm:text-4xl font-bold text-neutral-800 dark:text-neutral-100'>Welcome to ScrewFast</h1>
+      <p class='mt-3 text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto'>
+        Get started with our complete guide. Learn how to browse products, use interactive diagrams, checkout, and more.
+      </p>
+
+      <!-- Tour Status -->
+      <div class='mt-6 flex items-center justify-center gap-4 flex-wrap'>
+        <button x-on:click='startTour'
+          class='inline-flex items-center gap-2 rounded-xl bg-orange-400 hover:bg-orange-500 text-white px-6 py-3 font-semibold text-sm transition-colors'>
+          <span class='w-4 h-4' x-icon='"play"' />
+          <span x-text='tourCompleted ? "Restart Tour" : "Start Tour"'></span>
+        </button>
+        <template x-if='tourCompleted'>
+          <span class='inline-flex items-center gap-1.5 text-sm text-green-600 dark:text-green-400 font-medium'>
+            <span class='w-4 h-4' x-icon='"check-circle"' />
+            Completed
+          </span>
+        </template>
+      </div>
+    </div>
+
+    <!-- Quick Start Steps -->
+    <section class='mb-12'>
+      <h2 class='text-xl font-bold text-neutral-800 dark:text-neutral-100 mb-6'>Quick Start Steps</h2>
+      <div class='grid sm:grid-cols-2 lg:grid-cols-3 gap-4'>
+        <template x-for='(step, i) in steps' :key='step.id'>
+          <div class='relative group rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-5 hover:shadow-lg hover:border-orange-200 dark:hover:border-orange-800 transition-all duration-300'>
+            <div class='flex items-start gap-4'>
+              <div class='flex-shrink-0 w-9 h-9 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-500 dark:text-orange-400 font-bold text-sm'
+                x-text='step.id'></div>
+              <div class='min-w-0'>
+                <h3 class='font-semibold text-neutral-800 dark:text-neutral-100 text-sm' x-text='step.title'></h3>
+                <p class='mt-1 text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed line-clamp-2' x-text='step.description'></p>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+    </section>
+
+    <!-- Features Grid -->
+    <section class='mb-12'>
+      <h2 class='text-xl font-bold text-neutral-800 dark:text-neutral-100 mb-6'>Why Choose ScrewFast</h2>
+      <div class='grid sm:grid-cols-2 gap-4'>
+        <template x-for='feat in features' :key='feat.title'>
+          <div class='rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-5 flex gap-4'>
+            <div class='flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center'
+              :class='feat.color'>
+              <span class='w-5 h-5' :x-icon='`"${feat.icon}"`'></span>
+            </div>
+            <div>
+              <h3 class='font-semibold text-neutral-800 dark:text-neutral-100 text-sm' x-text='feat.title'></h3>
+              <p class='mt-1 text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed' x-text='feat.description'></p>
+            </div>
+          </div>
+        </template>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class='mb-12'>
+      <h2 class='text-xl font-bold text-neutral-800 dark:text-neutral-100 mb-6'>Frequently Asked Questions</h2>
+      <div class='divide-y divide-neutral-200 dark:divide-neutral-700 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 overflow-hidden'>
+        <template x-for='(faq, i) in faqs' :key='i'>
+          <div>
+            <button x-on:click='toggleFaq(i)'
+              class='flex w-full items-center justify-between gap-3 px-5 py-4 text-left text-sm font-medium text-neutral-800 dark:text-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-700/50 transition-colors'>
+              <span x-text='faq.q'></span>
+              <span class='w-4 h-4 flex-shrink-0 text-neutral-400 transition-transform duration-200'
+                :class='faqOpen === i ? "rotate-180" : ""'
+                x-icon='"chevron-down"'></span>
+            </button>
+            <div x-show='faqOpen === i' x-collapse>
+              <div class='px-5 pb-4 text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed' x-text='faq.a'></div>
+            </div>
+          </div>
+        </template>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class='text-center py-8'>
+      <p class='text-neutral-600 dark:text-neutral-400 mb-4'>Ready to start exploring?</p>
+      <div class='flex items-center justify-center gap-3 flex-wrap'>
+        <a href='/p/shop.html'
+          x-on:click.prevent='window.navigate("shop")'
+          class='inline-flex items-center gap-2 rounded-xl bg-orange-400 hover:bg-orange-500 text-white px-6 py-3 font-semibold text-sm transition-colors'>
+          <span class='w-4 h-4' x-icon='"shopping-bag"' />
+          Browse Products
+        </a>
+        <button x-on:click='resetTour'
+          class='inline-flex items-center gap-2 rounded-xl border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 px-6 py-3 font-semibold text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors'>
+          <span class='w-4 h-4' x-icon='"refresh"' />
+          Restart Tour
+        </button>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Tour Modal Overlay -->
+  <div x-show='showTour' x-cloak
+    x-transition:enter='transition ease-out duration-300'
+    x-transition:enter-start='opacity-0'
+    x-transition:enter-end='opacity-100'
+    x-transition:leave='transition ease-in duration-200'
+    x-transition:leave-end='opacity-0'
+    class='fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4'
+    x-on:keydown.escape='skipTour'>
+
+    <div x-show='showTour' x-cloak
+      x-transition:enter='transition ease-out duration-300'
+      x-transition:enter-start='opacity-0 scale-95 translate-y-4'
+      x-transition:enter-end='opacity-100 scale-100 translate-y-0'
+      x-transition:leave='transition ease-in duration-200'
+      x-transition:leave-end='opacity-0 scale-95 translate-y-4'
+      x-on:click.away='skipTour'
+      class='relative w-full max-w-lg bg-white dark:bg-neutral-800 rounded-2xl shadow-2xl overflow-hidden'>
+
+      <!-- Progress Bar -->
+      <div class='h-1 bg-neutral-200 dark:bg-neutral-700'>
+        <div class='h-full bg-orange-400 transition-all duration-500 ease-out' :style='`width: ${progress}%`'></div>
+      </div>
+
+      <!-- Step Number -->
+      <div class='px-6 pt-6 pb-2'>
+        <span class='text-xs font-medium text-orange-500 dark:text-orange-400'>
+          Step <span x-text='currentStep + 1'></span> of <span x-text='steps.length'></span>
+        </span>
+      </div>
+
+      <!-- Content -->
+      <div class='px-6 pb-6'>
+        <div class='flex flex-col items-center text-center mb-6'>
+          <!-- Icon Illustration -->
+          <div class='w-20 h-20 rounded-2xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mb-4'>
+            <span class='w-10 h-10 text-orange-500 dark:text-orange-400' :x-icon='`"${currentStepData.icon}"`'></span>
+          </div>
+          <h3 class='text-xl font-bold text-neutral-800 dark:text-neutral-100 mb-2' x-text='currentStepData.title'></h3>
+          <p class='text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed' x-text='currentStepData.description'></p>
+        </div>
+
+        <!-- Step Dots -->
+        <div class='flex justify-center gap-1.5 mb-6'>
+          <template x-for='(s, i) in steps' :key='s.id'>
+            <button x-on:click='goToStep(i)'
+              class='w-2 h-2 rounded-full transition-all duration-300'
+              :class='i === currentStep ? "bg-orange-400 w-6" : "bg-neutral-300 dark:bg-neutral-600 hover:bg-neutral-400 dark:hover:bg-neutral-500"'>
+            </button>
+          </template>
+        </div>
+
+        <!-- Actions -->
+        <div class='flex items-center justify-between gap-3'>
+          <button x-on:click='skipTour'
+            class='text-sm text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 font-medium transition-colors'>
+            Skip
+          </button>
+          <div class='flex items-center gap-2'>
+            <button x-show='!isFirstStep'
+              x-on:click='prevStep'
+              class='inline-flex items-center gap-1.5 rounded-lg border border-neutral-300 dark:border-neutral-600 px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors'>
+              <span class='w-3.5 h-3.5' x-icon='"chevron-left"' />
+              Back
+            </button>
+            <button x-on:click='nextStep'
+              class='inline-flex items-center gap-1.5 rounded-lg bg-orange-400 hover:bg-orange-500 px-5 py-2 text-sm font-semibold text-white transition-colors'>
+              <span x-text='isLastStep ? "Complete" : "Next"'></span>
+              <span class='w-3.5 h-3.5' x-show='!isLastStep' x-icon='"chevron-right"'></span>
+              <span class='w-3.5 h-3.5' x-show='isLastStep' x-icon='"check"'></span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
