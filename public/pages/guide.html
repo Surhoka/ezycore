@@ -17,10 +17,10 @@ if (!window.guideData) {
         try { this.tourCompleted = localStorage.getItem('EzycoreGuide') === 'true'; } catch (_) {}
       },
 
-      get progress() { return ((this.currentStep + 1) / this.steps.length) * 100; },
-      get currentStepData() { return this.steps[this.currentStep] || this.steps[0]; },
-      get isFirstStep() { return this.currentStep === 0; },
-      get isLastStep() { return this.currentStep === this.steps.length - 1; },
+      progress() { return ((this.currentStep + 1) / this.steps.length) * 100; },
+      currentStepData() { return this.steps[this.currentStep] || this.steps[0]; },
+      isFirstStep() { return this.currentStep === 0; },
+      isLastStep() { return this.currentStep === this.steps.length - 1; },
 
       startTour: function () {
         this.currentStep = 0; this.showTour = true;
@@ -270,14 +270,14 @@ if (!window.guideData) {
 
       <!-- Progress Bar -->
       <div class='h-1 rounded-full bg-neutral-200 dark:bg-neutral-700 mb-4 overflow-hidden'>
-        <div class='h-full rounded-full bg-orange-400 transition-all duration-500 ease-out' :style='`width: ${progress}%`'></div>
+        <div class='h-full rounded-full bg-orange-400 transition-all duration-500 ease-out' :style='`width: ${progress()}%`'></div>
       </div>
 
       <!-- Step Info + Nav -->
       <div class='flex items-center gap-4'>
         <!-- Icon -->
         <div class='w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center shrink-0'>
-          <span class='w-5 h-5 text-orange-500 dark:text-orange-400' :x-icon='`"${currentStepData.icon}"`'></span>
+          <span class='w-5 h-5 text-orange-500 dark:text-orange-400' :x-icon='`"${currentStepData().icon}"`'></span>
         </div>
 
         <!-- Step Title + Dots -->
@@ -295,19 +295,19 @@ if (!window.guideData) {
               </template>
             </div>
           </div>
-          <p class='text-sm font-semibold text-neutral-800 dark:text-neutral-100 truncate' x-text='currentStepData.title'></p>
+          <p class='text-sm font-semibold text-neutral-800 dark:text-neutral-100 truncate' x-text='currentStepData().title'></p>
         </div>
 
         <!-- Nav Buttons -->
         <div class='flex items-center gap-1.5 shrink-0'>
-          <button x-show='!isFirstStep' x-on:click='prevStep'
+          <button x-show='!isFirstStep()' x-on:click='prevStep'
             class='w-9 h-9 rounded-xl border border-neutral-300 dark:border-neutral-600 flex items-center justify-center text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors'>
             <span class='w-4 h-4' x-icon='"chevron-left"'></span>
           </button>
           <button x-on:click='nextStep'
             class='h-9 px-4 rounded-xl bg-orange-400 hover:bg-orange-500 text-white text-sm font-semibold flex items-center gap-1.5 transition-colors'>
-            <span x-text='isLastStep ? "Done" : "Next"'></span>
-            <span class='w-4 h-4' :x-icon='isLastStep ? "\"check\"" : "\"chevron-right\""'></span>
+            <span x-text='isLastStep() ? "Done" : "Next"'></span>
+            <span class='w-4 h-4' :x-icon='isLastStep() ? "\"check\"" : "\"chevron-right\""'></span>
           </button>
           <button x-on:click='skipTour'
             class='w-9 h-9 rounded-xl flex items-center justify-center text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors' title='Skip'>
