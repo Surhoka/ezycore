@@ -90,9 +90,9 @@ if (!window.guideData) {
       <button x-on:click='startTour'
         class='inline-flex items-center gap-2 rounded-xl bg-orange-400 hover:bg-orange-500 text-white px-6 py-3 font-semibold text-sm transition-colors shadow-lg shadow-orange-200 dark:shadow-orange-900/30'>
         <span class='w-4 h-4' x-icon='"play"' />
-        <span x-text='tourCompleted ? "Restart Tour" : "Start Interactive Tour"'></span>
+        <span x-text='$data.tourCompleted ? "Restart Tour" : "Start Interactive Tour"'></span>
       </button>
-      <template x-if='tourCompleted'>
+      <template x-if='$data.tourCompleted'>
         <span class='inline-flex items-center gap-1.5 text-sm text-green-600 dark:text-green-400 font-medium bg-green-50 dark:bg-green-900/20 px-3 py-1.5 rounded-full'>
           <span class='w-4 h-4' x-icon='"check-circle"' />
           Tour Completed
