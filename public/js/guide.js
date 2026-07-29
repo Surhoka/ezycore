@@ -21,18 +21,16 @@ window.guideData = function () {
       { q: 'Can I return a product?', a: '14-day return policy for unused items in original packaging.' }
     ],
     currentStep: 0, showTour: false, faqOpen: null,
-    isTourDone: false,
+    tourCompleted: false,
 
     init: function () {
-      try { this.isTourDone = localStorage.getItem('EzycoreGuide') === 'true'; } catch (_) {}
+      try { this.tourCompleted = localStorage.getItem('EzycoreGuide') === 'true'; } catch (_) {}
     },
 
     get progress() { return ((this.currentStep + 1) / this.steps.length) * 100; },
     get currentStepData() { return this.steps[this.currentStep] || this.steps[0]; },
     get isFirstStep() { return this.currentStep === 0; },
     get isLastStep() { return this.currentStep === this.steps.length - 1; },
-    get tourCompleted() { return this.isTourDone; },
-    set tourCompleted(v) { this.isTourDone = v; },
 
     startTour: function () {
       this.currentStep = 0; this.showTour = true;
@@ -75,12 +73,12 @@ window.guideData = function () {
 
     completeTour: function () {
       this.tourActiveCleanup();
-      this.isTourDone = true; this.showTour = false;
+      this.tourCompleted = true; this.showTour = false;
       try { localStorage.setItem('EzycoreGuide', 'true'); } catch (_) {}
       if (window.showToast) window.showToast('Selamat! Anda telah menyelesaikan tur panduan.', 'success');
     },
     resetTour: function () {
-      this.isTourDone = false; try { localStorage.removeItem('EzycoreGuide'); } catch (_) {} this.startTour();
+      this.tourCompleted = false; try { localStorage.removeItem('EzycoreGuide'); } catch (_) {} this.startTour();
     },
     toggleFaq: function (index) { this.faqOpen = this.faqOpen === index ? null : index; }
   };
