@@ -45,16 +45,52 @@ if (!window.guideData) {
       tourHighlight: function (index) {
         var el = document.getElementById('guide-step-' + index);
         if (!el) return;
-        el.style.position = 'relative'; el.style.zIndex = '1000';
-        el.style.boxShadow = '0 0 0 200vmax rgba(0,0,0,0.55)';
-        el.style.outline = '3px solid #F7941D'; el.style.outlineOffset = '3px';
-        el.style.borderRadius = '16px'; el.style.transition = 'box-shadow 0.4s ease, outline 0.4s ease';
+
+        var oldTip = el.querySelector('.guide-tip-card');
+        if (oldTip) oldTip.remove();
+
+        var titleRow = el.querySelector('.flex.items-center.gap-3.mb-4');
+        if (!titleRow) {
+          titleRow = el.querySelector(':scope > div');
+        }
+        if (!titleRow) return;
+
+        titleRow.style.position = 'relative';
+        titleRow.style.zIndex = '1000';
+        titleRow.style.boxShadow = '0 0 0 200vmax rgba(0,0,0,0.55)';
+        titleRow.style.outline = '3px solid #F7941D';
+        titleRow.style.outlineOffset = '3px';
+        titleRow.style.borderRadius = '12px';
+        titleRow.style.transition = 'box-shadow 0.4s ease, outline 0.4s ease';
+
+        var step = this.steps[index];
+        var tip = document.createElement('div');
+        tip.className = 'guide-tip-card';
+        tip.innerHTML = '<div class="guide-tip-arrow"></div>' +
+          '<div class="flex items-start gap-3 p-4">' +
+          '<span class="w-6 h-6 shrink-0 rounded-full bg-orange-100 dark:bg-orange-900/40 flex items-center justify-center text-orange-500 text-xs font-bold">' + (index + 1) + '</span>' +
+          '<p class="text-sm text-neutral-700 dark:text-neutral-200 leading-relaxed">' + step.description + '</p>' +
+          '</div>';
+        titleRow.parentNode.insertBefore(tip, titleRow.nextSibling);
       },
       tourActiveCleanup: function () {
         var old = document.getElementById('guide-step-' + this.currentStep);
         if (!old) return;
-        old.style.position = ''; old.style.zIndex = ''; old.style.boxShadow = '';
-        old.style.outline = ''; old.style.outlineOffset = ''; old.style.borderRadius = ''; old.style.transition = '';
+        var titleRow = old.querySelector('.flex.items-center.gap-3.mb-4');
+        if (!titleRow) {
+          titleRow = old.querySelector(':scope > div');
+        }
+        if (titleRow) {
+          titleRow.style.position = '';
+          titleRow.style.zIndex = '';
+          titleRow.style.boxShadow = '';
+          titleRow.style.outline = '';
+          titleRow.style.outlineOffset = '';
+          titleRow.style.borderRadius = '';
+          titleRow.style.transition = '';
+        }
+        var tip = old.querySelector('.guide-tip-card');
+        if (tip) tip.remove();
       },
       tourScrollTo: function (index) {
         var el = document.getElementById('guide-step-' + index);
@@ -74,6 +110,42 @@ if (!window.guideData) {
   };
 }
 </script>
+<style>
+  .guide-tip-card {
+    position: relative;
+    margin: -0.5rem 0 1rem 3.25rem;
+    background: #fff7ed;
+    border: 1px solid #fdba74;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(247,148,29,0.15);
+    animation: tip-slide-in 0.35s ease-out forwards;
+    z-index: 1001;
+  }
+  .dark .guide-tip-card {
+    background: #2d1b0e;
+    border-color: #9a5208;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  }
+  .guide-tip-arrow {
+    position: absolute;
+    top: -6px;
+    left: 20px;
+    width: 12px;
+    height: 12px;
+    background: #fff7ed;
+    border-left: 1px solid #fdba74;
+    border-top: 1px solid #fdba74;
+    transform: rotate(45deg);
+  }
+  .dark .guide-tip-arrow {
+    background: #2d1b0e;
+    border-color: #9a5208;
+  }
+  @keyframes tip-slide-in {
+    from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+</style>
 <div x-data='guideData()' class='max-w-4xl mx-auto relative' x-cloak>
 
   <!-- ===== HEADER ===== -->
