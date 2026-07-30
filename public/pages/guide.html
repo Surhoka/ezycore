@@ -1,7 +1,7 @@
 <style>
   .guide-tip-card {
     position: relative;
-    margin: -0.5rem 0 1rem 3.25rem;
+    margin: 0.75rem 0 0 0;
     background: #fff7ed;
     border: 1px solid #fdba74;
     border-radius: 12px;
@@ -19,7 +19,7 @@
   .guide-tip-arrow {
     position: absolute;
     top: -6px;
-    left: 20px;
+    left: 24px;
     width: 12px;
     height: 12px;
     background: #fff7ed;
@@ -52,150 +52,137 @@
   }
 </style>
 
-<div x-data='guideData()' class='max-w-4xl mx-auto relative page-bg' x-cloak>
+<div x-data='guideData()' class='page-bg relative' x-cloak>
 
-  <!-- ===== HERO HEADER ===== -->
-  <div class='text-center mb-12 pt-10'>
-    <div class='flex justify-center mb-4'>
-      <svg class='h-auto w-28 text-neutral-700 dark:text-neutral-300' viewBox='0 0 521 226' fill='none'>
-        <rect width='78.937' height='18.485' x='269' y='154.911' class='fill-current text-yellow-500 dark:text-yellow-400' fill='currentColor' rx='9.242' transform='rotate(-43.075 269 154.911)'></rect>
-        <rect width='78.937' height='18.485' x='319' y='154.911' class='fill-current text-yellow-500 dark:text-yellow-400' fill='currentColor' rx='9.242' transform='rotate(-43.075 319 154.911)'></rect>
-        <rect width='78.937' height='18.485' x='369.285' y='154.911' class='fill-current text-yellow-500 dark:text-yellow-400' fill='currentColor' rx='9.242' transform='rotate(-43.075 369.285 154.911)'></rect>
-        <rect width='28.464' height='18.485' x='419.57' y='154.911' class='fill-current text-yellow-500 dark:text-yellow-400' fill='currentColor' rx='9.242' transform='rotate(-43.075 419.57 154.911)'></rect>
-        <path class='fill-current text-yellow-500 dark:text-yellow-400' fill='currentColor' d='M499.804 128.068c7.03 2.636 6.885 12.63-.219 15.061l-18.951 6.483c-5.238 1.792-10.669-2.15-10.589-7.686l.196-13.514c.081-5.535 5.624-9.318 10.808-7.374l18.755 7.03Z'></path>
-        <path class='fill-current text-neutral-700 dark:text-neutral-300' fill='currentColor' d='M141.808 83.584c.171 5.803-1.024 10.837-3.584 15.104-5.717 9.387-15.701 14.336-29.952 14.848-6.485.256-13.61-1.323-21.376-4.736l.256-19.328c1.28 1.024 2.944 2.219 4.992 3.584 3.67 2.475 7.808 3.712 12.416 3.712 12.203 0 18.304-4.352 18.304-13.056v-.256c0-4.01-2.219-7.296-6.656-9.856-2.389-1.365-6.827-2.987-13.312-4.864a137.675 137.675 0 0 1-8.32-2.816c-10.496-5.888-15.744-14.421-15.744-25.6v-.768c0-5.12 1.408-9.899 4.224-14.336 2.816-4.523 6.528-8.021 11.136-10.496 4.693-2.56 9.728-3.925 15.104-4.096 7.253-.17 14.08 1.195 20.48 4.096v18.304c-4.693-4.096-10.88-6.144-18.56-6.144-2.816 0-5.419.725-7.808 2.176-3.67 2.219-5.504 5.461-5.504 9.728 0 5.803 4.267 9.984 12.8 12.544 1.536.512 4.565 1.45 9.088 2.816 7.68 2.304 13.184 5.76 16.512 10.368 3.413 4.608 5.248 10.965 5.504 19.072Z'></path>
-        <path class='fill-current text-neutral-700 dark:text-neutral-300' fill='currentColor' d='M56.064 163.616H26.24V212H8.832V110.624h47.232v14.848H26.24v20.096h29.824v18.048ZM147.389 212h-18.304l-3.712-9.984c-6.827 8.021-15.531 12.032-26.112 12.032-9.557 0-17.664-3.328-24.32-9.984-6.57-6.656-9.856-14.72-9.856-24.192 0-7.253 2.048-13.781 6.144-19.584 4.096-5.888 9.557-10.069 16.384-12.544 4.01-1.451 7.936-2.176 11.776-2.176 7.253 0 13.781 2.091 19.584 6.272 5.888 4.096 10.069 9.557 12.544 16.384L147.389 212Zm-31.104-32.128c0-5.973-2.432-10.624-7.296-13.952-2.816-1.963-6.059-2.944-9.728-2.944-5.973 0-10.581 2.389-13.824 7.168-2.048 2.987-3.072 6.229-3.072 9.728 0 5.888 2.432 10.496 7.296 13.824 2.987 2.048 6.187 3.072 9.6 3.072 4.693 0 8.704-1.621 12.032-4.864 3.328-3.328 4.992-7.339 4.992-12.032Z'></path>
-      </svg>
-    </div>
-    <h1 class='text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-balance text-neutral-800 dark:text-neutral-100'>Documentation Hub</h1>
-    <p class='mt-3 text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto'>
-      Your central hub for streamlined tool guidance, detailed service docs, and project support.
-    </p>
-
-    <div class='mt-6 flex items-center justify-center gap-4 flex-wrap'>
-      <button x-on:click='startTour'
-        class='inline-flex items-center gap-2 rounded-xl bg-yellow-400 hover:bg-yellow-500 text-neutral-700 px-6 py-3 font-semibold text-sm transition-colors shadow-lg shadow-yellow-200/50 dark:shadow-yellow-900/30'>
-        <span class='w-4 h-4' x-icon='"play"' />
-        <span x-text='$data.tourCompleted ? "Restart Tour" : "Start Interactive Tour"'></span>
-      </button>
-      <template x-if='$data.tourCompleted'>
-        <span
-          class='inline-flex items-center gap-1.5 text-sm text-green-600 dark:text-green-400 font-medium bg-green-50 dark:bg-green-900/20 px-3 py-1.5 rounded-full'>
-          <span class='w-4 h-4' x-icon='"check-circle"' />
-          Tour Completed
-        </span>
-      </template>
+  <!-- ===== HERO ===== -->
+  <div class='mx-auto max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-16'>
+    <div class='mx-auto max-w-2xl text-center lg:max-w-3xl'>
+      <div class='mb-6 flex justify-center'>
+        <svg class='h-auto w-28 text-neutral-700 dark:text-neutral-300 lg:w-36' viewBox='0 0 521 226' fill='none'>
+          <rect width='78.937' height='18.485' x='269' y='154.911' class='fill-current text-yellow-500 dark:text-yellow-400' fill='currentColor' rx='9.242' transform='rotate(-43.075 269 154.911)'></rect>
+          <rect width='78.937' height='18.485' x='319' y='154.911' class='fill-current text-yellow-500 dark:text-yellow-400' fill='currentColor' rx='9.242' transform='rotate(-43.075 319 154.911)'></rect>
+          <rect width='78.937' height='18.485' x='369.285' y='154.911' class='fill-current text-yellow-500 dark:text-yellow-400' fill='currentColor' rx='9.242' transform='rotate(-43.075 369.285 154.911)'></rect>
+          <rect width='28.464' height='18.485' x='419.57' y='154.911' class='fill-current text-yellow-500 dark:text-yellow-400' fill='currentColor' rx='9.242' transform='rotate(-43.075 419.57 154.911)'></rect>
+          <path class='fill-current text-yellow-500 dark:text-yellow-400' fill='currentColor' d='M499.804 128.068c7.03 2.636 6.885 12.63-.219 15.061l-18.951 6.483c-5.238 1.792-10.669-2.15-10.589-7.686l.196-13.514c.081-5.535 5.624-9.318 10.808-7.374l18.755 7.03Z'></path>
+          <path class='fill-current text-neutral-700 dark:text-neutral-300' fill='currentColor' d='M141.808 83.584c.171 5.803-1.024 10.837-3.584 15.104-5.717 9.387-15.701 14.336-29.952 14.848-6.485.256-13.61-1.323-21.376-4.736l.256-19.328c1.28 1.024 2.944 2.219 4.992 3.584 3.67 2.475 7.808 3.712 12.416 3.712 12.203 0 18.304-4.352 18.304-13.056v-.256c0-4.01-2.219-7.296-6.656-9.856-2.389-1.365-6.827-2.987-13.312-4.864a137.675 137.675 0 0 1-8.32-2.816c-10.496-5.888-15.744-14.421-15.744-25.6v-.768c0-5.12 1.408-9.899 4.224-14.336 2.816-4.523 6.528-8.021 11.136-10.496 4.693-2.56 9.728-3.925 15.104-4.096 7.253-.17 14.08 1.195 20.48 4.096v18.304c-4.693-4.096-10.88-6.144-18.56-6.144-2.816 0-5.419.725-7.808 2.176-3.67 2.219-5.504 5.461-5.504 9.728 0 5.803 4.267 9.984 12.8 12.544 1.536.512 4.565 1.45 9.088 2.816 7.68 2.304 13.184 5.76 16.512 10.368 3.413 4.608 5.248 10.965 5.504 19.072Z'></path>
+          <path class='fill-current text-neutral-700 dark:text-neutral-300' fill='currentColor' d='M56.064 163.616H26.24V212H8.832V110.624h47.232v14.848H26.24v20.096h29.824v18.048ZM147.389 212h-18.304l-3.712-9.984c-6.827 8.021-15.531 12.032-26.112 12.032-9.557 0-17.664-3.328-24.32-9.984-6.57-6.656-9.856-14.72-9.856-24.192 0-7.253 2.048-13.781 6.144-19.584 4.096-5.888 9.557-10.069 16.384-12.544 4.01-1.451 7.936-2.176 11.776-2.176 7.253 0 13.781 2.091 19.584 6.272 5.888 4.096 10.069 9.557 12.544 16.384L147.389 212Zm-31.104-32.128c0-5.973-2.432-10.624-7.296-13.952-2.816-1.963-6.059-2.944-9.728-2.944-5.973 0-10.581 2.389-13.824 7.168-2.048 2.987-3.072 6.229-3.072 9.728 0 5.888 2.432 10.496 7.296 13.824 2.987 2.048 6.187 3.072 9.6 3.072 4.693 0 8.704-1.621 12.032-4.864 3.328-3.328 4.992-7.339 4.992-12.032Z'></path>
+        </svg>
+      </div>
+      <h1 class='text-3xl font-bold tracking-tight text-balance text-neutral-800 md:text-5xl md:leading-tight lg:text-6xl dark:text-neutral-200'>Documentation Hub</h1>
+      <p class='mt-4 text-pretty text-lg text-neutral-600 md:text-xl dark:text-neutral-400'>
+        Your central hub for streamlined tool guidance, detailed service docs, and project support.
+      </p>
+      <div class='mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row'>
+        <a href='/guides/getting-started/'
+          class='inline-flex items-center gap-x-2 rounded-lg border border-transparent bg-yellow-400 px-6 py-3 text-sm font-bold text-neutral-700 ring-zinc-500 outline-hidden transition duration-300 hover:bg-yellow-500 focus-visible:ring-3 dark:ring-zinc-200 dark:focus:outline-hidden'>
+          Get started
+          <svg class='h-4 w-4 shrink-0' fill='none' viewBox='0 0 24 24' stroke-width='2' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3'/></svg>
+        </a>
+        <a href='https://github.com/themewagon/screwfast' target='_blank' rel='noopener noreferrer'
+          class='inline-flex items-center gap-x-2 rounded-lg border border-neutral-300 px-6 py-3 text-sm font-bold text-neutral-600 ring-zinc-500 outline-hidden transition duration-300 hover:bg-neutral-100 focus-visible:ring-3 dark:border-neutral-600 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:ring-zinc-200 dark:focus:outline-hidden'>
+          <svg class='h-4 w-4 shrink-0' fill='currentColor' viewBox='0 0 24 24'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg>
+          View on GitHub
+        </a>
+      </div>
+      <div class='mt-6 flex items-center justify-center gap-4 flex-wrap'>
+        <button x-on:click='startTour'
+          class='inline-flex items-center gap-2 rounded-xl bg-yellow-400 hover:bg-yellow-500 text-neutral-700 px-6 py-3 font-semibold text-sm transition-colors shadow-lg shadow-yellow-200/50 dark:shadow-yellow-900/30'>
+          <span class='w-4 h-4' x-icon='"play"' />
+          <span x-text='$data.tourCompleted ? "Restart Tour" : "Start Interactive Tour"'></span>
+        </button>
+        <template x-if='$data.tourCompleted'>
+          <span class='inline-flex items-center gap-1.5 text-sm text-green-600 dark:text-green-400 font-medium bg-green-50 dark:bg-green-900/20 px-3 py-1.5 rounded-full'>
+            <span class='w-4 h-4' x-icon='"check-circle"' />
+            Tour Completed
+          </span>
+        </template>
+      </div>
     </div>
   </div>
 
-  <!-- ===== STEP 0: Quick Start Guides ===== -->
-  <section id='guide-step-0'
-    class='guide-step mb-8 rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800/80 p-6 sm:p-8'>
-    <div class='flex items-center gap-3 mb-5'>
-      <span
-        class='w-9 h-9 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center text-yellow-600 dark:text-yellow-400 font-bold text-sm shrink-0'>1</span>
-      <h2 class='text-xl font-bold text-neutral-800 dark:text-neutral-100'>Quick Start Guides</h2>
-    </div>
-    <div class='flex items-start gap-6 flex-col sm:flex-row'>
-      <div class='flex-1'>
-        <p class='text-neutral-600 dark:text-neutral-400 leading-relaxed'>
-          Get up and running swiftly with our straightforward and concise guides, tailored for new users and seasoned experts alike. Follow step-by-step tutorials to master ScrewFast's core features in minutes.
-        </p>
-        <a href='/guides/getting-started/' class='group mt-4 inline-flex items-center gap-2 text-sm font-semibold text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300 transition-colors'>
+  <!-- ===== CARD GRID ===== -->
+  <div class='mx-auto max-w-[85rem] px-4 pb-16 sm:px-6 lg:px-8 lg:pb-24'>
+    <div class='grid gap-6 sm:grid-cols-2 lg:grid-cols-4'>
+
+      <!-- Step 0: Quick Start Guides -->
+      <section id='guide-step-0'
+        class='guide-step rounded-xl border border-neutral-200 bg-neutral-50 p-6 transition duration-300 hover:border-neutral-400 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800/50 dark:hover:border-neutral-500'>
+        <div class='flex items-center gap-3 mb-4'>
+          <div class='flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400'>
+            <svg class='h-6 w-6' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z'/></svg>
+          </div>
+          <h3 class='text-lg font-bold text-neutral-800 dark:text-neutral-200'>Quick Start Guides</h3>
+        </div>
+        <p class='text-sm text-neutral-600 dark:text-neutral-400'>Get up and running swiftly with our straightforward and concise guides, tailored for new users and seasoned experts alike.</p>
+        <a href='/guides/getting-started/' class='group mt-3 inline-flex items-center gap-1 text-xs font-semibold text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300 transition-colors'>
           Browse guides
-          <svg class='w-4 h-4 transition-transform group-hover:translate-x-1' fill='none' viewBox='0 0 24 24' stroke-width='2' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3'/></svg>
+          <svg class='w-3 h-3 transition-transform group-hover:translate-x-0.5' fill='none' viewBox='0 0 24 24' stroke-width='2' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3'/></svg>
         </a>
-      </div>
-      <div class='shrink-0 w-full sm:w-32 h-24 rounded-xl bg-gradient-to-br from-yellow-50 to-amber-100 dark:from-yellow-900/20 dark:to-amber-900/20 flex items-center justify-center border border-yellow-200 dark:border-yellow-800/50'>
-        <span class='w-10 h-10 text-yellow-500 dark:text-yellow-400' x-icon='"document"' />
-      </div>
-    </div>
-  </section>
+      </section>
 
-  <!-- ===== STEP 1: Tools & Equipment ===== -->
-  <section id='guide-step-1'
-    class='guide-step mb-8 rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800/80 p-6 sm:p-8'>
-    <div class='flex items-center gap-3 mb-5'>
-      <span
-        class='w-9 h-9 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center text-yellow-600 dark:text-yellow-400 font-bold text-sm shrink-0'>2</span>
-      <h2 class='text-xl font-bold text-neutral-800 dark:text-neutral-100'>Tools &amp; Equipment</h2>
-    </div>
-    <div class='flex items-start gap-6 flex-col sm:flex-row'>
-      <div class='flex-1'>
-        <p class='text-neutral-600 dark:text-neutral-400 leading-relaxed'>
-          Discover the complete lineup of ScrewFast's superior quality tools and equipment. Each subsection offers detailed specifications, usage instructions, and maintenance tips to keep your gear in top condition.
-        </p>
-        <a href='/products' class='group mt-4 inline-flex items-center gap-2 text-sm font-semibold text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300 transition-colors'>
+      <!-- Step 1: Tools & Equipment -->
+      <section id='guide-step-1'
+        class='guide-step rounded-xl border border-neutral-200 bg-neutral-50 p-6 transition duration-300 hover:border-neutral-400 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800/50 dark:hover:border-neutral-500'>
+        <div class='flex items-center gap-3 mb-4'>
+          <div class='flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400'>
+            <svg class='h-6 w-6' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='m6.115 5.19.319 1.913A6 6 0 0 0 8.11 10.36L9.75 12l-.387.775c-.217.433-.132.956.21 1.298l1.348 1.348c.21.21.329.497.329.795v1.089c0 .426.24.815.622 1.006l.153.076c.433.217.956.132 1.298-.21l.723-.723a8.7 8.7 0 0 0 2.288-4.042 1.087 1.087 0 0 0-.358-1.099l-1.33-1.108c-.251-.21-.382-.513-.382-.826v-1.61c0-.437.184-.851.513-1.147.49-.44 1.082-1.139 1.082-2.053 0-.828-.84-1.5-1.5-1.5H9.54c-.857 0-1.582.576-1.884 1.398l-.09.245Z'/><path stroke-linecap='round' stroke-linejoin='round' d='M10.5 10.5 3.75 3.75M10.5 10.5H7.5m3 0v-4.5l4.5 4.5H18'/></svg>
+          </div>
+          <h3 class='text-lg font-bold text-neutral-800 dark:text-neutral-200'>Tools &amp; Equipment</h3>
+        </div>
+        <p class='text-sm text-neutral-600 dark:text-neutral-400'>Discover the complete lineup of ScrewFast's superior quality tools and equipment. Each subsection offers detailed specifications, usage instructions, and maintenance tips.</p>
+        <a href='/products' class='group mt-3 inline-flex items-center gap-1 text-xs font-semibold text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300 transition-colors'>
           View products
-          <svg class='w-4 h-4 transition-transform group-hover:translate-x-1' fill='none' viewBox='0 0 24 24' stroke-width='2' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3'/></svg>
+          <svg class='w-3 h-3 transition-transform group-hover:translate-x-0.5' fill='none' viewBox='0 0 24 24' stroke-width='2' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3'/></svg>
         </a>
-      </div>
-      <div class='shrink-0 w-full sm:w-32 h-24 rounded-xl bg-gradient-to-br from-yellow-50 to-amber-100 dark:from-yellow-900/20 dark:to-amber-900/20 flex items-center justify-center border border-yellow-200 dark:border-yellow-800/50'>
-        <span class='w-10 h-10 text-yellow-500 dark:text-yellow-400' x-icon='"grid"' />
-      </div>
-    </div>
-  </section>
+      </section>
 
-  <!-- ===== STEP 2: Construction Services ===== -->
-  <section id='guide-step-2'
-    class='guide-step mb-8 rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800/80 p-6 sm:p-8'>
-    <div class='flex items-center gap-3 mb-5'>
-      <span
-        class='w-9 h-9 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center text-yellow-600 dark:text-yellow-400 font-bold text-sm shrink-0'>3</span>
-      <h2 class='text-xl font-bold text-neutral-800 dark:text-neutral-100'>Construction Services</h2>
-    </div>
-    <div class='flex items-start gap-6 flex-col sm:flex-row'>
-      <div class='flex-1'>
-        <p class='text-neutral-600 dark:text-neutral-400 leading-relaxed'>
-          Explore our full range of professional construction services. From project consultation to execution, ScrewFast provides end-to-end solutions backed by industry expertise and premium materials.
-        </p>
-        <a href='/services' class='group mt-4 inline-flex items-center gap-2 text-sm font-semibold text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300 transition-colors'>
+      <!-- Step 2: Construction Services -->
+      <section id='guide-step-2'
+        class='guide-step rounded-xl border border-neutral-200 bg-neutral-50 p-6 transition duration-300 hover:border-neutral-400 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800/50 dark:hover:border-neutral-500'>
+        <div class='flex items-center gap-3 mb-4'>
+          <div class='flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400'>
+            <svg class='h-6 w-6' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12'/></svg>
+          </div>
+          <h3 class='text-lg font-bold text-neutral-800 dark:text-neutral-200'>Construction Services</h3>
+        </div>
+        <p class='text-sm text-neutral-600 dark:text-neutral-400'>Discover the complete lineup of ScrewFast's superior quality tools and equipment. Each subsection offers detailed specifications, usage instructions, and maintenance tips.</p>
+        <a href='/services' class='group mt-3 inline-flex items-center gap-1 text-xs font-semibold text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300 transition-colors'>
           Explore services
-          <svg class='w-4 h-4 transition-transform group-hover:translate-x-1' fill='none' viewBox='0 0 24 24' stroke-width='2' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3'/></svg>
+          <svg class='w-3 h-3 transition-transform group-hover:translate-x-0.5' fill='none' viewBox='0 0 24 24' stroke-width='2' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3'/></svg>
         </a>
-      </div>
-      <div class='shrink-0 w-full sm:w-32 h-24 rounded-xl bg-gradient-to-br from-yellow-50 to-amber-100 dark:from-yellow-900/20 dark:to-amber-900/20 flex items-center justify-center border border-yellow-200 dark:border-yellow-800/50'>
-        <span class='w-10 h-10 text-yellow-500 dark:text-yellow-400' x-icon='"truck"' />
-      </div>
-    </div>
-  </section>
+      </section>
 
-  <!-- ===== STEP 3: Advanced Topics ===== -->
-  <section id='guide-step-3'
-    class='guide-step mb-8 rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800/80 p-6 sm:p-8'>
-    <div class='flex items-center gap-3 mb-5'>
-      <span
-        class='w-9 h-9 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center text-yellow-600 dark:text-yellow-400 font-bold text-sm shrink-0'>4</span>
-      <h2 class='text-xl font-bold text-neutral-800 dark:text-neutral-100'>Advanced Topics</h2>
-    </div>
-    <div class='flex items-start gap-6 flex-col sm:flex-row'>
-      <div class='flex-1'>
-        <p class='text-neutral-600 dark:text-neutral-400 leading-relaxed'>
-          Dive deeper into advanced configurations, custom integrations, and power-user techniques. Master ScrewFast's full potential with in-depth documentation for experienced professionals.
-        </p>
-        <a href='/docs/advanced/' class='group mt-4 inline-flex items-center gap-2 text-sm font-semibold text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300 transition-colors'>
+      <!-- Step 3: Advanced Topics -->
+      <section id='guide-step-3'
+        class='guide-step rounded-xl border border-neutral-200 bg-neutral-50 p-6 transition duration-300 hover:border-neutral-400 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800/50 dark:hover:border-neutral-500'>
+        <div class='flex items-center gap-3 mb-4'>
+          <div class='flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400'>
+            <svg class='h-6 w-6' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='M4.5 12a7.5 7.5 0 0 0 15 0m-15 0a7.5 7.5 0 1 1 15 0m-15 0H3m16.5 0H21m-1.5 0H12m-8.457 3.077 1.41-.513m14.095-5.13 1.41-.513M5.106 17.785l1.15-.964m11.49-9.642 1.149-.964M7.501 19.795l.75-1.3m7.5-12.99.75-1.3m-6.063 16.658.26-1.477m2.605-14.772.26-1.477m0 17.726-.26-1.477M10.698 4.614l-.26-1.477M16.5 19.794l-.75-1.299M7.5 4.205 12 12m6.894 5.785-1.149-.964M6.256 7.178l-1.15-.964m15.352 8.864-1.41-.513M4.954 9.435l-1.41-.514M12.002 12l-3.75 6.495'/></svg>
+          </div>
+          <h3 class='text-lg font-bold text-neutral-800 dark:text-neutral-200'>Advanced Topics</h3>
+        </div>
+        <p class='text-sm text-neutral-600 dark:text-neutral-400'>Discover the complete lineup of ScrewFast's superior quality tools and equipment. Each subsection offers detailed specifications, usage instructions, and maintenance tips.</p>
+        <a href='/docs/advanced/' class='group mt-3 inline-flex items-center gap-1 text-xs font-semibold text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300 transition-colors'>
           Learn more
-          <svg class='w-4 h-4 transition-transform group-hover:translate-x-1' fill='none' viewBox='0 0 24 24' stroke-width='2' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3'/></svg>
+          <svg class='w-3 h-3 transition-transform group-hover:translate-x-0.5' fill='none' viewBox='0 0 24 24' stroke-width='2' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3'/></svg>
         </a>
-      </div>
-      <div class='shrink-0 w-full sm:w-32 h-24 rounded-xl bg-gradient-to-br from-yellow-50 to-amber-100 dark:from-yellow-900/20 dark:to-amber-900/20 flex items-center justify-center border border-yellow-200 dark:border-yellow-800/50'>
-        <span class='w-10 h-10 text-yellow-500 dark:text-yellow-400' x-icon='"star"' />
-      </div>
-    </div>
-  </section>
+      </section>
 
-  <!-- ===== CTA ===== -->
-  <div class='text-center py-8 mb-24'>
-    <p class='text-neutral-600 dark:text-neutral-400 mb-4'>Ready to explore the docs on your own?</p>
-    <div class='flex items-center justify-center gap-3 flex-wrap'>
-      <a href='/guides/getting-started/'
-        class='inline-flex items-center gap-2 rounded-xl bg-yellow-400 hover:bg-yellow-500 text-neutral-700 px-6 py-3 font-semibold text-sm transition-colors'>
-        <span class='w-4 h-4' x-icon='"document"' /> Get Started
-      </a>
-      <button x-on:click='resetTour'
-        class='inline-flex items-center gap-2 rounded-xl border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 px-6 py-3 font-semibold text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors'>
-        <span class='w-4 h-4' x-icon='"refresh"' /> Restart Tour
-      </button>
+    </div>
+
+    <!-- ===== CTA ===== -->
+    <div class='text-center mt-12'>
+      <p class='text-neutral-600 dark:text-neutral-400 mb-4'>Ready to explore the docs on your own?</p>
+      <div class='flex items-center justify-center gap-3 flex-wrap'>
+        <a href='/guides/getting-started/'
+          class='inline-flex items-center gap-2 rounded-xl bg-yellow-400 hover:bg-yellow-500 text-neutral-700 px-6 py-3 font-semibold text-sm transition-colors'>
+          <span class='w-4 h-4' x-icon='"document"' /> Get Started
+        </a>
+        <button x-on:click='resetTour'
+          class='inline-flex items-center gap-2 rounded-xl border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 px-6 py-3 font-semibold text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors'>
+          <span class='w-4 h-4' x-icon='"refresh"' /> Restart Tour
+        </button>
+      </div>
     </div>
   </div>
 </div>
