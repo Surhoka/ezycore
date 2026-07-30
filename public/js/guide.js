@@ -2,12 +2,10 @@ if (!window.guideData) {
   window.guideData = function () {
     return {
       steps: [
-        { id: 1, title: 'Welcome to ScrewFast', description: 'Your one-stop solution for top-quality hardware tools, spare parts, and construction services.', icon: 'star' },
-        { id: 2, title: 'Browse Products', description: 'Explore our extensive catalog of tools and spare parts. Use category filters and search to find what you need.', icon: 'shopping-bag' },
-        { id: 3, title: 'Interactive Diagrams', description: 'View spare parts with hotspot technology. Hover diagram points to see part details and pricing.', icon: 'grid' },
-        { id: 4, title: 'Easy Checkout', description: 'Add items to cart, review, and pay in just a few clicks. Supports bank transfer, cards, e-wallets, and COD.', icon: 'credit-card' },
-        { id: 5, title: 'Track Orders', description: 'Monitor orders in real-time from placement to delivery. Get notified at every step.', icon: 'truck' },
-        { id: 6, title: 'Get Support', description: 'Our expert team is available 24/7 via live chat, email, or phone.', icon: 'headset' }
+        { id: 1, title: 'Quick Start Guides', description: 'Get up and running swiftly with straightforward guides tailored for new users and seasoned experts alike.', icon: 'document' },
+        { id: 2, title: 'Tools & Equipment', description: 'Discover the complete lineup of ScrewFast tools and equipment with detailed specs, usage instructions, and maintenance tips.', icon: 'grid' },
+        { id: 3, title: 'Construction Services', description: 'Explore our full range of professional construction services from consultation to execution with premium materials.', icon: 'truck' },
+        { id: 4, title: 'Advanced Topics', description: 'Dive deeper into advanced configurations, custom integrations, and power-user techniques for experienced professionals.', icon: 'star' }
       ],
       currentStep: 0, showTour: false, tourCompleted: false,
 
