@@ -47,19 +47,17 @@
 
   .page-bg {
     background:
-      linear-gradient(215deg, hsla(43.3, 96.4%, 56.3%, 0.12), transparent 40%),
-      radial-gradient(hsla(43.3, 96.4%, 56.3%, 0.08), transparent 40%) no-repeat center center / cover;
-      background-blend-mode: overlay;
-      min-height: 100vh;
-      width: 100vw;
-      margin-left: calc(-50vw + 50%);
+      radial-gradient(ellipse 80% 60% at 50% 40%, hsla(43.3, 96.4%, 56.3%, 0.15), transparent 70%),
+      radial-gradient(ellipse 60% 50% at 50% 60%, hsla(43.3, 96.4%, 56.3%, 0.08), transparent 60%);
+    min-height: 100vh;
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
   }
 
   .dark .page-bg {
     background:
-      linear-gradient(215deg, hsla(43.3, 96.4%, 56.3%, 0.08), transparent 40%),
-      radial-gradient(hsla(43.3, 96.4%, 56.3%, 0.05), transparent 40%) no-repeat center center / cover;
-    background-blend-mode: overlay;
+      radial-gradient(ellipse 80% 60% at 50% 40%, hsla(43.3, 96.4%, 56.3%, 0.08), transparent 70%),
+      radial-gradient(ellipse 60% 50% at 50% 60%, hsla(43.3, 96.4%, 56.3%, 0.05), transparent 60%);
   }
 </style>
 <div x-data='guideData()' class='page-bg relative' x-cloak>
