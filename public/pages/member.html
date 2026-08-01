@@ -1,0 +1,64 @@
+<div class='mx-auto max-w-5xl px-4 py-8 sm:px-6'>
+  <!-- Header Member -->
+  <div class='flex flex-col gap-6 md:flex-row md:items-center md:justify-between'>
+    <div>
+      <h1 class='text-2xl font-bold text-neutral-800 dark:text-neutral-200'>Member Area</h1>
+      <p class='mt-1 text-sm text-neutral-600 dark:text-neutral-400'>
+        Selamat datang,
+        <span class='font-semibold text-orange-500 dark:text-orange-400' x-text='$store.auth.user ? $store.auth.user.email : "Member"'></span>
+      </p>
+    </div>
+    <button type='button'
+      class='inline-flex w-fit items-center justify-center gap-x-2 rounded-lg border border-neutral-200 bg-neutral-100 px-4 py-2.5 text-sm font-medium text-neutral-600 transition duration-300 hover:bg-neutral-200 hover:text-neutral-700 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700'
+      x-on:click='$store.auth.signOut()'>
+      Sign out
+    </button>
+  </div>
+
+  <!-- Grid Dashboard -->
+  <div class='mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3'>
+    <!-- Profil -->
+    <div class='rounded-xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-700 dark:bg-neutral-800'>
+      <div class='mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-orange-100 text-orange-500 dark:bg-orange-900/30 dark:text-orange-400'>
+        <span class='h-5 w-5' x-icon='"user"' />
+      </div>
+      <h3 class='text-lg font-bold text-neutral-800 dark:text-neutral-200'>Profil Saya</h3>
+      <p class='mt-1 text-sm text-neutral-600 dark:text-neutral-400'>
+        Email:
+        <span class='font-medium text-neutral-800 dark:text-neutral-200' x-text='$store.auth.user ? $store.auth.user.email : "-"'></span>
+      </p>
+      <p class='mt-1 text-sm text-neutral-600 dark:text-neutral-400'>
+        Terdaftar sejak:
+        <span class='font-medium text-neutral-800 dark:text-neutral-200' x-text='$store.auth.user &amp;&amp; $store.auth.user.loginAt ? new Date($store.auth.user.loginAt).toLocaleDateString("id-ID") : "-"'></span>
+      </p>
+    </div>
+
+    <!-- Pesanan -->
+    <div class='rounded-xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-700 dark:bg-neutral-800'>
+      <div class='mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-orange-100 text-orange-500 dark:bg-orange-900/30 dark:text-orange-400'>
+        <span class='h-5 w-5' x-icon='"shopping-bag"' />
+      </div>
+      <h3 class='text-lg font-bold text-neutral-800 dark:text-neutral-200'>Pesanan Saya</h3>
+      <p class='mt-1 text-sm text-neutral-600 dark:text-neutral-400'>Belum ada riwayat pesanan. Fitur ini siap dihubungkan ke backend GAS.</p>
+    </div>
+
+    <!-- Dukungan -->
+    <div class='rounded-xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-700 dark:bg-neutral-800'>
+      <div class='mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-orange-100 text-orange-500 dark:bg-orange-900/30 dark:text-orange-400'>
+        <span class='h-5 w-5' x-icon='"envelope"' />
+      </div>
+      <h3 class='text-lg font-bold text-neutral-800 dark:text-neutral-200'>Bantuan &amp; Dukungan</h3>
+      <p class='mt-1 text-sm text-neutral-600 dark:text-neutral-400'>Butuh bantuan? Hubungi tim dukungan kami melalui halaman Contact.</p>
+      <a class='mt-3 inline-flex items-center gap-x-1 text-sm font-semibold text-orange-500 hover:text-orange-600 dark:text-orange-400'
+        href='/p/contact.html' x-on:click.prevent='window.navigate("contact")'>
+        Hubungi kami
+        <span class='h-3.5 w-3.5' x-icon='"chevron-right"' />
+      </a>
+    </div>
+  </div>
+
+  <!-- Catatan Akses Admin -->
+  <div class='mt-8 rounded-xl border border-dashed border-neutral-300 p-5 text-sm text-neutral-500 dark:border-neutral-600 dark:text-neutral-400'>
+    <p>Dashboard admin tidak termasuk di sini dan tetap diakses mandiri melalui URL/subdomain khusus (mis. admin.yourdomain.com).</p>
+  </div>
+</div>
