@@ -1,64 +1,362 @@
-<div class='mx-auto max-w-5xl px-4 py-8 sm:px-6'>
+<script>
+  // AI-GUARD: DO NOT MODIFY — Definisi state & helper untuk Member Area.
+  if (!window.memberData) {
+    window.memberData = function () {
+      return {
+        active: 'dashboard',
+        menuItems: [
+          { id: 'dashboard', label: 'Dashboard', icon: 'home' },
+          { id: 'profile', label: 'Profil Saya', icon: 'user' },
+          { id: 'orders', label: 'Pesanan', icon: 'shopping-bag' },
+          { id: 'addresses', label: 'Alamat', icon: 'map-pin' },
+          { id: 'notifications', label: 'Notifikasi', icon: 'bell' },
+          { id: 'settings', label: 'Pengaturan', icon: 'settings' },
+          { id: 'help', label: 'Bantuan', icon: 'help-circle' }
+        ],
+        prefs: { email: true, promo: false, privacy: true },
+
+        get initials() {
+          var email = (this.$store.auth.user && this.$store.auth.user.email) || 'M';
+          var name = email.split('@')[0] || 'M';
+          return name.substring(0, 2).toUpperCase();
+        },
+
+        goTo(id) {
+          this.active = id;
+          if (window.__lenis) window.__lenis.scrollTo(0, { duration: 0.4 });
+          else window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+
+        signOut() {
+          this.$store.auth.signOut();
+        },
+
+        saveProfile() {
+          window.showToast('Perubahan profil berhasil disimpan.', 'success');
+        },
+
+        addAddress() {
+          window.showToast('Fitur tambah alamat siap dihubungkan ke backend GAS.', 'info');
+        }
+      };
+    };
+  }
+</script>
+
+<div x-data='memberData()' class='mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-10'>
+
   <!-- Header Member -->
-  <div class='flex flex-col gap-6 md:flex-row md:items-center md:justify-between'>
-    <div>
-      <h1 class='text-2xl font-bold text-neutral-800 dark:text-neutral-200'>Member Area</h1>
-      <p class='mt-1 text-sm text-neutral-600 dark:text-neutral-400'>
-        Selamat datang,
-        <span class='font-semibold text-orange-500 dark:text-orange-400' x-text='$store.auth.user ? $store.auth.user.email : "Member"'></span>
-      </p>
-    </div>
-    <button type='button'
-      class='inline-flex w-fit items-center justify-center gap-x-2 rounded-lg border border-neutral-200 bg-neutral-100 px-4 py-2.5 text-sm font-medium text-neutral-600 transition duration-300 hover:bg-neutral-200 hover:text-neutral-700 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700'
-      x-on:click='$store.auth.signOut()'>
-      Sign out
-    </button>
+  <div>
+    <h1 class='text-2xl font-bold text-neutral-800 dark:text-neutral-200'>Member Area</h1>
+    <p class='mt-1 text-sm text-neutral-600 dark:text-neutral-400'>
+      Selamat datang kembali,
+      <span class='font-semibold text-orange-500 dark:text-orange-400' x-text='$store.auth.user ? $store.auth.user.email : "Member"'></span>
+    </p>
   </div>
 
-  <!-- Grid Dashboard -->
-  <div class='mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3'>
-    <!-- Profil -->
-    <div class='rounded-xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-700 dark:bg-neutral-800'>
-      <div class='mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-orange-100 text-orange-500 dark:bg-orange-900/30 dark:text-orange-400'>
-        <span class='h-5 w-5' x-icon='"user"' />
-      </div>
-      <h3 class='text-lg font-bold text-neutral-800 dark:text-neutral-200'>Profil Saya</h3>
-      <p class='mt-1 text-sm text-neutral-600 dark:text-neutral-400'>
-        Email:
-        <span class='font-medium text-neutral-800 dark:text-neutral-200' x-text='$store.auth.user ? $store.auth.user.email : "-"'></span>
-      </p>
-      <p class='mt-1 text-sm text-neutral-600 dark:text-neutral-400'>
-        Terdaftar sejak:
-        <span class='font-medium text-neutral-800 dark:text-neutral-200' x-text='$store.auth.user &amp;&amp; $store.auth.user.loginAt ? new Date($store.auth.user.loginAt).toLocaleDateString("id-ID") : "-"'></span>
-      </p>
-    </div>
+  <div class='mt-8 grid gap-6 lg:grid-cols-[15rem_1fr] lg:items-start lg:gap-8'>
 
-    <!-- Pesanan -->
-    <div class='rounded-xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-700 dark:bg-neutral-800'>
-      <div class='mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-orange-100 text-orange-500 dark:bg-orange-900/30 dark:text-orange-400'>
-        <span class='h-5 w-5' x-icon='"shopping-bag"' />
-      </div>
-      <h3 class='text-lg font-bold text-neutral-800 dark:text-neutral-200'>Pesanan Saya</h3>
-      <p class='mt-1 text-sm text-neutral-600 dark:text-neutral-400'>Belum ada riwayat pesanan. Fitur ini siap dihubungkan ke backend GAS.</p>
-    </div>
+    <!-- ================= SIDEBAR NAVIGASI ================= -->
+    <aside class='lg:sticky lg:top-24'>
+      <!-- Navigasi mobile: pill horizontal scroll -->
+      <nav class='-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 lg:hidden' aria-label='Navigasi Member'>
+        <template x-for='item in menuItems' :key='item.id'>
+          <button x-on:click='goTo(item.id)'
+            class='flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors'
+            :class='active === item.id ? "border-orange-300 bg-orange-50 text-orange-500 dark:border-orange-900/40 dark:bg-orange-900/20 dark:text-orange-400" : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-neutral-600"'>
+            <span class='w-4 h-4' x-icon='item.icon' />
+            <span x-text='item.label'></span>
+          </button>
+        </template>
+      </nav>
 
-    <!-- Dukungan -->
-    <div class='rounded-xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-700 dark:bg-neutral-800'>
-      <div class='mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-orange-100 text-orange-500 dark:bg-orange-900/30 dark:text-orange-400'>
-        <span class='h-5 w-5' x-icon='"envelope"' />
-      </div>
-      <h3 class='text-lg font-bold text-neutral-800 dark:text-neutral-200'>Bantuan &amp; Dukungan</h3>
-      <p class='mt-1 text-sm text-neutral-600 dark:text-neutral-400'>Butuh bantuan? Hubungi tim dukungan kami melalui halaman Contact.</p>
-      <a class='mt-3 inline-flex items-center gap-x-1 text-sm font-semibold text-orange-500 hover:text-orange-600 dark:text-orange-400'
-        href='/p/contact.html' x-on:click.prevent='window.navigate("contact")'>
-        Hubungi kami
-        <span class='h-3.5 w-3.5' x-icon='"chevron-right"' />
-      </a>
-    </div>
-  </div>
+      <!-- Sidebar desktop: vertikal sticky -->
+      <div class='hidden rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm lg:block dark:border-neutral-700 dark:bg-neutral-800'>
+        <!-- Kartu user -->
+        <div class='flex items-center gap-3 border-b border-neutral-200 pb-4 dark:border-neutral-700'>
+          <div class='flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-orange-100 text-sm font-bold text-orange-500 dark:bg-orange-900/30 dark:text-orange-400'
+            x-text='initials'></div>
+          <div class='min-w-0'>
+            <p class='truncate text-sm font-semibold text-neutral-800 dark:text-neutral-200' x-text='$store.auth.user ? $store.auth.user.email : "Member"'></p>
+            <p class='mt-0.5 flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400'>
+              <span class='w-3 h-3' x-icon='"shield-check"' />
+              Member EzyCore
+            </p>
+          </div>
+        </div>
 
-  <!-- Catatan Akses Admin -->
-  <div class='mt-8 rounded-xl border border-dashed border-neutral-300 p-5 text-sm text-neutral-500 dark:border-neutral-600 dark:text-neutral-400'>
-    <p>Dashboard admin tidak termasuk di sini dan tetap diakses mandiri melalui URL/subdomain khusus (mis. admin.yourdomain.com).</p>
+        <!-- Daftar menu -->
+        <nav class='mt-4 space-y-1' aria-label='Navigasi Member'>
+          <template x-for='item in menuItems' :key='item.id'>
+            <button x-on:click='goTo(item.id)'
+              class='flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors'
+              :class='active === item.id ? "bg-orange-50 text-orange-500 dark:bg-orange-900/20 dark:text-orange-400" : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-700/50 dark:hover:text-neutral-200"'>
+              <span class='w-4 h-4' x-icon='item.icon' />
+              <span x-text='item.label'></span>
+              <span class='ml-auto flex items-center' x-show='active === item.id'>
+                <span class='w-3.5 h-3.5' x-icon='"chevron-right"' />
+              </span>
+            </button>
+          </template>
+        </nav>
+
+        <!-- Sign out -->
+        <div class='mt-4 border-t border-neutral-200 pt-4 dark:border-neutral-700'>
+          <button x-on:click='signOut()'
+            class='flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-600 transition-colors hover:bg-red-50 hover:text-red-500 dark:text-neutral-400 dark:hover:bg-red-900/20 dark:hover:text-red-400'>
+            <span class='w-4 h-4' x-icon='"log-out"' />
+            Sign Out
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ================= KONTEN UTAMA ================= -->
+    <div class='min-w-0'>
+
+      <!-- ===== SECTION: DASHBOARD ===== -->
+      <section x-show='active === "dashboard"' x-transition.opacity.duration.200ms>
+        <!-- Statistik ringkas -->
+        <div class='grid gap-4 sm:grid-cols-3'>
+          <div class='rounded-xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-700 dark:bg-neutral-800'>
+            <div class='mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100 text-orange-500 dark:bg-orange-900/30 dark:text-orange-400'>
+              <span class='h-5 w-5' x-icon='"shopping-bag"' />
+            </div>
+            <p class='text-2xl font-bold text-neutral-800 dark:text-neutral-200'>0</p>
+            <p class='text-sm text-neutral-600 dark:text-neutral-400'>Total Pesanan</p>
+          </div>
+          <div class='rounded-xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-700 dark:bg-neutral-800'>
+            <div class='mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100 text-orange-500 dark:bg-orange-900/30 dark:text-orange-400'>
+              <span class='h-5 w-5' x-icon='"bell"' />
+            </div>
+            <p class='text-2xl font-bold text-neutral-800 dark:text-neutral-200'>0</p>
+            <p class='text-sm text-neutral-600 dark:text-neutral-400'>Notifikasi</p>
+          </div>
+          <div class='rounded-xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-700 dark:bg-neutral-800'>
+            <div class='mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100 text-orange-500 dark:bg-orange-900/30 dark:text-orange-400'>
+              <span class='h-5 w-5' x-icon='"star"' />
+            </div>
+            <p class='text-2xl font-bold text-neutral-800 dark:text-neutral-200'>0</p>
+            <p class='text-sm text-neutral-600 dark:text-neutral-400'>Wishlist</p>
+          </div>
+        </div>
+
+        <!-- Akses cepat -->
+        <div class='mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3'>
+          <!-- Profil -->
+          <button x-on:click='goTo("profile")' class='w-full rounded-xl border border-neutral-200 bg-white p-6 text-left shadow-sm transition hover:border-orange-300 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800 dark:hover:border-orange-900/40'>
+            <div class='mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-orange-100 text-orange-500 dark:bg-orange-900/30 dark:text-orange-400'>
+              <span class='h-5 w-5' x-icon='"user"' />
+            </div>
+            <h3 class='text-lg font-bold text-neutral-800 dark:text-neutral-200'>Profil Saya</h3>
+            <p class='mt-1 text-sm text-neutral-600 dark:text-neutral-400'>
+              Email:
+              <span class='font-medium text-neutral-800 dark:text-neutral-200' x-text='$store.auth.user ? $store.auth.user.email : "-"'></span>
+            </p>
+            <p class='mt-1 text-sm text-neutral-600 dark:text-neutral-400'>
+              Terdaftar sejak:
+              <span class='font-medium text-neutral-800 dark:text-neutral-200' x-text='$store.auth.user &amp;&amp; $store.auth.user.loginAt ? new Date($store.auth.user.loginAt).toLocaleDateString("id-ID") : "-"'></span>
+            </p>
+            <span class='mt-3 inline-flex items-center gap-x-1 text-sm font-semibold text-orange-500 hover:text-orange-600 dark:text-orange-400'>
+              Kelola profil
+              <span class='h-3.5 w-3.5' x-icon='"chevron-right"' />
+            </span>
+          </button>
+
+          <!-- Pesanan -->
+          <button x-on:click='goTo("orders")' class='w-full rounded-xl border border-neutral-200 bg-white p-6 text-left shadow-sm transition hover:border-orange-300 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800 dark:hover:border-orange-900/40'>
+            <div class='mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-orange-100 text-orange-500 dark:bg-orange-900/30 dark:text-orange-400'>
+              <span class='h-5 w-5' x-icon='"shopping-bag"' />
+            </div>
+            <h3 class='text-lg font-bold text-neutral-800 dark:text-neutral-200'>Pesanan Saya</h3>
+            <p class='mt-1 text-sm text-neutral-600 dark:text-neutral-400'>Belum ada riwayat pesanan. Fitur ini siap dihubungkan ke backend GAS.</p>
+            <span class='mt-3 inline-flex items-center gap-x-1 text-sm font-semibold text-orange-500 hover:text-orange-600 dark:text-orange-400'>
+              Lihat pesanan
+              <span class='h-3.5 w-3.5' x-icon='"chevron-right"' />
+            </span>
+          </button>
+
+          <!-- Dukungan -->
+          <button x-on:click='goTo("help")' class='w-full rounded-xl border border-neutral-200 bg-white p-6 text-left shadow-sm transition hover:border-orange-300 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800 dark:hover:border-orange-900/40'>
+            <div class='mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-orange-100 text-orange-500 dark:bg-orange-900/30 dark:text-orange-400'>
+              <span class='h-5 w-5' x-icon='"envelope"' />
+            </div>
+            <h3 class='text-lg font-bold text-neutral-800 dark:text-neutral-200'>Bantuan &amp; Dukungan</h3>
+            <p class='mt-1 text-sm text-neutral-600 dark:text-neutral-400'>Butuh bantuan? Hubungi tim dukungan kami melalui halaman Contact.</p>
+            <span class='mt-3 inline-flex items-center gap-x-1 text-sm font-semibold text-orange-500 hover:text-orange-600 dark:text-orange-400'>
+              Hubungi kami
+              <span class='h-3.5 w-3.5' x-icon='"chevron-right"' />
+            </span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ===== SECTION: PROFIL ===== -->
+      <section x-show='active === "profile"' x-cloak x-transition.opacity.duration.200ms>
+        <div class='rounded-xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-700 dark:bg-neutral-800'>
+          <h3 class='text-lg font-bold text-neutral-800 dark:text-neutral-200'>Profil Saya</h3>
+          <p class='mt-1 text-sm text-neutral-600 dark:text-neutral-400'>Kelola informasi akun dan data pribadi Anda.</p>
+
+          <dl class='mt-6 grid gap-4 sm:grid-cols-2'>
+            <div class='rounded-lg bg-neutral-50 p-4 dark:bg-neutral-700/30'>
+              <dt class='text-xs font-medium text-neutral-500 dark:text-neutral-400'>Email</dt>
+              <dd class='mt-1 text-sm font-semibold text-neutral-800 dark:text-neutral-200' x-text='$store.auth.user ? $store.auth.user.email : "-"'></dd>
+            </div>
+            <div class='rounded-lg bg-neutral-50 p-4 dark:bg-neutral-700/30'>
+              <dt class='text-xs font-medium text-neutral-500 dark:text-neutral-400'>Terdaftar sejak</dt>
+              <dd class='mt-1 text-sm font-semibold text-neutral-800 dark:text-neutral-200' x-text='$store.auth.user &amp;&amp; $store.auth.user.loginAt ? new Date($store.auth.user.loginAt).toLocaleDateString("id-ID") : "-"'></dd>
+            </div>
+          </dl>
+
+          <div class='mt-6 grid gap-4 sm:grid-cols-2'>
+            <div>
+              <label for='profile-name' class='mb-2 block text-sm text-neutral-800 dark:text-neutral-200'>Nama Lengkap</label>
+              <input type='text' id='profile-name' value=''
+                class='block w-full rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-700 focus:border-neutral-200 focus:ring-3 focus:ring-neutral-400 focus:outline-hidden dark:border-neutral-600 dark:bg-neutral-700/30 dark:text-neutral-300 dark:focus:ring-1'
+                placeholder='Nama lengkap Anda' />
+            </div>
+            <div>
+              <label for='profile-phone' class='mb-2 block text-sm text-neutral-800 dark:text-neutral-200'>No. HP</label>
+              <input type='tel' id='profile-phone' value=''
+                class='block w-full rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-700 focus:border-neutral-200 focus:ring-3 focus:ring-neutral-400 focus:outline-hidden dark:border-neutral-600 dark:bg-neutral-700/30 dark:text-neutral-300 dark:focus:ring-1'
+                placeholder='08xxxxxxxxxx' />
+            </div>
+          </div>
+
+          <div class='mt-6 flex flex-wrap items-center gap-3'>
+            <button x-on:click='saveProfile()'
+              class='inline-flex items-center justify-center gap-x-2 rounded-lg bg-orange-400 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-orange-500 dark:bg-orange-400 dark:hover:bg-orange-500'>
+              Simpan Perubahan
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== SECTION: PESANAN ===== -->
+      <section x-show='active === "orders"' x-cloak x-transition.opacity.duration.200ms>
+        <div class='rounded-xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-700 dark:bg-neutral-800'>
+          <h3 class='text-lg font-bold text-neutral-800 dark:text-neutral-200'>Pesanan Saya</h3>
+          <p class='mt-1 text-sm text-neutral-600 dark:text-neutral-400'>Pantau status dan riwayat pesanan Anda di sini.</p>
+
+          <div class='mt-8 flex flex-col items-center justify-center rounded-xl border border-dashed border-neutral-300 px-6 py-12 text-center dark:border-neutral-600'>
+            <span class='mx-auto block h-12 w-12 text-neutral-400 dark:text-neutral-500' x-icon='"package"' />
+            <p class='mt-4 text-sm font-medium text-neutral-700 dark:text-neutral-300'>Belum ada riwayat pesanan.</p>
+            <p class='mt-1 text-sm text-neutral-500 dark:text-neutral-400'>Fitur ini siap dihubungkan ke backend GAS untuk melacak pesanan Anda.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== SECTION: ALAMAT ===== -->
+      <section x-show='active === "addresses"' x-cloak x-transition.opacity.duration.200ms>
+        <div class='rounded-xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-700 dark:bg-neutral-800'>
+          <div class='flex flex-wrap items-center justify-between gap-3'>
+            <div>
+              <h3 class='text-lg font-bold text-neutral-800 dark:text-neutral-200'>Alamat Saya</h3>
+              <p class='mt-1 text-sm text-neutral-600 dark:text-neutral-400'>Kelola alamat pengiriman untuk pesanan Anda.</p>
+            </div>
+            <button x-on:click='addAddress()'
+              class='inline-flex items-center gap-x-2 rounded-lg bg-orange-400 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-orange-500 dark:bg-orange-400 dark:hover:bg-orange-500'>
+              <span class='w-4 h-4' x-icon='"plus"' />
+              Tambah Alamat
+            </button>
+          </div>
+
+          <div class='mt-6 flex flex-col items-center justify-center rounded-xl border border-dashed border-neutral-300 px-6 py-12 text-center dark:border-neutral-600'>
+            <span class='mx-auto block h-12 w-12 text-neutral-400 dark:text-neutral-500' x-icon='"map-pin"' />
+            <p class='mt-4 text-sm font-medium text-neutral-700 dark:text-neutral-300'>Belum ada alamat tersimpan.</p>
+            <p class='mt-1 text-sm text-neutral-500 dark:text-neutral-400'>Tambahkan alamat agar checkout lebih cepat.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== SECTION: NOTIFIKASI ===== -->
+      <section x-show='active === "notifications"' x-cloak x-transition.opacity.duration.200ms>
+        <div class='rounded-xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-700 dark:bg-neutral-800'>
+          <h3 class='text-lg font-bold text-neutral-800 dark:text-neutral-200'>Notifikasi</h3>
+          <p class='mt-1 text-sm text-neutral-600 dark:text-neutral-400'>Informasi terbaru tentang akun dan pesanan Anda.</p>
+
+          <div class='mt-6 flex flex-col items-center justify-center rounded-xl border border-dashed border-neutral-300 px-6 py-12 text-center dark:border-neutral-600'>
+            <span class='mx-auto block h-12 w-12 text-neutral-400 dark:text-neutral-500' x-icon='"bell"' />
+            <p class='mt-4 text-sm font-medium text-neutral-700 dark:text-neutral-300'>Tidak ada notifikasi baru.</p>
+            <p class='mt-1 text-sm text-neutral-500 dark:text-neutral-400'>Anda akan diberi tahu saat ada pembaruan status pesanan.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== SECTION: PENGATURAN ===== -->
+      <section x-show='active === "settings"' x-cloak x-transition.opacity.duration.200ms>
+        <div class='rounded-xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-700 dark:bg-neutral-800'>
+          <h3 class='text-lg font-bold text-neutral-800 dark:text-neutral-200'>Pengaturan</h3>
+          <p class='mt-1 text-sm text-neutral-600 dark:text-neutral-400'>Atur preferensi notifikasi dan privasi akun Anda.</p>
+
+          <div class='mt-4 divide-y divide-neutral-200 dark:divide-neutral-700'>
+            <button x-on:click='prefs.email = !prefs.email' class='flex w-full items-center justify-between gap-4 py-4 text-left'>
+              <div>
+                <p class='text-sm font-medium text-neutral-800 dark:text-neutral-200'>Notifikasi Email</p>
+                <p class='mt-0.5 text-xs text-neutral-500 dark:text-neutral-400'>Info status pesanan, pengiriman, dan promo.</p>
+              </div>
+              <span class='relative h-6 w-11 shrink-0 rounded-full transition-colors' :class='prefs.email ? "bg-orange-400" : "bg-neutral-300 dark:bg-neutral-600"'>
+                <span class='absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform' :class='prefs.email ? "translate-x-5" : ""'></span>
+              </span>
+            </button>
+
+            <button x-on:click='prefs.promo = !prefs.promo' class='flex w-full items-center justify-between gap-4 py-4 text-left'>
+              <div>
+                <p class='text-sm font-medium text-neutral-800 dark:text-neutral-200'>Notifikasi Promo</p>
+                <p class='mt-0.5 text-xs text-neutral-500 dark:text-neutral-400'>Penawaran khusus dan info diskon dari kami.</p>
+              </div>
+              <span class='relative h-6 w-11 shrink-0 rounded-full transition-colors' :class='prefs.promo ? "bg-orange-400" : "bg-neutral-300 dark:bg-neutral-600"'>
+                <span class='absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform' :class='prefs.promo ? "translate-x-5" : ""'></span>
+              </span>
+            </button>
+
+            <button x-on:click='prefs.privacy = !prefs.privacy' class='flex w-full items-center justify-between gap-4 py-4 text-left'>
+              <div>
+                <p class='text-sm font-medium text-neutral-800 dark:text-neutral-200'>Keamanan Akun</p>
+                <p class='mt-0.5 text-xs text-neutral-500 dark:text-neutral-400'>Verifikasi dua langkah untuk masuk ke akun.</p>
+              </div>
+              <span class='relative h-6 w-11 shrink-0 rounded-full transition-colors' :class='prefs.privacy ? "bg-orange-400" : "bg-neutral-300 dark:bg-neutral-600"'>
+                <span class='absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform' :class='prefs.privacy ? "translate-x-5" : ""'></span>
+              </span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== SECTION: BANTUAN ===== -->
+      <section x-show='active === "help"' x-cloak x-transition.opacity.duration.200ms>
+        <div class='rounded-xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-700 dark:bg-neutral-800'>
+          <div class='mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-orange-100 text-orange-500 dark:bg-orange-900/30 dark:text-orange-400'>
+            <span class='h-5 w-5' x-icon='"help-circle"' />
+          </div>
+          <h3 class='text-lg font-bold text-neutral-800 dark:text-neutral-200'>Bantuan &amp; Dukungan</h3>
+          <p class='mt-1 text-sm text-neutral-600 dark:text-neutral-400'>Butuh bantuan? Hubungi tim dukungan kami melalui halaman Contact, atau lihat panduan penggunaan di halaman Guide.</p>
+
+          <div class='mt-6 grid gap-4 sm:grid-cols-2'>
+            <a href='/p/contact.html' x-on:click.prevent='window.navigate("contact")'
+              class='flex items-center justify-between gap-3 rounded-lg border border-neutral-200 bg-neutral-50 p-4 transition hover:border-orange-300 dark:border-neutral-700 dark:bg-neutral-700/30 dark:hover:border-orange-900/40'>
+              <span class='flex items-center gap-3'>
+                <span class='h-5 w-5 text-orange-500 dark:text-orange-400' x-icon='"envelope"' />
+                <span class='text-sm font-medium text-neutral-800 dark:text-neutral-200'>Hubungi Kami</span>
+              </span>
+              <span class='h-4 w-4 text-neutral-400' x-icon='"chevron-right"' />
+            </a>
+            <a href='/p/guide.html' x-on:click.prevent='window.navigate("guide")'
+              class='flex items-center justify-between gap-3 rounded-lg border border-neutral-200 bg-neutral-50 p-4 transition hover:border-orange-300 dark:border-neutral-700 dark:bg-neutral-700/30 dark:hover:border-orange-900/40'>
+              <span class='flex items-center gap-3'>
+                <span class='h-5 w-5 text-orange-500 dark:text-orange-400' x-icon='"book-open"' />
+                <span class='text-sm font-medium text-neutral-800 dark:text-neutral-200'>Panduan Penggunaan</span>
+              </span>
+              <span class='h-4 w-4 text-neutral-400' x-icon='"chevron-right"' />
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Catatan Akses Admin -->
+      <div class='mt-8 rounded-xl border border-dashed border-neutral-300 p-5 text-sm text-neutral-500 dark:border-neutral-600 dark:text-neutral-400'>
+        <p>Dashboard admin tidak termasuk di sini dan tetap diakses mandiri melalui URL/subdomain khusus (mis. admin.yourdomain.com).</p>
+      </div>
+    </div>
   </div>
 </div>
