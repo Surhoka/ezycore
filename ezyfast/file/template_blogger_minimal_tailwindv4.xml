@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html>
+<html b:css='false' b:defaultwidgetversion='2' b:layoutsVersion='3' expr:dir='data:blog.languageDirection' expr:lang='data:blog.locale'>
+<head>
+  <meta content='width=device-width, initial-scale=1' name='viewport'/>
+  <meta expr:content='data:blog.isMobile ? "noindex, nofollow" : "index, follow"' name='robots'/>
+  
+  <title><data:view.title.escaped/></title>
+
+  <b:include data='blog' name='all-head-content'/>
+
+  <!-- 1. Script Browser Tailwind CSS v4 Engine -->
+  <script src='https://unpkg.com/@tailwindcss/browser@4'></script>
+
+  <!-- 2. Configuration & Custom Theme Tailwind v4 -->
+  <style type='text/tailwindcss'>
+    @import "tailwindcss";
+
+    /* Konfigurasi Theme Native Tailwind CSS v4 */
+    @theme {
+      --color-brand: #f97316;
+      --color-brand-hover: #ea580c;
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    /* Reset tambahan jika diperlukan */
+    body {
+      @apply bg-gray-50 text-gray-800 dark:bg-zinc-900 dark:text-gray-100 antialiased font-sans min-h-screen flex flex-col;
+    }
+  </style>
+
+  <b:skin><![CDATA[
+    /* CSS Reset bawaan Blogger disembunyikan agar Tailwind bekerja penuh */
+    .custom-css-section, .custom-js-section { display: none; }
+  ]]></b:skin>
+</head>
+
+<body>
+
+  <!-- SECTION UNTUK CUSTOM CSS (Jika ingin menambah CSS via Tata Letak) -->
+  <b:section class='custom-css-section' id='custom-css' maxwidgets='1' showaddelement='no'>
+    <b:widget id='HTML101' locked='true' title='Custom CSS' type='HTML' visible='true'>
+      <b:includable id='main'>
+        <b:if cond='data:content != ""'>
+          <style><data:content.escaped/></style>
+        </b:if>
+      </b:includable>
+    </b:widget>
+  </b:section>
+
+  <!-- HEADER & NAVIGATION -->
+  <header class='bg-white dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-700 sticky top-0 z-50'>
+    <div class='max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
+      
+      <b:section class='header-title' id='header-title' maxwidgets='1' showaddelement='no'>
+        <b:widget id='Header1' locked='true' title='Header Blog' type='Header' visible='true'>
+          <b:includable id='main'>
+            <div>
+              <h1 class='text-2xl font-bold tracking-tight text-gray-900 dark:text-white'>
+                <a class='hover:text-brand transition-colors' expr:href='data:blog.homepageUrl'><data:title/></a>
+              </h1>
+              <b:if cond='data:description'>
+                <p class='text-xs text-gray-500 dark:text-gray-400 mt-1'><data:description/></p>
+              </b:if>
+            </div>
+          </b:includable>
+        </b:widget>
+      </b:section>
+
+      <!-- Navigasi Menu Header -->
+      <nav class='flex items-center gap-6 text-sm font-semibold text-gray-600 dark:text-gray-300'>
+        <a class='hover:text-brand transition-colors' expr:href='data:blog.homepageUrl'>Beranda</a>
+        <a class='hover:text-brand transition-colors' href='/p/about.html'>Tentang</a>
+        <a class='px-3 py-1.5 bg-brand hover:bg-brand-hover text-white rounded-lg transition-colors text-xs font-bold shadow-sm' href='/p/login.html'>Member Login</a>
+      </nav>
+
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class='max-w-5xl mx-auto px-4 py-8 flex-1 w-full'>
+    <b:section class='main-content' id='main-content' maxwidgets='1' showaddelement='no'>
+      <b:widget id='Blog1' locked='true' title='Blog Posts' type='Blog' visible='true'>
+        
+        <b:includable id='main' var='this'>
+          <div class='grid gap-6'>
+            <!-- Loop Postingan Blogger -->
+            <b:loop values='data:posts' var='post'>
+              <article class='p-6 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-xl shadow-xs transition-all hover:border-gray-300 dark:hover:border-zinc-600'>
+                
+                <h2 class='text-xl sm:text-2xl font-bold mb-2 leading-snug'>
+                  <a class='text-gray-900 dark:text-white hover:text-brand transition-colors' expr:href='data:post.url'>
+                    <data:post.title/>
+                  </a>
+                </h2>
+
+                <div class='prose dark:prose-invert max-w-none text-sm leading-relaxed text-gray-600 dark:text-gray-300 mt-3'>
+                  <b:if cond='data:view.isSingleItem'>
+                    <!-- Tampilan Lengkap Saat Membuka Artikel / Page -->
+                    <data:post.body/>
+                  <b:else/>
+                    <!-- Ringkasan Snippet Saat di Beranda -->
+                    <p><b:eval expr='data:post.body snippet { length: 180, links: false }'/></p>
+                    <div class='mt-4'>
+                      <a class='inline-flex items-center text-xs font-bold text-brand hover:underline' expr:href='data:post.url'>
+                        Baca Selengkapnya &amp;rarr;
+                      </a>
+                    </div>
+                  </b:if>
+                </div>
+
+              </article>
+            </b:loop>
+          </div>
+
+          <!-- Paginasi -->
+          <b:include name='nextprev'/>
+        </b:includable>
+
+        <b:includable id='nextprev'>
+          <div class='flex justify-between items-center mt-8 pt-6 border-t border-gray-200 dark:border-zinc-700 text-sm font-semibold'>
+            <div>
+              <b:if cond='data:newerPageUrl'>
+                <a class='text-brand hover:underline' expr:href='data:newerPageUrl'>&amp;larr; Posting Terbaru</a>
+              </b:if>
+            </div>
+            <div>
+              <b:if cond='data:olderPageUrl'>
+                <a class='text-brand hover:underline' expr:href='data:olderPageUrl'>Posting Lama &amp;rarr;</a>
+              </b:if>
+            </div>
+          </div>
+        </b:includable>
+
+      </b:widget>
+    </b:section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class='bg-white dark:bg-zinc-800 border-t border-gray-200 dark:border-zinc-700 py-6 mt-auto text-center text-xs text-gray-500 dark:text-gray-400'>
+    <div class='max-w-5xl mx-auto px-4'>
+      <b:section class='footer-sec' id='footer-sec' maxwidgets='1' showaddelement='no'>
+        <b:widget id='HTML102' locked='true' title='Teks Footer' type='HTML' visible='true'>
+          <b:includable id='main'>
+            <p>© <script>document.write(new Date().getFullYear())</script> <data:blog.title/>. All rights reserved.</p>
+          </b:includable>
+        </b:widget>
+      </b:section>
+    </div>
+  </footer>
+
+  <!-- SECTION UNTUK CUSTOM JS -->
+  <b:section class='custom-js-section' id='custom-js' maxwidgets='1' showaddelement='no'>
+    <b:widget id='HTML103' locked='true' title='Custom JS' type='HTML' visible='true'>
+      <b:includable id='main'>
+        <b:if cond='data:content != ""'>
+          <data:content/>
+        </b:if>
+      </b:includable>
+    </b:widget>
+  </b:section>
+
+</body>
+</html>
