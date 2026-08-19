@@ -1,0 +1,286 @@
+// ================================================================
+// HELPER: Promise-based sendDataToGoogle untuk EzyFast
+// ================================================================
+function efApi(action, data) {
+  return new Promise(function (resolve, reject) {
+    if (typeof window.sendDataToGoogle !== 'function') {
+      reject(new Error('sendDataToGoogle is not available'));
+      return;
+    }
+    window.sendDataToGoogle(action, data || {}, resolve, reject);
+  });
+}
+
+// ================================================================
+// EZYFAST DASHBOARD
+// ================================================================
+Alpine.data('ezyfastDashboard', () => ({
+    loading: true,
+    stats: {},
+    recentOrders: [],
+
+    async init() {
+        await this.loadDashboard();
+    },
+
+    async loadDashboard() {
+        this.loading = true;
+        try {
+            var res = await efApi('ef_getDashboardStats');
+            if (res && res.status === 'success' && res.data) {
+                this.stats = res.data.summary || {};
+                this.recentOrders = res.data.recentOrders || [];
+            }
+        } catch (e) {
+            if (window.showToast) window.showToast('Gagal memuat dashboard', 'error');
+        }
+        this.loading = false;
+    },
+
+    formatCurrency(val) {
+        return 'Rp ' + Number(val || 0).toLocaleString('id-ID');
+    },
+
+    formatNumber(val) {
+        return Number(val || 0).toLocaleString('id-ID');
+    },
+
+    statusColor(status) {
+        var colors = {
+            pending: 'bg-yellow-100 text-yellow-700',
+            processing: 'bg-blue-100 text-blue-700',
+            shipped: 'bg-purple-100 text-purple-700',
+            delivered: 'bg-green-100 text-green-700',
+            completed: 'bg-green-100 text-green-700',
+            cancelled: 'bg-red-100 text-red-700'
+        };
+        return colors[status] || 'bg-gray-100 text-gray-600';
+    }
+}));
+
+// ================================================================
+// EZYFAST SETTINGS
+// ================================================================
+Alpine.data('ezyfastSettings', () => ({
+    loading: true,
+    isSaving: false,
+    settings: {
+        blogId: '',
+        blogUrl: '',
+        siteName: '',
+        telegramBotId: '',
+        currency: 'IDR'
+    },
+
+    async init() {
+        await this.loadSettings();
+    },
+
+    async loadSettings() {
+        this.loading = true;
+        try {
+            var res = await efApi('ef_getSettings');
+            if (res && res.status === 'success' && res.data) {
+                this.settings = { ...this.settings, ...res.data };
+            }
+        } catch (e) {
+            if (window.showToast) window.showToast('Gagal memuat pengaturan', 'error');
+        }
+        this.loading = false;
+    },
+
+    async saveSettings() {
+        this.isSaving = true;
+        try {
+            var res = await efApi('ef_saveSettings', this.settings);
+            if (res && res.status === 'success') {
+                if (window.showToast) window.showToast('Pengaturan berhasil disimpan.', 'success');
+            } else {
+                if (window.showToast) window.showToast(res.message || 'Gagal menyimpan.', 'error');
+            }
+        } catch (e) {
+            if (window.showToast) window.showToast('Gagal menyimpan pengaturan.', 'error');
+        }
+        this.isSaving = false;
+    }
+}));
+
+// ================================================================
+// EZYFAST CUSTOMERS
+// ================================================================
+Alpine.data('ezyfastCustomers', () => ({
+    loading: true,
+    customers: [],
+    searchQuery: '',
+
+    async init() {
+        await this.loadCustomers();
+    },
+
+    async loadCustomers() {
+        this.loading = true;
+        try {
+            var res = await efApi('ef_getCustomers');
+            if (res && res.status === 'success') {
+                this.customers = res.data || [];
+            }
+        } catch (e) {
+            if (window.showToast) window.showToast('Gagal memuat data pelanggan', 'error');
+        }
+        this.loading = false;
+    },
+
+    get filteredCustomers() {
+        if (!this.searchQuery) return this.customers;
+        var q = this.searchQuery.toLowerCase();
+        return this.customers.filter(function(c) {
+            return (c.name || '').toLowerCase().includes(q) ||
+                   (c.email || '').toLowerCase().includes(q) ||
+                   (c.phone || '').includes(q);
+        });
+    },
+
+    formatCurrency(val) {
+        return 'Rp ' + Number(val || 0).toLocaleString('id-ID');
+    }
+}));
+
+// ================================================================
+// EZYFAST ORDERS
+// ================================================================
+Alpine.data('ezyfastOrders', () => ({
+    loading: true,
+    orders: [],
+    filter: 'all',
+    selectedOrder: null,
+
+    async init() {
+        await this.loadOrders();
+    },
+
+    async loadOrders() {
+        this.loading = true;
+        try {
+            var res = await efApi('ef_getOrders');
+            if (res && res.status === 'success') {
+                this.orders = res.data || [];
+            }
+        } catch (e) {
+            if (window.showToast) window.showToast('Gagal memuat data pesanan', 'error');
+        }
+        this.loading = false;
+    },
+
+    get filteredOrders() {
+        if (this.filter === 'all') return this.orders;
+        return this.orders.filter(function(o) {
+            return o.status === this.filter;
+        }.bind(this));
+    },
+
+    viewOrder(order) {
+        this.selectedOrder = order;
+    },
+
+    closeDetail() {
+        this.selectedOrder = null;
+    },
+
+    async updateStatus(id, status) {
+        try {
+            var res = await efApi('ef_updateOrderStatus', { id: id, status: status });
+            if (res && res.status === 'success') {
+                if (window.showToast) window.showToast('Status berhasil diperbarui.', 'success');
+                await this.loadOrders();
+                this.closeDetail();
+            } else {
+                if (window.showToast) window.showToast(res.message || 'Gagal memperbarui status.', 'error');
+            }
+        } catch (e) {
+            if (window.showToast) window.showToast('Gagal memperbarui status.', 'error');
+        }
+    },
+
+    statusColor(status) {
+        var colors = {
+            pending: 'bg-yellow-100 text-yellow-700',
+            processing: 'bg-blue-100 text-blue-700',
+            shipped: 'bg-purple-100 text-purple-700',
+            delivered: 'bg-green-100 text-green-700',
+            completed: 'bg-green-100 text-green-700',
+            cancelled: 'bg-red-100 text-red-700'
+        };
+        return colors[status] || 'bg-gray-100 text-gray-600';
+    },
+
+    formatCurrency(val) {
+        return 'Rp ' + Number(val || 0).toLocaleString('id-ID');
+    }
+}));
+
+// ================================================================
+// EZYFAST ARTIKEL (Blogger Feed)
+// ================================================================
+Alpine.data('ezyfastArtikel', () => ({
+    loading: true,
+    syncing: false,
+    articles: [],
+    maxResults: 50,
+
+    async init() {
+        await this.loadArticles();
+    },
+
+    async loadArticles() {
+        this.loading = true;
+        try {
+            var res = await efApi('ef_getArticles');
+            if (res && res.status === 'success') {
+                this.articles = res.data || [];
+            }
+        } catch (e) {
+            if (window.showToast) window.showToast('Gagal memuat artikel', 'error');
+        }
+        this.loading = false;
+    },
+
+    async syncFromBlogger() {
+        this.syncing = true;
+        try {
+            var res = await efApi('ef_fetchArticles', { maxResults: this.maxResults });
+            if (res && res.status === 'success') {
+                if (window.showToast) window.showToast(res.message || 'Sinkronisasi berhasil.', 'success');
+                await this.loadArticles();
+            } else {
+                if (window.showToast) window.showToast(res.message || 'Gagal sinkronisasi.', 'error');
+            }
+        } catch (e) {
+            if (window.showToast) window.showToast('Gagal sinkronisasi dari Blogger.', 'error');
+        }
+        this.syncing = false;
+    },
+
+    async deleteArticle(id) {
+        if (!confirm('Yakin ingin menghapus artikel ini dari cache?')) return;
+        try {
+            var res = await efApi('ef_deleteArticle', { id: id });
+            if (res && res.status === 'success') {
+                if (window.showToast) window.showToast('Artikel dihapus.', 'success');
+                await this.loadArticles();
+            } else {
+                if (window.showToast) window.showToast(res.message || 'Gagal menghapus.', 'error');
+            }
+        } catch (e) {
+            if (window.showToast) window.showToast('Gagal menghapus artikel.', 'error');
+        }
+    },
+
+    formatDate(dateStr) {
+        if (!dateStr) return '-';
+        try {
+            return new Date(dateStr).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+        } catch (e) {
+            return dateStr;
+        }
+    }
+}));
