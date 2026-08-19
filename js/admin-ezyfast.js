@@ -70,6 +70,12 @@ Alpine.data('ezyfastSettings', () => ({
         result: null,
         error: null
     },
+    // diagnostics viewer state
+    bloggerDiag: {
+        loading: false,
+        data: null,
+        error: null
+    },
 
     settings: {
         blogId: '',
@@ -150,6 +156,37 @@ Alpine.data('ezyfastSettings', () => ({
         }
 
         this.bloggerCheck.loading = false;
+    },
+
+    // Ambil LAST_BLOGGER_SYNC / LAST_BLOGGER_PAGE_CHECK dari server
+    async getBloggerDiagnostics() {
+        this.bloggerDiag.loading = true;
+        this.bloggerDiag.data = null;
+        this.bloggerDiag.error = null;
+
+        if (!this.settings || !this.settings.blogId) {
+            this.bloggerDiag.error = 'Blog ID kosong.';
+            this.bloggerDiag.loading = false;
+            return;
+        }
+
+        try {
+            var res = await efApi('ef_getBloggerDiagnostics', { blogId: this.settings.blogId });
+            console.log('ef_getBloggerDiagnostics', res);
+            if (res && res.status === 'success') {
+                this.bloggerDiag.data = res;
+                if (window.showToast) window.showToast('Diagnostik diambil.', 'success');
+            } else {
+                this.bloggerDiag.error = res.message || 'Gagal ambil diagnostik.';
+                if (window.showToast) window.showToast(this.bloggerDiag.error, 'error');
+            }
+        } catch (e) {
+            console.error(e);
+            this.bloggerDiag.error = e.message || String(e);
+            if (window.showToast) window.showToast('Gagal ambil diagnostik.', 'error');
+        }
+
+        this.bloggerDiag.loading = false;
     }
 }));
 
