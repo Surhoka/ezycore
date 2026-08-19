@@ -347,13 +347,17 @@
                     if (!confirm('Are you sure you want to remove this plugin?')) return;
                     try {
                         const res = await apiCall('remove_plugin', { id: id });
+                        console.log('[deletePlugin] Response:', JSON.stringify(res));
                         if (res.status === 'success') {
                             window.showToast('Plugin removed', "success");
                             await this.fetchPlugins();
                             // Sync Sidebar Menu
                             window.dispatchEvent(new CustomEvent('ezy:menu-update'));
+                        } else {
+                            if (res.debug) console.log('[deletePlugin] DEBUG:', JSON.stringify(res.debug));
                         }
                     } catch (e) {
+                        console.error('[deletePlugin] Error:', e);
                         window.showToast("Failed to remove plugin", "error");
                     }
                 },
