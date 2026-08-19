@@ -1,0 +1,128 @@
+<div x-data="ezyfastDashboard" class="w-full animate-fade-in">
+  <!-- Loading Overlay -->
+  <div x-show="loading" x-cloak class="flex items-center justify-center min-h-[400px]">
+    <svg class="h-8 w-8 animate-spin text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+    </svg>
+  </div>
+
+  <div x-show="!loading" x-cloak>
+    <div class="grid grid-cols-12 gap-4 md:gap-6">
+
+      <!-- Total Orders -->
+      <div class="col-span-12 sm:col-span-6 xl:col-span-3">
+        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100 dark:bg-gray-800">
+            <span class="w-6 h-6 text-gray-800 dark:text-white/90" x-icon="&quot;shopping-bag&quot;"/>
+          </div>
+          <div class="mt-5">
+            <span class="text-sm text-gray-500 dark:text-gray-400">Total Orders</span>
+            <h4 class="mt-2 text-title-sm font-bold text-gray-800 dark:text-white/90" x-text="formatNumber(stats.totalOrders)"></h4>
+          </div>
+        </div>
+      </div>
+
+      <!-- Revenue -->
+      <div class="col-span-12 sm:col-span-6 xl:col-span-3">
+        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100 dark:bg-gray-800">
+            <span class="w-6 h-6 text-gray-800 dark:text-white/90" x-icon="&quot;currency-dollar&quot;"/>
+          </div>
+          <div class="mt-5">
+            <span class="text-sm text-gray-500 dark:text-gray-400">Total Revenue</span>
+            <h4 class="mt-2 text-title-sm font-bold text-gray-800 dark:text-white/90" x-text="formatCurrency(stats.totalRevenue)"></h4>
+          </div>
+        </div>
+      </div>
+
+      <!-- Customers -->
+      <div class="col-span-12 sm:col-span-6 xl:col-span-3">
+        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100 dark:bg-gray-800">
+            <span class="w-6 h-6 text-gray-800 dark:text-white/90" x-icon="&quot;users-group&quot;"/>
+          </div>
+          <div class="mt-5">
+            <span class="text-sm text-gray-500 dark:text-gray-400">Pelanggan</span>
+            <h4 class="mt-2 text-title-sm font-bold text-gray-800 dark:text-white/90" x-text="formatNumber(stats.totalCustomers)"></h4>
+          </div>
+        </div>
+      </div>
+
+      <!-- Articles -->
+      <div class="col-span-12 sm:col-span-6 xl:col-span-3">
+        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100 dark:bg-gray-800">
+            <span class="w-6 h-6 text-gray-800 dark:text-white/90" x-icon="&quot;file-text&quot;"/>
+          </div>
+          <div class="mt-5">
+            <span class="text-sm text-gray-500 dark:text-gray-400">Artikel</span>
+            <h4 class="mt-2 text-title-sm font-bold text-gray-800 dark:text-white/90" x-text="formatNumber(stats.totalArticles)"></h4>
+          </div>
+        </div>
+      </div>
+
+      <!-- Revenue Bulan Ini -->
+      <div class="col-span-12 sm:col-span-6 xl:col-span-4">
+        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
+          <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Revenue Bulan Ini</h3>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Pendapatan bulan berjalan</p>
+          <p class="mt-4 text-2xl font-bold text-gray-800 dark:text-white/90" x-text="formatCurrency(stats.thisMonthRevenue)"></p>
+        </div>
+      </div>
+
+      <!-- Pending Orders -->
+      <div class="col-span-12 sm:col-span-6 xl:col-span-4">
+        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
+          <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Menunggu Diproses</h3>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Order dengan status pending</p>
+          <p class="mt-4 text-2xl font-bold text-yellow-600 dark:text-yellow-400" x-text="formatNumber(stats.pendingOrders)"></p>
+        </div>
+      </div>
+
+      <!-- Completed Orders -->
+      <div class="col-span-12 sm:col-span-6 xl:col-span-4">
+        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
+          <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Selesai</h3>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Order yang telah selesai</p>
+          <p class="mt-4 text-2xl font-bold text-green-600 dark:text-green-400" x-text="formatNumber(stats.completedOrders)"></p>
+        </div>
+      </div>
+
+      <!-- Recent Orders -->
+      <div class="col-span-12">
+        <div class="rounded-2xl border border-gray-200 bg-white px-5 py-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
+          <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-4">Order Terakhir</h3>
+          <div class="w-full overflow-x-auto">
+            <table class="min-w-full">
+              <thead>
+                <tr class="border-gray-100 border-y dark:border-gray-800">
+                  <th class="py-3 text-left"><p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">Order ID</p></th>
+                  <th class="py-3 text-left"><p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">Customer</p></th>
+                  <th class="py-3 text-left"><p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">Total</p></th>
+                  <th class="py-3 text-left"><p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">Status</p></th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                <template x-if="recentOrders.length === 0">
+                  <tr><td colspan="4" class="py-8 text-center text-gray-500">Belum ada order.</td></tr>
+                </template>
+                <template x-for="order in recentOrders" :key="order.id">
+                  <tr>
+                    <td class="py-3 font-mono text-xs text-gray-800 dark:text-white/90" x-text="order.id"></td>
+                    <td class="py-3 text-gray-800 dark:text-white/90" x-text="order.customername || order.customeremail || '-'"></td>
+                    <td class="py-3 text-gray-800 dark:text-white/90" x-text="formatCurrency(order.total)"></td>
+                    <td class="py-3">
+                      <span class="px-2 py-1 text-xs rounded-full font-medium" :class="statusColor(order.status)" x-text="order.status || 'pending'"></span>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

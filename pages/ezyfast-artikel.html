@@ -1,0 +1,106 @@
+<div x-data="ezyfastArtikel" class="w-full px-1 sm:px-0">
+
+  <div class="rounded-2xl border border-primary bg-secondary relative min-h-[500px] shadow-sm overflow-hidden">
+    <!-- Loading Overlay -->
+    <div x-show="loading" x-cloak
+      class="absolute inset-0 z-10 flex items-center justify-center bg-secondary/80 backdrop-blur-sm rounded-lg">
+      <svg class="h-8 w-8 animate-spin text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+      </svg>
+    </div>
+
+    <div x-show="!loading" class="p-4 md:p-6 transition-opacity duration-500">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Artikel dari Blogger</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Sinkronisasi artikel dari feed Blogger ke cache Firestore.</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <select x-model="maxResults"
+            class="h-10 rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+            <option value="10">10 artikel</option>
+            <option value="25">25 artikel</option>
+            <option value="50">50 artikel</option>
+            <option value="100">100 artikel</option>
+          </select>
+          <button @click="syncFromBlogger()" :disabled="syncing"
+            class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+            <svg x-show="syncing" x-cloak class="w-4 h-4 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+            <span class="w-4 h-4" x-icon="&quot;refresh-cw&quot;" x-show="!syncing"></span>
+            <span x-text="syncing ? 'Sinkronisasi...' : 'Sync dari Blogger'"></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+                <th class="text-left py-3 px-4 font-medium text-gray-500 w-[60px]">Gambar</th>
+                <th class="text-left py-3 px-4 font-medium text-gray-500">Judul</th>
+                <th class="text-left py-3 px-4 font-medium text-gray-500">Kategori</th>
+                <th class="text-left py-3 px-4 font-medium text-gray-500">Penulis</th>
+                <th class="text-left py-3 px-4 font-medium text-gray-500">Tanggal</th>
+                <th class="text-left py-3 px-4 font-medium text-gray-500 w-[100px]">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template x-if="articles.length === 0">
+                <tr><td colspan="6" class="py-8 text-center text-gray-500">Belum ada artikel. Klik "Sync dari Blogger" untuk mengambil artikel.</td></tr>
+              </template>
+              <template x-for="article in articles" :key="article.id">
+                <tr class="border-b border-gray-50 dark:border-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800/30">
+                  <td class="py-3 px-4">
+                    <div class="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+                      <template x-if="article.thumbnail">
+                        <img :src="article.thumbnail" :alt="article.title" class="w-full h-full object-cover">
+                      </template>
+                      <template x-if="!article.thumbnail">
+                        <div class="w-full h-full flex items-center justify-center text-gray-400">
+                          <span class="w-5 h-5" x-icon="&quot;image&quot;"></span>
+                        </div>
+                      </template>
+                    </div>
+                  </td>
+                  <td class="py-3 px-4">
+                    <a :href="article.url" target="_blank" class="font-medium text-gray-800 dark:text-white/90 hover:text-brand-500 line-clamp-2" x-text="article.title"></a>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-1" x-text="article.summary"></p>
+                  </td>
+                  <td class="py-3 px-4">
+                    <div class="flex flex-wrap gap-1">
+                      <template x-for="cat in (article.categories || []).slice(0, 3)" :key="cat">
+                        <span class="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400" x-text="cat"></span>
+                      </template>
+                    </div>
+                  </td>
+                  <td class="py-3 px-4 text-gray-600 dark:text-gray-400" x-text="article.author || '-'"></td>
+                  <td class="py-3 px-4 text-xs text-gray-500" x-text="formatDate(article.published)"></td>
+                  <td class="py-3 px-4">
+                    <div class="flex items-center gap-2">
+                      <a :href="article.url" target="_blank" class="p-1.5 rounded-lg text-gray-400 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-colors" title="Lihat di Blogger">
+                        <span class="w-4 h-4 block" x-icon="&quot;external-link&quot;"></span>
+                      </a>
+                      <button @click="deleteArticle(article.id)" class="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors" title="Hapus dari cache">
+                        <span class="w-4 h-4 block" x-icon="&quot;trash-2&quot;"></span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="mt-4 text-sm text-gray-500 dark:text-gray-400">
+        Total: <span class="font-medium text-gray-800 dark:text-white/90" x-text="articles.length"></span> artikel di-cache
+      </div>
+    </div>
+  </div>
+
+</div>
