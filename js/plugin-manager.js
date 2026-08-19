@@ -28,13 +28,23 @@
     }
 
     // Helper: Promise-based sendDataToGoogle (POST + idToken)
-    const apiCall = (action, data) => new Promise((resolve, reject) => {
-        if (typeof window.sendDataToGoogle !== 'function') {
-            reject(new Error('sendDataToGoogle is not available'));
-            return;
-        }
-        window.sendDataToGoogle(action, data || {}, resolve, reject);
-    });
+    const apiCall = (action, data) => {
+        console.log(`[apiCall] START action=${action}`, data);
+        return new Promise((resolve, reject) => {
+            if (typeof window.sendDataToGoogle !== 'function') {
+                console.error('[apiCall] sendDataToGoogle NOT AVAILABLE');
+                reject(new Error('sendDataToGoogle is not available'));
+                return;
+            }
+            window.sendDataToGoogle(action, data || {}, (res) => {
+                console.log(`[apiCall] CALLBACK OK action=${action}`, res);
+                resolve(res);
+            }, (err) => {
+                console.error(`[apiCall] CALLBACK ERR action=${action}`, err);
+                reject(err);
+            });
+        });
+    };
 
     // Define the registration function
     const registerPluginManager = () => {
@@ -344,16 +354,25 @@
                 },
 
                 async deletePlugin(id) {
-                    if (!confirm('Are you sure you want to remove this plugin?')) return;
+                    console.log('[deletePlugin] Called with id:', id);
+                    if (!confirm('Are you sure you want to remove this plugin?')) {
+                        console.log('[deletePlugin] User cancelled');
+                        return;
+                    }
+                    console.log('[deletePlugin] User confirmed, calling apiCall...');
                     try {
                         const res = await apiCall('remove_plugin', { id: id });
+                        console.log('[deletePlugin] Response:', res);
                         if (res.status === 'success') {
                             window.showToast('Plugin removed', "success");
                             await this.fetchPlugins();
                             // Sync Sidebar Menu
                             window.dispatchEvent(new CustomEvent('ezy:menu-update'));
+                        } else {
+                            console.warn('[deletePlugin] Not success:', res);
                         }
                     } catch (e) {
+                        console.error('[deletePlugin] Error:', e);
                         window.showToast("Failed to remove plugin", "error");
                     }
                 },
