@@ -92,17 +92,13 @@
             <a href="/"
                 class="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
                 <span class="w-5 h-5 mr-2" x-icon="'arrow-left'"></span>
-                <span x-text="$store.i18n ? $store.i18n.t('back_to_dashboard') : 'Back to dashboard'">Back to dashboard</span>
+                <span>Back to dashboard</span>
             </a>
         </div>
 
         <div class="mb-4 2xl:mb-6">
-            <h1 class="mb-2 text-2xl font-bold text-gray-800 dark:text-white" x-text="$store.i18n ? $store.i18n.t('signup_title') : 'Sign Up'">
-                Sign Up
-            </h1>
-            <p class="text-gray-500 dark:text-gray-400" x-text="$store.i18n ? $store.i18n.t('signup_subtitle') : 'Enter your details to sign up!'">
-                Enter your details to sign up!
-            </p>
+            <h1 class="mb-2 text-2xl font-bold text-gray-800 dark:text-white">Sign Up</h1>
+            <p class="text-gray-500 dark:text-gray-400">Enter your details to sign up!</p>
         </div>
 
         <form @submit.prevent="register()">
@@ -111,7 +107,7 @@
                     <!-- First Name -->
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            <span x-text="$store.i18n ? $store.i18n.t('first_name') : 'First Name'">First Name</span><span class="text-error-500">*</span>
+                            <span>First Name</span><span class="text-error-500">*</span>
                         </label>
                         <input type="text" x-model="formData.fname" placeholder="First name" required
                             class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-sm placeholder:text-gray-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white dark:placeholder:text-white/30 dark:focus:border-brand-500" />
@@ -119,7 +115,7 @@
                     <!-- Last Name -->
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            <span x-text="$store.i18n ? $store.i18n.t('last_name') : 'Last Name'">Last Name</span>
+                            <span>Last Name</span>
                         </label>
                         <input type="text" x-model="formData.lname" placeholder="Last name"
                             class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-sm placeholder:text-gray-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white dark:placeholder:text-white/30 dark:focus:border-brand-500" />
@@ -128,9 +124,9 @@
                 <!-- Email -->
                 <div>
                     <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        <span x-text="$store.i18n ? $store.i18n.t('email_label') : 'Email'">Email</span><span class="text-error-500">*</span>
+                        <span>Email</span><span class="text-error-500">*</span>
                     </label>
-                    <input type="email" x-model="formData.email" :placeholder="$store.i18n ? $store.i18n.t('email_placeholder') : 'Enter your email'"
+                    <input type="email" x-model="formData.email" placeholder="Enter your email"
                         placeholder="Enter your email" required
                         class="w-full h-11 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-sm placeholder:text-gray-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white dark:placeholder:text-white/30 dark:focus:border-brand-500" />
                 </div>
@@ -139,12 +135,12 @@
                     <!-- Password -->
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            <span x-text="$store.i18n ? $store.i18n.t('password_label') : 'Password'">Password</span><span
+                            <span>Password</span><span
                                 class="text-error-500">*</span>
                         </label>
                         <div x-data="{ showPassword: false }" class="relative">
                             <input x-model="formData.password" :type="showPassword ? 'text' : 'password'"
-                                :placeholder="$store.i18n ? $store.i18n.t('password_placeholder') : '••••••••'" placeholder="••••••••"
+                                placeholder="••••••••"
                                 required
                                 class="w-full h-11 rounded-lg border border-gray-300 bg-transparent py-2.5 pl-4 pr-11 text-sm text-gray-800 shadow-sm placeholder:text-gray-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white dark:placeholder:text-white/30 dark:focus:border-brand-500" />
                             <span @click="showPassword = !showPassword"
@@ -190,7 +186,7 @@
                                     </span>
                                 </div>
                             </div>
-                            <span x-text="$store.i18n ? $store.i18n.t('agree_terms') : 'Agree to the Terms and Conditions and our Privacy Policy'">Agree to the Terms and Conditions and our Privacy Policy</span>
+                            <span>Agree to the Terms and Conditions and our Privacy Policy</span>
                         </label>
                     </div>
                 </div>
@@ -199,7 +195,7 @@
                     <button type="submit" :disabled="isSubmitting"
                         class="flex items-center justify-center w-full px-4 py-3 text-sm font-bold text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
                         <template x-if="!isSubmitting">
-                            <span x-text="$store.i18n ? $store.i18n.t('sign_up') : 'Sign Up'">Sign Up</span>
+                            <span>Sign Up</span>
                         </template>
                         <template x-if="isSubmitting">
                             <svg class="w-6 h-6 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -213,20 +209,14 @@
         </form>
         <div class="mt-4 2xl:mt-5">
             <p class="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
-                <span x-text="$store.i18n ? $store.i18n.t('already_have_account') : 'Already have an account?'">Already have an account?</span>
-                <a href="#signin" class="text-brand-500 hover:text-brand-600 dark:text-brand-400 font-medium"
-                    x-text="$store.i18n ? $store.i18n.t('sign_in') : 'Sign In'">Sign In</a>
+                <span>Already have an account?</span>
+                <a href="#signin" class="text-brand-500 hover:text-brand-600 dark:text-brand-400 font-medium">Sign In</a>
             </p>
         </div>
     </div>
 </div>
 
 <div class="fixed z-50 flex items-center gap-3 max-sm:hidden top-6 right-6">
-    <button x-show="$store.i18n"
-        class="inline-flex items-center justify-center size-10 text-xs font-bold text-white transition-colors rounded-full bg-brand-500 hover:bg-brand-600"
-        @click.prevent="$store.i18n.toggle()">
-        <span x-text="$store.i18n.locale.toUpperCase()"></span>
-    </button>
     <button
         class="inline-flex items-center justify-center text-white transition-colors rounded-full size-10 bg-brand-500 hover:bg-brand-600"
         @click.prevent="darkMode = !darkMode">
