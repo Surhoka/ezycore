@@ -64,6 +64,13 @@ Alpine.data('ezyfastDashboard', () => ({
 Alpine.data('ezyfastSettings', () => ({
     loading: true,
     isSaving: false,
+    // state for blogger config page verification
+    bloggerCheck: {
+        loading: false,
+        result: null,
+        error: null
+    },
+
     settings: {
         blogId: '',
         blogUrl: '',
@@ -111,6 +118,38 @@ Alpine.data('ezyfastSettings', () => ({
             if (window.showToast) window.showToast('Gagal menyimpan pengaturan.', 'error');
         }
         this.isSaving = false;
+    },
+
+    // Verifikasi halaman konfigurasi di Blogger (dipanggil oleh UI)
+    async checkBloggerConfigPage() {
+        // reset state
+        this.bloggerCheck.loading = true;
+        this.bloggerCheck.result = null;
+        this.bloggerCheck.error = null;
+
+        if (!this.settings || !this.settings.blogId) {
+            this.bloggerCheck.error = 'Blog ID kosong.';
+            this.bloggerCheck.loading = false;
+            return;
+        }
+
+        try {
+            var res = await efApi('ef_checkBloggerConfigPage', { blogId: this.settings.blogId });
+            console.log('ef_checkBloggerConfigPage', res);
+            if (res && res.status === 'success') {
+                this.bloggerCheck.result = res.data || null;
+                if (window.showToast) window.showToast('Pemeriksaan selesai.', 'success');
+            } else {
+                this.bloggerCheck.error = res.message || 'Pemeriksaan gagal.';
+                if (window.showToast) window.showToast(this.bloggerCheck.error, 'error');
+            }
+        } catch (e) {
+            console.error(e);
+            this.bloggerCheck.error = e.message || String(e);
+            if (window.showToast) window.showToast('Gagal memeriksa halaman konfigurasi.', 'error');
+        }
+
+        this.bloggerCheck.loading = false;
     }
 }));
 
