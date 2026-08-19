@@ -27,6 +27,15 @@
         // and we just need to provide the global function.
     }
 
+    // Helper: Promise-based sendDataToGoogle (POST + idToken)
+    const apiCall = (action, data) => new Promise((resolve, reject) => {
+        if (typeof window.sendDataToGoogle !== 'function') {
+            reject(new Error('sendDataToGoogle is not available'));
+            return;
+        }
+        window.sendDataToGoogle(action, data || {}, resolve, reject);
+    });
+
     // Define the registration function
     const registerPluginManager = () => {
         if (window.Alpine) {
@@ -237,10 +246,7 @@
                 async savePlugin() {
                     this.submitting = true;
                     try {
-                        const res = await window.app.fetchJsonp(this.apiUrl, {
-                            action: 'save_plugin',
-                            data: JSON.stringify(this.formData)
-                        });
+                        const res = await apiCall('save_plugin', { data: JSON.stringify(this.formData) });
                         this.submitting = false;
                         if (res.status === 'success') {
                             window.showToast(res.message, "success");
@@ -326,10 +332,7 @@
 
                 async togglePlugin(plugin) {
                     try {
-                        const res = await window.app.fetchJsonp(this.apiUrl, {
-                            action: 'save_plugin',
-                            data: JSON.stringify(plugin)
-                        });
+                        const res = await apiCall('save_plugin', { data: JSON.stringify(plugin) });
                         if (res.status === 'success') {
                             window.showToast(`Plugin ${plugin.active ? 'enabled' : 'disabled'}`);
                             // Sync Sidebar Menu
@@ -343,10 +346,7 @@
                 async deletePlugin(id) {
                     if (!confirm('Are you sure you want to remove this plugin?')) return;
                     try {
-                        const res = await window.app.fetchJsonp(this.apiUrl, {
-                            action: 'remove_plugin',
-                            id: id
-                        });
+                        const res = await apiCall('remove_plugin', { id: id });
                         if (res.status === 'success') {
                             window.showToast('Plugin removed', "success");
                             await this.fetchPlugins();
@@ -377,9 +377,7 @@
                 async syncFromRegistry() {
                     this.syncing = true;
                     try {
-                        const res = await window.app.fetchJsonp(this.apiUrl, {
-                            action: 'sync_plugins_from_registry'
-                        });
+                        const res = await apiCall('sync_plugins_from_registry');
                         if (res.status === 'success') {
                             window.showToast(res.message || 'Plugins synced from registry', 'success');
                             await this.fetchPlugins();
