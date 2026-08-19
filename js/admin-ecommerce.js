@@ -1069,16 +1069,18 @@ Alpine.data('ecommerceSettings', () => ({
   async loadSettings() {
     this.isLoading = true;
     try {
-      const res = await ecomApi('getEcommerceSettings');
-      if (res.status === 'success' && res.data) {
-        this.settings = { ...this.settings, ...res.data };
-        this.syncToConfig();
-      }
+    var blogIdParam = (this.settings && this.settings.blogId) || window.EZY_BLOG_ID || '';
+    const res = await ecomApi('getEcommerceSettings', { blogId: blogIdParam });
+    if (res.status === 'success' && res.data) {
+      this.settings = { ...this.settings, ...res.data };
+      this.syncToConfig();
+    }
     } catch (e) {
-      if (window.showToast) window.showToast('Failed to load settings', 'error');
+    if (window.showToast) window.showToast('Failed to load settings', 'error');
     }
     this.isLoading = false;
   },
+
 
   async saveSettings() {
     this.isSaving = true;
@@ -1098,19 +1100,21 @@ Alpine.data('ecommerceSettings', () => ({
         ecomApi('saveEcommerceSettings', payload),
         new Promise(function (_, reject) { setTimeout(function () { reject(new Error('Timeout')); }, 25000); })
       ]);
-      if (res.status === 'success') {
-        var syncMsg = res.syncInfo ? (typeof res.syncInfo === 'object' ? res.syncInfo.message || JSON.stringify(res.syncInfo) : res.syncInfo) : '';
-        if (window.showToast) window.showToast('Settings saved. Sync: ' + syncMsg, 'success');
-        this.syncToConfig();
-        await this.loadSettings();
-      } else {
-        if (window.showToast) window.showToast(res.message, 'error');
-      }
+    console.log('saveEcommerceSettings result', res);
+    if (res.status === 'success') {
+      var syncMsg = res.syncInfo ? (typeof res.syncInfo === 'object' ? res.syncInfo.message || JSON.stringify(res.syncInfo) : res.syncInfo) : '';
+      if (window.showToast) window.showToast('Settings saved. Sync: ' + syncMsg, 'success');
+      this.syncToConfig();
+      await this.loadSettings();
+    } else {
+      if (window.showToast) window.showToast(res.message, 'error');
+    }
     } catch (e) {
-      if (window.showToast) window.showToast(e.message === 'Timeout' ? 'Server tidak merespon, coba lagi' : 'Failed to save settings', 'error');
+    if (window.showToast) window.showToast(e.message === 'Timeout' ? 'Server tidak merespon, coba lagi' : 'Failed to save settings', 'error');
     }
     this.isSaving = false;
   },
+
 
   async loadHomeData() {
     try {
