@@ -98,6 +98,7 @@ Alpine.data('ezyfastSettings', () => ({
             var res = await efApi('ef_saveSettings', this.settings);
             if (res && res.status === 'success') {
                 if (window.showToast) window.showToast('Pengaturan berhasil disimpan.', 'success');
+                await this.loadSettings();
             } else {
                 if (window.showToast) window.showToast(res.message || 'Gagal menyimpan.', 'error');
             }
