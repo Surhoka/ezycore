@@ -82,7 +82,9 @@ Alpine.data('ezyfastSettings', () => ({
     async loadSettings() {
         this.loading = true;
         try {
-            var res = await efApi('ef_getSettings');
+            // Request settings for the current blog context when available
+            var blogIdParam = window.EZY_BLOG_ID || (this.settings && this.settings.blogId) || '';
+            var res = await efApi('ef_getSettings', { blogId: blogIdParam });
             if (res && res.status === 'success' && res.data) {
                 this.settings = { ...this.settings, ...res.data };
             }
