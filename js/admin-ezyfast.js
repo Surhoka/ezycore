@@ -187,6 +187,33 @@ Alpine.data('ezyfastSettings', () => ({
         }
 
         this.bloggerDiag.loading = false;
+    },
+
+    // Force recreate System Config Page (delete existing PAGE_ID and create a new one)
+    async forceRecreateConfig() {
+        if (!this.settings || !this.settings.blogId) {
+            if (window.showToast) window.showToast('Blog ID kosong.', 'error');
+            return;
+        }
+        if (!confirm('Anda yakin akan membuat ulang System Config Page? Halaman lama akan di-overwrite/ditimpa.')) return;
+
+        this.bloggerDiag.loading = true;
+        try {
+            var res = await efApi('ef_forceRecreateBloggerConfig', { blogId: this.settings.blogId });
+            console.log('ef_forceRecreateBloggerConfig', res);
+            if (res && res.status === 'success') {
+                if (window.showToast) window.showToast('Permintaan recreate dikirim. Periksa diagnostik untuk hasil.', 'success');
+                // reload settings & diagnostics
+                await this.loadSettings();
+                await this.getBloggerDiagnostics();
+            } else {
+                if (window.showToast) window.showToast(res.message || 'Gagal recreate.', 'error');
+            }
+        } catch (e) {
+            console.error(e);
+            if (window.showToast) window.showToast('Gagal mengirim permintaan recreate.', 'error');
+        }
+        this.bloggerDiag.loading = false;
     }
 }));
 
