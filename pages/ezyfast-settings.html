@@ -76,6 +76,32 @@
                   </template>
                 </div>
 
+                <!-- Diagnostics: LAST_BLOGGER_SYNC & LAST_BLOGGER_PAGE_CHECK -->
+                <div class="mt-3">
+                  <button @click="getBloggerDiagnostics()" :disabled="bloggerDiag.loading || !settings.blogId"
+                    class="px-3 py-1.5 text-sm font-medium text-white bg-gray-700 rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <svg x-show="bloggerDiag.loading" x-cloak class="w-4 h-4 animate-spin mr-2 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                    </svg>
+                    <span x-text="bloggerDiag.loading ? 'Mengambil...' : 'Tampilkan Riwayat Sinkron'"></span>
+                  </button>
+
+                  <div x-show="bloggerDiag.data || bloggerDiag.error" class="mt-2 text-xs bg-white dark:bg-gray-900 p-3 rounded-lg border border-gray-100 dark:border-gray-800">
+                    <template x-if="bloggerDiag.data">
+                      <div>
+                        <div class="mb-1"><strong>LAST_BLOGGER_SYNC:</strong></div>
+                        <pre class="text-[11px] mt-1 max-h-40 overflow-auto" x-text="JSON.stringify(bloggerDiag.data.lastSync || bloggerDiag.data.lastSyncRaw, null, 2)"></pre>
+                        <div class="mb-1 mt-2"><strong>LAST_BLOGGER_PAGE_CHECK:</strong></div>
+                        <pre class="text-[11px] mt-1 max-h-40 overflow-auto" x-text="JSON.stringify(bloggerDiag.data.lastPageCheck || bloggerDiag.data.lastPageCheckRaw, null, 2)"></pre>
+                      </div>
+                    </template>
+                    <template x-if="bloggerDiag.error">
+                      <div class="text-red-500">Error: <span x-text="bloggerDiag.error"></span></div>
+                    </template>
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>
