@@ -96,6 +96,7 @@ Alpine.data('ezyfastSettings', () => ({
         this.isSaving = true;
         try {
             var res = await efApi('ef_saveSettings', this.settings);
+            console.log('ef_saveSettings result', res);
             if (res && res.status === 'success') {
                 var msg = 'Pengaturan berhasil disimpan.';
                 if (res.syncInfo) msg += '\n' + res.syncInfo;
