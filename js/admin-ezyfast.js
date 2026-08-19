@@ -69,7 +69,10 @@ Alpine.data('ezyfastSettings', () => ({
         blogUrl: '',
         siteName: '',
         telegramBotId: '',
-        currency: 'IDR'
+        currency: 'IDR',
+        webAppUrl: '',
+        siteKey: '',
+        pageIdSystemConfig: ''
     },
 
     async init() {
