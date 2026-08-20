@@ -84,23 +84,9 @@
                     <div class="text-red-500">Error: <span x-text="bloggerCheck.error"></span></div>
                   </template>
                 </div>
-
-                  <div x-show="bloggerDiag.data || bloggerDiag.error" class="mt-2 text-xs bg-white dark:bg-gray-900 p-3 rounded-lg border border-gray-100 dark:border-gray-800">
-                    <template x-if="bloggerDiag.data">
-                      <div>
-                        <div class="mb-1"><strong>LAST_BLOGGER_SYNC:</strong></div>
-                        <pre class="text-[11px] mt-1 max-h-40 overflow-auto" x-text="JSON.stringify(bloggerDiag.data.lastSync || bloggerDiag.data.lastSyncRaw, null, 2)"></pre>
-                      </div>
-                    </template>
-                    <template x-if="bloggerDiag.error">
-                      <div class="text-red-500">Error: <span x-text="bloggerDiag.error"></span></div>
-                    </template>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
-
         </div>
       </div>
 
