@@ -1072,14 +1072,17 @@ Alpine.data('ecommerceSettings', () => ({
     try {
       // Determine blogId param for settings request.
       // Prefer existing settings.blogId, then localStorage cache for the current page context, otherwise request without blogId to let server return Firestore-stored blogId.
-      var blogIdParam = (this.settings && this.settings.blogId) || '';
-      // Do not read EzycoreConfig_ localStorage in plugin pages; prefer settings.blogId or server-side Firestore value.
+      var blogIdParam = (this.settings && this.settings.blogId) || window.EZY_BLOG_ID || '';
+      // Prefer explicit settings.blogId, fallback to window.EZY_BLOG_ID (same pattern as EzyFast) to let server return Firestore-stored blogId when not provided.
 
       var payload = (blogIdParam) ? { blogId: blogIdParam } : {};
       const res = await ecomApi('getEcommerceSettings', payload);
+      console.log('getEcommerceSettings', res);
       if (res.status === 'success' && res.data) {
         // Use server-provided values (Firestore preferred) — overwrite local settings with returned data
         this.settings = { ...this.settings, ...res.data };
+        // Ensure explicit blogId override from server (helps detect mismatches)
+        if (res.data.blogId) this.settings.blogId = res.data.blogId;
         this.syncToConfig();
       }
     } catch (e) {
