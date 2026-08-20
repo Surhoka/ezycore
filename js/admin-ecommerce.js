@@ -1093,9 +1093,10 @@ Alpine.data('ecommerceSettings', () => ({
 
   async saveSettings() {
     this.isSaving = true;
-    // Jika blogId dihapus, siteKey juga harus di-clear
+    // Jika blogId dihapus, siteKey dan pageIdSystemConfig juga harus di-clear
     if (!this.settings.blogId) {
       this.settings.siteKey = '';
+      this.settings.pageIdSystemConfig = '';
     }
     var payload = {
       blogId: this.settings.blogId,

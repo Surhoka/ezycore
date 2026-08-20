@@ -109,9 +109,10 @@ Alpine.data('ezyfastSettings', () => ({
 
     async saveSettings() {
         this.isSaving = true;
-        // Jika blogId dihapus, siteKey juga harus di-clear
+        // Jika blogId dihapus, siteKey dan pageIdSystemConfig juga harus di-clear
         if (!this.settings.blogId) {
             this.settings.siteKey = '';
+            this.settings.pageIdSystemConfig = '';
         }
         try {
             var res = await efApi('ef_saveSettings', this.settings);
