@@ -1048,6 +1048,8 @@ Alpine.data('ecommerceSettings', () => ({
   isLoading: true,
   isSaving: false,
   isPublishing: false,
+  // diagnostics viewer state (LAST_BLOGGER_SYNC etc.)
+  bloggerDiag: { loading: false, data: null, error: null },
   activeTab: 'general',
   settings: {
     blogId: '', blogUrl: '', webAppUrl: '', pageIdShop: '', pageIdAlbum: '', pageIdHomeData: '',
@@ -1142,8 +1144,96 @@ Alpine.data('ecommerceSettings', () => ({
     this.isSaving = false;
   },
 
+  // Ambil LAST_BLOGGER_SYNC / LAST_BLOGGER_PAGE_CHECK dari server
+  async getBloggerDiagnostics() {
+    this.bloggerDiag.loading = true;
+    this.bloggerDiag.data = null;
+    this.bloggerDiag.error = null;
+
+    if (!this.settings || !this.settings.blogId) {
+      this.bloggerDiag.error = 'Blog ID kosong.';
+      this.bloggerDiag.loading = false;
+      return;
+    }
+
+    try {
+      var res = await ecomApi('ef_getBloggerDiagnostics', { blogId: this.settings.blogId });
+      console.log('ef_getBloggerDiagnostics', res);
+      if (res && res.status === 'success') {
+        this.bloggerDiag.data = res;
+        if (window.showToast) window.showToast('Diagnostik diambil.', 'success');
+      } else {
+        this.bloggerDiag.error = res.message || 'Gagal ambil diagnostik.';
+        if (window.showToast) window.showToast(this.bloggerDiag.error, 'error');
+      }
+    } catch (e) {
+      console.error(e);
+      this.bloggerDiag.error = e.message || String(e);
+      if (window.showToast) window.showToast('Gagal ambil diagnostik.', 'error');
+    }
+
+    this.bloggerDiag.loading = false;
+  },
+
+  // Force recreate System Config Page (delete existing PAGE_ID and create a new one)
+  async forceRecreateConfig() {
+    if (!this.settings || !this.settings.blogId) {
+      if (window.showToast) window.showToast('Blog ID kosong.', 'error');
+      return;
+    }
+    if (!confirm('Anda yakin akan membuat ulang System Config Page? Halaman lama akan di-overwrite/ditimpa.')) return;
+
+    this.bloggerDiag.loading = true;
+    try {
+      var res = await ecomApi('ef_forceRecreateBloggerConfig', { blogId: this.settings.blogId });
+      console.log('ef_forceRecreateBloggerConfig', res);
+      if (res && res.status === 'success') {
+        if (window.showToast) window.showToast('Permintaan recreate dikirim. Periksa diagnostik untuk hasil.', 'success');
+        // reload settings & diagnostics
+        await this.loadSettings();
+        await this.getBloggerDiagnostics();
+      } else {
+        if (window.showToast) window.showToast(res.message || 'Gagal recreate.', 'error');
+      }
+    } catch (e) {
+      console.error(e);
+      if (window.showToast) window.showToast('Gagal mengirim permintaan recreate.', 'error');
+    }
+    this.bloggerDiag.loading = false;
+  },
+
+  // Sinkronisasi PAGE_ID dari LAST_BLOGGER_SYNC jika memungkinkan
+  async syncPageIdFromLastSync() {
+    if (!this.settings || !this.settings.blogId) {
+      if (window.showToast) window.showToast('Blog ID kosong.', 'error');
+      return;
+    }
+    if (!confirm('Sinkronkan PAGE_ID dari LAST_BLOGGER_SYNC? Operasi ini akan memvalidasi pageId yang tercatat dan menuliskannya sebagai PAGE_ID resmi jika valid.')) return;
+
+    this.bloggerDiag.loading = true;
+    this.bloggerDiag.error = null;
+    try {
+      var res = await ecomApi('ef_reconcilePageId', { blogId: this.settings.blogId });
+      console.log('ef_reconcilePageId', res);
+      if (res && res.status === 'success') {
+        if (window.showToast) window.showToast('PAGE_ID disinkronkan dari LAST_BLOGGER_SYNC.', 'success');
+        // reload settings & diagnostics
+        await this.loadSettings();
+        await this.getBloggerDiagnostics();
+      } else {
+        this.bloggerDiag.error = res.message || 'Gagal rekonsiliasi PAGE_ID.';
+        if (window.showToast) window.showToast(this.bloggerDiag.error, 'error');
+      }
+    } catch (e) {
+      console.error(e);
+      this.bloggerDiag.error = e.message || String(e);
+      if (window.showToast) window.showToast('Gagal melakukan rekonsiliasi PAGE_ID.', 'error');
+    }
+    this.bloggerDiag.loading = false;
+  },
+
   syncToConfig() {
-    var blogId = this.settings.blogId || window.EZY_BLOG_ID || '';
+    var blogId = (this.settings && this.settings.blogId) || window.EZY_BLOG_ID || '';
     if (!blogId) return;
     var storageKey = 'EzycoreConfig_' + blogId;
     var config = JSON.parse(localStorage.getItem(storageKey) || '{}');
