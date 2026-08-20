@@ -178,12 +178,12 @@ Alpine.data('ecommerceProducts', () => ({
   editingItem: {},
 
   init() {
-    var storageKey = 'EzycoreConfig_' + (window.EZY_BLOG_ID || '');
-    var config = JSON.parse(localStorage.getItem(storageKey) || '{}');
-    this.dbId = config.pluginContentDbId || config.sheetId || config.dbId || null;
+    var config = {}; // do not use EzycoreConfig_ localStorage in plugin pages
+    this.dbId = null;
     if (!this.dbId && window.showToast) window.showToast('Database ID tidak ditemukan.', 'error');
     this.loadData();
   },
+
 
   async loadData() {
     this.isLoading = true;
@@ -415,9 +415,8 @@ Alpine.data('ecommerceAlbums', () => ({
       this.$watch('fileSearchQuery', () => { this.currentPage = 1; });
       this.$watch('selectedAlbumId', () => { this.currentPage = 1; });
     }
-    var storageKey = 'EzycoreConfig_' + (window.EZY_BLOG_ID || '');
-    var cache = JSON.parse(localStorage.getItem(storageKey) || '{}');
-    this.dbId = cache.pluginContentDbId || cache.sheetId || cache.dbId || null;
+    var cache = {}; // do not use EzycoreConfig_ localStorage in plugin pages
+    this.dbId = null;
     this.fetchAlbums();
   },
 
@@ -562,19 +561,14 @@ Alpine.data('ecommerceAlbums', () => ({
       if (window.showToast) window.showToast('Pilih album terlebih dahulu!', 'warning');
       return;
     }
-    var storageKey = 'EzycoreConfig_' + (window.EZY_BLOG_ID || '');
-    var cache = JSON.parse(localStorage.getItem(storageKey) || '{}');
-    var blogId = cache.blogId || '';
-    var pageId = cache.pageIdAlbum;
+    var blogId = (this.settings && this.settings.blogId) || '';
+    var pageId = (this.settings && this.settings.pageIdAlbum) || '';
     if (!blogId || !pageId) {
       try {
         const res = await ecomApi('getEcommerceSettings');
         if (res.status === 'success' && res.data) {
           blogId = res.data.blogId || blogId;
           pageId = res.data.pageIdAlbum || pageId;
-          cache.blogId = blogId;
-          cache.pageIdAlbum = pageId;
-          localStorage.setItem(storageKey, JSON.stringify(cache));
         }
       } catch (e) {
         console.error('Failed to fetch settings:', e);
@@ -683,27 +677,23 @@ Alpine.data('ecommerceAlbums', () => ({
   },
 
   async syncMetadata() {
-    if (!this.selectedAlbumId) { if (window.showToast) window.showToast('Pilih album terlebih dahulu!', 'warning'); return; }
-    this.isSyncing = true;
-    if (window.showToast) window.showToast('Menarik metadata dari Blogger...', 'info');
-    try {
-      const storageKey = 'EzycoreConfig_' + (window.EZY_BLOG_ID || '');
-      var cache = JSON.parse(localStorage.getItem(storageKey) || '{}');
-      var webUrl = cache.webUrl || cache.blogUrl || '';
-      if (!webUrl) {
-        try {
-          const res = await ecomApi('getEcommerceSettings');
-          if (res.status === 'success' && res.data) {
-            webUrl = res.data.blogUrl || '';
-            cache.blogUrl = webUrl;
-            cache.webUrl = webUrl;
-            localStorage.setItem(storageKey, JSON.stringify(cache));
-          }
-        } catch (e) {
-          console.error('Failed to fetch settings:', e);
+  if (!this.selectedAlbumId) { if (window.showToast) window.showToast('Pilih album terlebih dahulu!', 'warning'); return; }
+  this.isSyncing = true;
+  if (window.showToast) window.showToast('Menarik metadata dari Blogger...', 'info');
+  try {
+    // Prefer server-provided settings (Firestore) for blogUrl; do not rely on EzycoreConfig_ localStorage in plugin pages.
+    var webUrl = (this.settings && this.settings.blogUrl) || '';
+    if (!webUrl) {
+      try {
+        const res = await ecomApi('getEcommerceSettings');
+        if (res && res.status === 'success' && res.data) {
+          webUrl = res.data.blogUrl || '';
         }
+      } catch (e) {
+        console.error('Failed to fetch settings:', e);
       }
-      if (!webUrl) { throw new Error('Web URL tidak ditemukan. Harap simpan konfigurasi di menu Settings.'); }
+    }
+    if (!webUrl) { throw new Error('Web URL tidak ditemukan. Harap simpan konfigurasi di menu Settings.'); }
       const res = await ecomApi('syncAlbumMetadata', { dbId: this.dbId, albumId: this.selectedAlbumId });
       if (res && res.status === 'success') {
         if (window.showToast) window.showToast(res.message, 'success');
@@ -893,11 +883,20 @@ Alpine.data('ecommerceCategories', () => ({
   editingCat: {},
   showForm: false,
 
-  init() {
-    var storageKey = 'EzycoreConfig_' + (window.EZY_BLOG_ID || '');
-    var config = JSON.parse(localStorage.getItem(storageKey) || '{}');
-    this.dbId = config.pluginContentDbId || config.sheetId || config.dbId || null;
-    this.loadCategories();
+  async init() {
+    // Do not read EzycoreConfig_ localStorage in plugin pages. Fetch server settings (Firestore-first) and derive dbId.
+    this.dbId = null;
+    try {
+      const res = await ecomApi('getEcommerceSettings');
+      if (res && res.status === 'success' && res.data) {
+        const cfg = res.data || {};
+        this.dbId = cfg.pluginContentDbId || cfg.sheetId || cfg.dbId || null;
+      }
+    } catch (e) {
+      console.error('Failed to fetch settings for categories:', e);
+    }
+    if (!this.dbId && window.showToast) window.showToast('Database ID tidak ditemukan.', 'error');
+    await this.loadCategories();
   },
 
   async loadCategories() {
@@ -1071,14 +1070,20 @@ Alpine.data('ecommerceSettings', () => ({
   async loadSettings() {
     this.isLoading = true;
     try {
-    var blogIdParam = (this.settings && this.settings.blogId) || window.EZY_BLOG_ID || '';
-    const res = await ecomApi('getEcommerceSettings', { blogId: blogIdParam });
-    if (res.status === 'success' && res.data) {
-      this.settings = { ...this.settings, ...res.data };
-      this.syncToConfig();
-    }
+      // Determine blogId param for settings request.
+      // Prefer existing settings.blogId, then localStorage cache for the current page context, otherwise request without blogId to let server return Firestore-stored blogId.
+      var blogIdParam = (this.settings && this.settings.blogId) || '';
+      // Do not read EzycoreConfig_ localStorage in plugin pages; prefer settings.blogId or server-side Firestore value.
+
+      var payload = (blogIdParam) ? { blogId: blogIdParam } : {};
+      const res = await ecomApi('getEcommerceSettings', payload);
+      if (res.status === 'success' && res.data) {
+        // Use server-provided values (Firestore preferred) — overwrite local settings with returned data
+        this.settings = { ...this.settings, ...res.data };
+        this.syncToConfig();
+      }
     } catch (e) {
-    if (window.showToast) window.showToast('Failed to load settings', 'error');
+      if (window.showToast) window.showToast('Failed to load settings', 'error');
     }
     this.isLoading = false;
   },
@@ -1233,19 +1238,22 @@ Alpine.data('ecommerceSettings', () => ({
   },
 
   syncToConfig() {
-    var blogId = (this.settings && this.settings.blogId) || window.EZY_BLOG_ID || '';
+    var blogId = (this.settings && this.settings.blogId) || '';
     if (!blogId) return;
-    var storageKey = 'EzycoreConfig_' + blogId;
-    var config = JSON.parse(localStorage.getItem(storageKey) || '{}');
-    config.pageIdAlbum = this.settings.pageIdAlbum;
-    config.pageIdHomeData = this.settings.pageIdHomeData;
-    config.pageIdSystemConfig = this.settings.pageIdSystemConfig;
-    config.blogId = blogId;
-    config.blogUrl = this.settings.blogUrl;
-    config.webUrl = this.settings.blogUrl;
-    config.siteKey = this.settings.siteKey;
-    localStorage.setItem(storageKey, JSON.stringify(config));
+    // Do not persist plugin page config to global EzycoreConfig_ localStorage used by settings.html.
+    // Keep an in-memory copy for this page only.
+    var config = {
+      pageIdAlbum: this.settings.pageIdAlbum,
+      pageIdHomeData: this.settings.pageIdHomeData,
+      pageIdSystemConfig: this.settings.pageIdSystemConfig,
+      blogId: blogId,
+      blogUrl: this.settings.blogUrl,
+      webUrl: this.settings.blogUrl,
+      siteKey: this.settings.siteKey
+    };
+    this.localConfig = config;
   },
+
 
   handleSave() {
     if (this.activeTab === 'homedata') {
@@ -1286,8 +1294,7 @@ Alpine.data('ecommercePromotions', () => ({
   allProducts: [],
 
   init() {
-    var storageKey = 'EzycoreConfig_' + (window.EZY_BLOG_ID || '');
-    var config = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    var config = {}; // intentionally not reading EzycoreConfig_ localStorage in plugin pages (use server settings instead)
     this.dbId = config.pluginContentDbId || config.sheetId || config.dbId || null;
     this.loadAll();
   },
