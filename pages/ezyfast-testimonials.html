@@ -1,0 +1,192 @@
+<div x-data="ezyfastTestimonials" class="w-full px-1 sm:px-0">
+
+  <div class="rounded-2xl border border-primary bg-secondary relative min-h-[500px] shadow-sm overflow-hidden">
+    <!-- Loading Overlay -->
+    <div x-show="loading" x-cloak
+      class="absolute inset-0 z-10 flex items-center justify-center bg-secondary/80 backdrop-blur-sm rounded-lg">
+      <svg class="h-8 w-8 animate-spin text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+      </svg>
+    </div>
+
+    <div x-show="!loading" class="p-4 md:p-6 transition-opacity duration-500">
+      <!-- Header -->
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+          <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Testimonials</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1" x-text="statsText"></p>
+        </div>
+        <div class="flex items-center gap-3">
+          <select x-model="filter"
+            class="h-10 rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+            <option value="all">Semua</option>
+            <option value="active">Aktif</option>
+            <option value="pending">Pending</option>
+          </select>
+          <button @click="syncToBlogger()" :disabled="syncing"
+            class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+            <svg x-show="syncing" x-cloak class="w-4 h-4 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+            <span x-text="syncing ? 'Syncing...' : 'Sync ke Blogger'"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div x-show="filteredTestimonials.length === 0" class="text-center py-16">
+        <svg class="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>
+        </svg>
+        <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">Belum ada testimoni.</p>
+      </div>
+
+      <!-- Table -->
+      <div x-show="filteredTestimonials.length > 0" class="overflow-x-auto">
+        <table class="w-full text-sm text-left">
+          <thead class="text-xs text-gray-500 uppercase bg-gray-50 dark:bg-white/[0.03] dark:text-gray-400">
+            <tr>
+              <th class="px-4 py-3">Member</th>
+              <th class="px-4 py-3 hidden sm:table-cell">Perusahaan</th>
+              <th class="px-4 py-3">Rating</th>
+              <th class="px-4 py-3">Status</th>
+              <th class="px-4 py-3 hidden md:table-cell">Urutan</th>
+              <th class="px-4 py-3 text-right">Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template x-for="t in filteredTestimonials" :key="t.id">
+              <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-white/[0.02]">
+                <td class="px-4 py-3">
+                  <div class="flex items-center gap-3">
+                    <img :src="t.avatarUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(t.name) + '&background=f97316&color=fff&size=40'"
+                      :alt="t.name" class="h-9 w-9 rounded-full object-cover shrink-0" />
+                    <div>
+                      <div class="font-medium text-gray-800 dark:text-white/90" x-text="t.name"></div>
+                      <div class="text-xs text-gray-500 dark:text-gray-400" x-text="t.email || ''"></div>
+                      <div class="text-xs text-gray-400 dark:text-gray-500" x-text="t.role || ''"></div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-4 py-3 hidden sm:table-cell text-gray-600 dark:text-gray-400" x-text="t.company || '-'"></td>
+                <td class="px-4 py-3">
+                  <span class="text-orange-500 text-sm" x-text="renderStars(t.rating)"></span>
+                </td>
+                <td class="px-4 py-3">
+                  <button @click="toggleActive(t)"
+                    :class="t.active ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'"
+                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-colors cursor-pointer">
+                    <span x-text="t.active ? 'Aktif' : 'Pending'"></span>
+                  </button>
+                </td>
+                <td class="px-4 py-3 hidden md:table-cell">
+                  <input type="number" :value="t.sortOrder || 0" @change="updateSortOrder(t, $event.target.value)"
+                    class="w-16 h-8 text-center text-sm rounded border border-gray-300 bg-transparent dark:border-gray-700 dark:text-white/90 focus:border-brand-300 focus:outline-none" />
+                </td>
+                <td class="px-4 py-3 text-right">
+                  <div class="flex items-center justify-end gap-2">
+                    <button @click="viewDetail(t)"
+                      class="p-1.5 rounded-lg text-gray-500 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-colors"
+                      title="Detail &amp; Balas">
+                      <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>
+                      </svg>
+                    </button>
+                    <button @click="deleteTesti(t.id)"
+                      class="p-1.5 rounded-lg text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                      title="Hapus">
+                      <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail / Reply Modal -->
+  <div x-show="selectedTesti" x-cloak x-transition:enter="transition ease-out duration-200"
+    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+    x-transition:leave="transition ease-in duration-150"
+    x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+    @click.self="closeDetail()">
+    <div x-show="selectedTesti" x-transition:enter="transition ease-out duration-200"
+      x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+      class="w-full max-w-lg rounded-2xl border border-gray-200 bg-white p-6 shadow-xl dark:border-gray-700 dark:bg-gray-900">
+
+      <div class="flex items-start justify-between mb-4">
+        <h4 class="text-lg font-semibold text-gray-800 dark:text-white/90">Detail Testimoni</h4>
+        <button @click="closeDetail()" class="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800">
+          <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <template x-if="selectedTesti">
+        <div>
+          <!-- Author -->
+          <div class="flex items-center gap-3 mb-4">
+            <img :src="selectedTesti.avatarUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(selectedTesti.name) + '&background=f97316&color=fff&size=48'"
+              :alt="selectedTesti.name" class="h-12 w-12 rounded-full object-cover" />
+            <div>
+              <div class="font-bold text-gray-800 dark:text-white/90" x-text="selectedTesti.name"></div>
+              <div class="text-sm text-gray-500 dark:text-gray-400">
+                <span x-text="selectedTesti.role || ''"></span>
+                <span x-show="selectedTesti.role && selectedTesti.company"> | </span>
+                <span x-text="selectedTesti.company || ''"></span>
+              </div>
+              <div class="text-xs text-gray-400" x-text="selectedTesti.email || ''"></div>
+            </div>
+          </div>
+
+          <!-- Rating & Date -->
+          <div class="flex items-center gap-3 mb-3">
+            <span class="text-orange-500" x-text="renderStars(selectedTesti.rating)"></span>
+            <span class="text-xs text-gray-400" x-text="formatDate(selectedTesti.createdat)"></span>
+          </div>
+
+          <!-- Quote -->
+          <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 mb-4">
+            <p class="text-sm text-gray-700 dark:text-gray-300 italic" x-text="selectedTesti.quote"></p>
+          </div>
+
+          <!-- Reply Section -->
+          <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Balasan Admin</label>
+            <textarea x-model="replyText" rows="3" placeholder="Tulis balasan untuk testimoni ini..."
+              class="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 dark:border-gray-700 dark:text-white/90 focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10"></textarea>
+            <div class="flex items-center justify-between mt-3">
+              <span x-show="selectedTesti.repliedAt" class="text-xs text-gray-400">
+                Dibalas: <span x-text="formatDate(selectedTesti.repliedAt)"></span>
+              </span>
+              <div class="flex gap-2 ml-auto">
+                <button @click="closeDetail()"
+                  class="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 transition-colors">
+                  Batal
+                </button>
+                <button @click="saveReply()" :disabled="savingReply"
+                  class="px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600 transition-all disabled:opacity-50 inline-flex items-center gap-2">
+                  <svg x-show="savingReply" x-cloak class="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                  <span x-text="savingReply ? 'Menyimpan...' : 'Simpan Balasan'"></span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+
+</div>
