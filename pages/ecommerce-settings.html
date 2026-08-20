@@ -158,6 +158,39 @@
                     <span class="text-gray-700 dark:text-gray-300 truncate"
                       x-text="settings.pageIdSystemConfig || '—'"></span>
                   </div>
+
+                  <div class="mt-3 flex items-center gap-2">
+                    <button @click="getBloggerDiagnostics()" :disabled="isLoading || !settings.blogId"
+                      class="px-3 py-1.5 text-sm font-medium text-white bg-gray-700 rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed">
+                      <svg x-show="isLoading" x-cloak class="w-4 h-4 animate-spin mr-2 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                      </svg>
+                      <span>Tampilkan Riwayat Sinkron</span>
+                    </button>
+
+                    <button @click="forceRecreateConfig()" :disabled="isLoading || !settings.blogId"
+                      class="px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                      <svg class="w-4 h-4 mr-2 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M12 5v6l4 2"/>
+                      </svg>
+                      Recreate Page
+                    </button>
+
+                    <a class="text-sm text-gray-600 hover:underline ml-2" x-show="settings.pageIdSystemConfig && settings.blogId" :href="'https://draft.blogger.com/blog/page/edit/' + settings.blogId + '/' + settings.pageIdSystemConfig" target="_blank">Buka Halaman di Blogger</a>
+                  </div>
+
+                  <div x-show="bloggerDiag.data || bloggerDiag.error" class="mt-2 text-xs bg-white dark:bg-gray-900 p-3 rounded-lg border border-gray-100 dark:border-gray-800">
+                    <template x-if="bloggerDiag.data">
+                      <div>
+                        <div class="mb-1"><strong>LAST_BLOGGER_SYNC:</strong></div>
+                        <pre class="text-[11px] mt-1 max-h-40 overflow-auto" x-text="JSON.stringify(bloggerDiag.data.lastSync || bloggerDiag.data.lastSyncRaw, null, 2)"></pre>
+                      </div>
+                    </template>
+                    <template x-if="bloggerDiag.error">
+                      <div class="text-red-500">Error: <span x-text="bloggerDiag.error"></span></div>
+                    </template>
+                  </div>
                 </div>
               </div>
             </div>
