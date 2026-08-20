@@ -371,6 +371,7 @@ Alpine.data('ezyfastOrders', () => ({
 Alpine.data('ezyfastArtikel', () => ({
     loading: true,
     syncing: false,
+    exporting: false,
     articles: [],
     maxResults: 50,
 
@@ -420,6 +421,33 @@ Alpine.data('ezyfastArtikel', () => ({
         } catch (e) {
             if (window.showToast) window.showToast('Gagal menghapus artikel.', 'error');
         }
+    },
+
+    async exportToSheet() {
+        if (this.articles.length === 0) {
+            if (window.showToast) window.showToast('Tidak ada artikel untuk di-export.', 'error');
+            return;
+        }
+        this.exporting = true;
+        try {
+            var res = await efApi('ef_exportArticlesToSheet');
+            if (res && res.status === 'success') {
+                var msg = res.message || 'Berhasil di-export.';
+                if (res.data && res.data.url) {
+                    msg += '\nBuka Spreadsheet: ' + res.data.url;
+                }
+                if (window.showToast) window.showToast(msg, 'success');
+                // Buka spreadsheet di tab baru
+                if (res.data && res.data.url) {
+                    window.open(res.data.url, '_blank');
+                }
+            } else {
+                if (window.showToast) window.showToast(res.message || 'Gagal export.', 'error');
+            }
+        } catch (e) {
+            if (window.showToast) window.showToast('Gagal export ke Spreadsheet.', 'error');
+        }
+        this.exporting = false;
     },
 
     formatDate(dateStr) {
