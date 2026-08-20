@@ -1189,14 +1189,19 @@ Alpine.data('ecommerceSettings', () => ({
       if (window.showToast) window.showToast('Blog ID kosong.', 'error');
       return;
     }
-    if (!confirm('Anda yakin akan membuat ulang System Config Page? Halaman lama akan di-overwrite/ditimpa.')) return;
+    if (!confirm('Anda yakin akan membuat ulang System Config Page? Operasi ini juga akan menghasilkan (regenerate) SITE_KEY baru. Halaman lama akan di-overwrite/ditimpa.')) return;
 
     this.bloggerDiag.loading = true;
     try {
-      var res = await ecomApi('ef_forceRecreateBloggerConfig', { blogId: this.settings.blogId });
+      var res = await ecomApi('ef_forceRecreateBloggerConfig', { blogId: this.settings.blogId, regenSiteKey: true });
       console.log('ef_forceRecreateBloggerConfig', res);
       if (res && res.status === 'success') {
-        if (window.showToast) window.showToast('Permintaan recreate dikirim. Periksa diagnostik untuk hasil.', 'success');
+        if (res.siteKey) {
+          this.settings.siteKey = res.siteKey;
+          if (window.showToast) window.showToast('SITE_KEY baru: ' + res.siteKey, 'success');
+        } else {
+          if (window.showToast) window.showToast('Permintaan recreate dikirim. Periksa diagnostik untuk hasil.', 'success');
+        }
         // reload settings & diagnostics
         await this.loadSettings();
         await this.getBloggerDiagnostics();
