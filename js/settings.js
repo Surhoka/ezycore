@@ -68,7 +68,7 @@
                 }
 
                 // Load dari EzycoreConfig_<blogId> (discovery appinit — lebih lengkap)
-                const blogConfigKey = 'EzycoreConfig_' + (window.EZY_BLOG_ID || '');
+                const blogConfigKey = 'EzycoreConfig_' + ((this.settings && this.settings.blogId) || window.EZY_BLOG_ID || '');
                 const blogConfigCache = localStorage.getItem(blogConfigKey);
                 if (blogConfigCache) {
                     try {
@@ -99,7 +99,7 @@
 
             loadLiveSettings() {
                 if (!window.sendDataToGoogle) return;
-                window.sendDataToGoogle('get_settings', { blogId: window.EZY_BLOG_ID || '' }, (res) => {
+                window.sendDataToGoogle('get_settings', { blogId: (this.settings && this.settings.blogId) || window.EZY_BLOG_ID || '' }, (res) => {
                     if (res && res.status === 'success') {
                         this.applyServerConfig(res);
                     }
@@ -113,7 +113,7 @@
                     localStorage.setItem('userSettings', JSON.stringify(this.settings));
 
                     if (window.sendDataToGoogle) {
-                        const blogId = this.settings.blogId || (window.EzyApi && window.EzyApi.config && window.EzyApi.config.blogId) || '';
+                        const blogId = (this.settings && this.settings.blogId) || (window.EzyApi && window.EzyApi.config && window.EzyApi.config.blogId) || window.EZY_BLOG_ID || '';
                         const settingsPayload = {
                             blogId: blogId,
                             gatewayToken: this.settings.gatewayToken,
