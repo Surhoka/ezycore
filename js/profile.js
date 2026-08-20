@@ -34,11 +34,12 @@
                     const key = 'signedInUser_' + blogId;
                     const sessionUser = JSON.parse(localStorage.getItem(key) || localStorage.getItem('signedInUser') || 'null');
                     const sessionUserId = sessionUser ? (sessionUser.id || sessionUser.firebaseUid || sessionUser.uid) : null;
-                    await this.fetchProfileData(sessionUserId);
+                    const sessionEmail = sessionUser ? sessionUser.email : null;
+                    await this.fetchProfileData(sessionUserId, sessionEmail);
                     this.isLoading = false;
                 },
 
-                async fetchProfileData(userId) {
+                async fetchProfileData(userId, email) {
                     this.isLoading = true;
                     const cacheKey = userId ? `cached_profile_data_${userId}` : 'cached_profile_data_default';
                     const cachedData = localStorage.getItem(cacheKey);
@@ -58,16 +59,19 @@
                         return;
                     }
 
-                    window.sendDataToGoogle('getProfile', { userId: userId || '' }, (response) => {
+                    const params = userId ? { userId: userId } : (email ? { email: email } : {});
+                    window.sendDataToGoogle('getProfile', params, (response) => {
                         if (response.status === 'success' && response.data) {
                             this.populateProfileData(response.data);
                             localStorage.setItem(cacheKey, JSON.stringify(response.data));
 
                             // Sync header photo
-                            const sessionUser = JSON.parse(localStorage.getItem('signedInUser'));
+                            const blogId = window.EZY_BLOG_ID || '';
+                            const syncKey = 'signedInUser_' + blogId;
+                            const sessionUser = JSON.parse(localStorage.getItem(syncKey) || localStorage.getItem('signedInUser'));
                             if (sessionUser && response.data.personalInfo?.profilePhoto) {
                                 sessionUser.pictureUrl = response.data.personalInfo.profilePhoto;
-                                localStorage.setItem('signedInUser', JSON.stringify(sessionUser));
+                                localStorage.setItem(syncKey, JSON.stringify(sessionUser));
                                 if (window.app) window.app.currentUser = { ...sessionUser };
                             }
                         } else if (!cachedData) {
@@ -153,11 +157,13 @@
                                 };
 
                                 // Update session user (agar nama di header/navbar sinkron secara global)
-                                const sessionUser = JSON.parse(localStorage.getItem('signedInUser'));
+                                const blogId = window.EZY_BLOG_ID || '';
+                                const sessionKey = 'signedInUser_' + blogId;
+                                const sessionUser = JSON.parse(localStorage.getItem(sessionKey) || localStorage.getItem('signedInUser'));
                                 if (sessionUser) {
                                     sessionUser.firstName = profileData.personalInfo.firstName || sessionUser.firstName;
                                     sessionUser.lastName = profileData.personalInfo.lastName || sessionUser.lastName;
-                                    localStorage.setItem('signedInUser', JSON.stringify(sessionUser));
+                                    localStorage.setItem(sessionKey, JSON.stringify(sessionUser));
                                     if (window.app) window.app.currentUser = { ...sessionUser };
                                 }
                             }
@@ -265,10 +271,12 @@
                             }
 
                             // 3. Update session user (untuk foto di header/navbar)
-                            const sessionUser = JSON.parse(localStorage.getItem('signedInUser'));
+                            const blogId = window.EZY_BLOG_ID || '';
+                            const syncKey = 'signedInUser_' + blogId;
+                            const sessionUser = JSON.parse(localStorage.getItem(syncKey) || localStorage.getItem('signedInUser'));
                             if (sessionUser) {
                                 sessionUser.pictureUrl = photoUrl;
-                                localStorage.setItem('signedInUser', JSON.stringify(sessionUser));
+                                localStorage.setItem(syncKey, JSON.stringify(sessionUser));
                                 // Jika ada objek app global, sinkronkan juga
                                 if (window.app) window.app.currentUser = { ...sessionUser };
                             }
