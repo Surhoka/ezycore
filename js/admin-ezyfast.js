@@ -459,3 +459,140 @@ Alpine.data('ezyfastArtikel', () => ({
         }
     }
 }));
+
+// ================================================================
+// EZYFAST TESTIMONIALS
+// ================================================================
+Alpine.data('ezyfastTestimonials', () => ({
+    loading: true,
+    syncing: false,
+    testimonials: [],
+    filter: 'all',
+    selectedTesti: null,
+    replyText: '',
+    savingReply: false,
+
+    async init() {
+        await this.loadTestimonials();
+    },
+
+    async loadTestimonials() {
+        this.loading = true;
+        try {
+            var res = await efApi('ef_getTestimonials');
+            if (res && res.status === 'success') {
+                this.testimonials = res.data || [];
+            }
+        } catch (e) {
+            if (window.showToast) window.showToast('Gagal memuat testimoni', 'error');
+        }
+        this.loading = false;
+    },
+
+    get filteredTestimonials() {
+        if (this.filter === 'all') return this.testimonials;
+        if (this.filter === 'active') return this.testimonials.filter(function(t) { return t.active; });
+        if (this.filter === 'pending') return this.testimonials.filter(function(t) { return !t.active; });
+        return this.testimonials;
+    },
+
+    get statsText() {
+        var total = this.testimonials.length;
+        var active = this.testimonials.filter(function(t) { return t.active; }).length;
+        return total + ' total, ' + active + ' aktif, ' + (total - active) + ' pending';
+    },
+
+    async toggleActive(t) {
+        try {
+            var res = await efApi('ef_updateTestimonialStatus', { id: t.id, active: !t.active });
+            if (res && res.status === 'success') {
+                if (window.showToast) window.showToast('Status testimoni diperbarui.', 'success');
+                await this.loadTestimonials();
+            }
+        } catch (e) {
+            if (window.showToast) window.showToast('Gagal memperbarui status.', 'error');
+        }
+    },
+
+    async updateSortOrder(t, order) {
+        try {
+            await efApi('ef_updateTestimonialStatus', { id: t.id, sortOrder: parseInt(order) || 0 });
+        } catch (e) {}
+    },
+
+    async deleteTesti(id) {
+        if (!confirm('Yakin ingin menghapus testimoni ini?')) return;
+        try {
+            var res = await efApi('ef_deleteTestimonial', { id: id });
+            if (res && res.status === 'success') {
+                if (window.showToast) window.showToast('Testimoni dihapus.', 'success');
+                this.selectedTesti = null;
+                await this.loadTestimonials();
+            }
+        } catch (e) {
+            if (window.showToast) window.showToast('Gagal menghapus testimoni.', 'error');
+        }
+    },
+
+    viewDetail(t) {
+        this.selectedTesti = t;
+        this.replyText = t.reply || '';
+    },
+
+    closeDetail() {
+        this.selectedTesti = null;
+        this.replyText = '';
+    },
+
+    async saveReply() {
+        if (!this.selectedTesti) return;
+        this.savingReply = true;
+        try {
+            var res = await efApi('ef_replyTestimonial', { id: this.selectedTesti.id, reply: this.replyText });
+            if (res && res.status === 'success') {
+                if (window.showToast) window.showToast('Balasan berhasil disimpan.', 'success');
+                await this.loadTestimonials();
+                this.closeDetail();
+            } else {
+                if (window.showToast) window.showToast(res.message || 'Gagal menyimpan balasan.', 'error');
+            }
+        } catch (e) {
+            if (window.showToast) window.showToast('Gagal menyimpan balasan.', 'error');
+        }
+        this.savingReply = false;
+    },
+
+    async syncToBlogger() {
+        this.syncing = true;
+        try {
+            var res = await efApi('ef_publishTestimoniToBlogger');
+            if (res && res.status === 'success') {
+                var msg = res.message || 'Berhasil di-sync.';
+                if (res.pageUrl) msg += '\n' + res.pageUrl;
+                if (window.showToast) window.showToast(msg, 'success');
+                if (res.pageUrl) window.open(res.pageUrl, '_blank');
+            } else {
+                if (window.showToast) window.showToast(res.message || 'Gagal sync ke Blogger.', 'error');
+            }
+        } catch (e) {
+            if (window.showToast) window.showToast('Gagal sync ke Blogger.', 'error');
+        }
+        this.syncing = false;
+    },
+
+    renderStars(n) {
+        n = parseInt(n) || 0;
+        var s = '';
+        for (var i = 1; i <= 5; i++) s += i <= n ? '\u2605' : '\u2606';
+        return s;
+    },
+
+    formatDate(dateStr) {
+        if (!dateStr) return '-';
+        try {
+            return new Date(dateStr).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        } catch (e) {
+            return dateStr;
+        }
+    }
+}));
