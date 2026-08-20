@@ -214,6 +214,36 @@ Alpine.data('ezyfastSettings', () => ({
             if (window.showToast) window.showToast('Gagal mengirim permintaan recreate.', 'error');
         }
         this.bloggerDiag.loading = false;
+    },
+
+    // Sinkronisasi PAGE_ID dari LAST_BLOGGER_SYNC jika memungkinkan
+    async syncPageIdFromLastSync() {
+        if (!this.settings || !this.settings.blogId) {
+            if (window.showToast) window.showToast('Blog ID kosong.', 'error');
+            return;
+        }
+        if (!confirm('Sinkronkan PAGE_ID dari LAST_BLOGGER_SYNC? Operasi ini akan memvalidasi pageId yang tercatat dan menuliskannya sebagai PAGE_ID resmi jika valid.')) return;
+
+        this.bloggerDiag.loading = true;
+        this.bloggerDiag.error = null;
+        try {
+            var res = await efApi('ef_reconcilePageId', { blogId: this.settings.blogId });
+            console.log('ef_reconcilePageId', res);
+            if (res && res.status === 'success') {
+                if (window.showToast) window.showToast('PAGE_ID disinkronkan dari LAST_BLOGGER_SYNC.', 'success');
+                // reload settings & diagnostics
+                await this.loadSettings();
+                await this.getBloggerDiagnostics();
+            } else {
+                this.bloggerDiag.error = res.message || 'Gagal rekonsiliasi PAGE_ID.';
+                if (window.showToast) window.showToast(this.bloggerDiag.error, 'error');
+            }
+        } catch (e) {
+            console.error(e);
+            this.bloggerDiag.error = e.message || String(e);
+            if (window.showToast) window.showToast('Gagal melakukan rekonsiliasi PAGE_ID.', 'error');
+        }
+        this.bloggerDiag.loading = false;
     }
 }));
 
