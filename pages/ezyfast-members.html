@@ -129,133 +129,147 @@
       </div>
     </div>
 
-    <!-- ===================== TAMPILAN DETAIL (TAB) ===================== -->
+    <!-- ===================== TAMPILAN DETAIL (GAYA PROFIL) ===================== -->
     <div x-show="selectedMember && !loading" x-cloak class="p-4 md:p-6 transition-opacity duration-500">
       <template x-if="selectedMember">
-        <div>
-          <!-- Header Detail: Tombol kembali & identitas singkat -->
+        <div class="animate-fade-in">
+          <!-- Header Detail: Tombol kembali & aksi cepat -->
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div class="flex items-center gap-3 min-w-0">
-              <button @click="closeDetail()"
-                class="p-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors shrink-0"
-                title="Kembali ke Daftar">
-                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/>
-                </svg>
+              <button @click="closeDetail()" class="btn btn-outline w-10 h-10 !p-0 shrink-0" title="Kembali ke Daftar">
+                <span class="w-4 h-4 block" x-icon="'arrow-left'"></span>
               </button>
               <div class="min-w-0">
                 <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90 truncate">Detail Profil Member</h3>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
-                  <span x-text="selectedMember.name || 'Member'"></span>
-                  <span class="ml-1 font-mono" x-text="'(' + (selectedMember.memberId || selectedMember.id || '-') + ')'"></span>
-                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate" x-text="selectedMember.email || '-'"></p>
               </div>
             </div>
-            <div class="flex gap-2 shrink-0">
+            <div class="flex items-center gap-3 shrink-0">
               <template x-if="selectedMember.phone">
                 <a :href="'https://wa.me/' + selectedMember.phone.replace(/[^0-9]/g, '')" target="_blank"
-                  class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-green-700 bg-green-100 rounded-lg hover:bg-green-200 dark:bg-green-900/40 dark:text-green-300 dark:hover:bg-green-900/60 transition-colors">
-                  WhatsApp
+                  class="btn btn-outline !text-green-700 dark:!text-green-400 hover:!text-green-800 dark:hover:!text-green-300 px-4 py-3 lg:w-auto">
+                  <span class="w-4 h-4 block" x-icon="'phone'"></span> WhatsApp
                 </a>
               </template>
-              <button @click="openEdit(selectedMember)"
-                class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600 transition-colors">
-                Edit Profil
+              <button @click="openEdit(selectedMember)" class="btn btn-primary">
+                <span class="w-4 h-4 block" x-icon="'pencil'"></span> Edit Profil
               </button>
             </div>
           </div>
 
-          <!-- Kartu Identitas Member -->
-          <div class="flex items-center gap-4 p-4 mb-6 rounded-xl bg-orange-50/60 dark:bg-orange-950/20 border border-orange-100 dark:border-orange-900/30">
-            <img :src="selectedMember.avatarUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(selectedMember.name || selectedMember.email || 'Member') + '&background=f97316&color=fff&size=96'"
-              :alt="selectedMember.name" class="h-16 w-16 rounded-2xl object-cover ring-2 ring-orange-200 dark:ring-orange-800 shrink-0" />
-            <div class="grow min-w-0">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-lg font-bold text-gray-800 dark:text-white/90" x-text="selectedMember.name || 'Member'"></span>
-                <span class="px-2 py-0.5 rounded-full text-xs font-mono font-semibold bg-orange-500 text-white" x-text="selectedMember.memberId || selectedMember.id || '-'"></span>
-              </div>
-              <div class="text-sm text-gray-600 dark:text-gray-300 mt-0.5" x-text="selectedMember.role ? selectedMember.role + (selectedMember.company ? ' di ' + selectedMember.company : '') : (selectedMember.company || '-')"></div>
-              <div class="text-xs text-gray-400 dark:text-gray-500 mt-1" x-text="'Bergabung: ' + formatDate(selectedMember.createdat || selectedMember.createdAt)"></div>
-            </div>
-          </div>
+          <!-- Kontainer putih mengikuti gaya halaman Profil -->
+          <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
 
-          <!-- Navigasi Tab -->
-          <div class="flex flex-wrap items-center gap-1 mb-5">
-            <button @click="detailTab = 'profil'" :class="{ 'active': detailTab === 'profil' }" class="tab-nav-btn">Profil</button>
-            <button @click="detailTab = 'alamat'" :class="{ 'active': detailTab === 'alamat' }" class="tab-nav-btn">Alamat</button>
-            <button @click="detailTab = 'catatan'" :class="{ 'active': detailTab === 'catatan' }" class="tab-nav-btn">Catatan</button>
-          </div>
-
-          <!-- Konten Tab: Profil -->
-          <div x-show="detailTab === 'profil'" class="space-y-4">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-sm">
-              <div class="p-3 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-white/[0.02]">
-                <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Email</span>
-                <span class="font-medium text-gray-800 dark:text-white/90 break-all" x-text="selectedMember.email || '-'"></span>
-              </div>
-              <div class="p-3 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-white/[0.02]">
-                <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">No. WhatsApp / Telepon</span>
-                <span class="font-medium text-gray-800 dark:text-white/90" x-text="selectedMember.phone || '-'"></span>
-              </div>
-              <div class="p-3 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-white/[0.02]">
-                <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Perusahaan</span>
-                <span class="font-medium text-gray-800 dark:text-white/90" x-text="selectedMember.company || '-'"></span>
-              </div>
-              <div class="p-3 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-white/[0.02]">
-                <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Jabatan</span>
-                <span class="font-medium text-gray-800 dark:text-white/90" x-text="selectedMember.role || '-'"></span>
+            <!-- Kartu Identitas Member -->
+            <div class="p-5 mb-6 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
+              <div class="flex flex-col items-center gap-5 text-center xl:flex-row xl:items-center xl:justify-between xl:text-left">
+                <div class="flex flex-col items-center gap-6 xl:flex-row min-w-0">
+                  <div class="w-20 h-20 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800 shrink-0">
+                    <img :src="selectedMember.avatarUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(selectedMember.name || selectedMember.email || 'Member') + '&background=f97316&color=fff&size=128'"
+                      :alt="selectedMember.name || 'Member'" class="w-full h-full object-cover" />
+                  </div>
+                  <div class="min-w-0">
+                    <h4 class="mb-2 text-lg font-semibold text-gray-800 dark:text-white/90 flex flex-wrap items-center justify-center xl:justify-start gap-2">
+                      <span x-text="selectedMember.name || 'Member'"></span>
+                      <span class="px-2 py-0.5 rounded-full text-xs font-mono font-semibold bg-orange-500 text-white" x-text="selectedMember.memberId || selectedMember.id || '-'"></span>
+                    </h4>
+                    <div class="flex flex-col items-center gap-1 text-sm text-gray-500 dark:text-gray-400 xl:flex-row xl:gap-3 xl:text-left">
+                      <p x-text="selectedMember.role ? selectedMember.role + (selectedMember.company ? ' di ' + selectedMember.company : '') : (selectedMember.company || 'Tanpa jabatan')"></p>
+                      <div class="hidden h-3.5 w-px bg-gray-300 dark:bg-gray-700 xl:block"></div>
+                      <p x-text="'Bergabung: ' + formatDate(selectedMember.createdat || selectedMember.createdAt)"></p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <!-- Ringkasan Transaksi -->
-            <div class="grid grid-cols-2 gap-3.5 text-sm">
-              <div class="p-3.5 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-white/[0.02]">
-                <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Total Order</span>
-                <span class="text-lg font-bold text-gray-800 dark:text-white/90" x-text="(selectedMember.totalorders || 0) + ' Order'"></span>
-              </div>
-              <div class="p-3.5 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-white/[0.02]">
-                <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Total Belanja</span>
-                <span class="text-lg font-bold text-gray-800 dark:text-white/90" x-text="formatCurrency(selectedMember.totalspent)"></span>
+            <!-- Kartu Informasi Pribadi -->
+            <div class="p-5 mb-6 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
+              <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                <div class="min-w-0">
+                  <h4 class="h4 mb-6">Informasi Pribadi</h4>
+                  <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
+                    <div>
+                      <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">Email</p>
+                      <p x-text="selectedMember.email || '-'" class="text-sm font-medium text-gray-800 dark:text-white/90 break-all"></p>
+                    </div>
+                    <div>
+                      <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">No. WhatsApp / Telepon</p>
+                      <p x-text="selectedMember.phone || '-'" class="text-sm font-medium text-gray-800 dark:text-white/90"></p>
+                    </div>
+                    <div>
+                      <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">Perusahaan</p>
+                      <p x-text="selectedMember.company || '-'" class="text-sm font-medium text-gray-800 dark:text-white/90"></p>
+                    </div>
+                    <div>
+                      <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">Jabatan</p>
+                      <p x-text="selectedMember.role || '-'" class="text-sm font-medium text-gray-800 dark:text-white/90"></p>
+                    </div>
+                  </div>
+                </div>
+                <button @click="openEdit(selectedMember)" class="btn btn-outline w-full py-3 lg:w-auto">
+                  <span class="w-4 h-4 block" x-icon="'pencil'"></span> Edit
+                </button>
               </div>
             </div>
-          </div>
 
-          <!-- Konten Tab: Alamat -->
-          <div x-show="detailTab === 'alamat'" x-cloak class="space-y-4">
-            <div class="p-3.5 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-white/[0.02] text-sm">
-              <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Alamat Pengiriman / Domisili</span>
-              <p class="text-gray-700 dark:text-gray-300 leading-relaxed" x-text="selectedMember.address || 'Belum mengisi alamat'"></p>
+            <!-- Kartu Alamat -->
+            <div class="p-5 mb-6 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
+              <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                <div class="min-w-0">
+                  <h4 class="h4 mb-6">Alamat</h4>
+                  <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
+                    <div class="lg:col-span-2">
+                      <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">Alamat Pengiriman / Domisili</p>
+                      <p x-text="selectedMember.address || 'Belum mengisi alamat'" class="text-sm font-medium text-gray-800 dark:text-white/90"></p>
+                    </div>
+                    <div>
+                      <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">Kota</p>
+                      <p x-text="selectedMember.city || '-'" class="text-sm font-medium text-gray-800 dark:text-white/90"></p>
+                    </div>
+                    <div>
+                      <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">Provinsi</p>
+                      <p x-text="selectedMember.province || '-'" class="text-sm font-medium text-gray-800 dark:text-white/90"></p>
+                    </div>
+                    <div>
+                      <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">Kode Pos</p>
+                      <p x-text="selectedMember.postalCode || '-'" class="text-sm font-medium text-gray-800 dark:text-white/90"></p>
+                    </div>
+                  </div>
+                </div>
+                <button @click="openEdit(selectedMember)" class="btn btn-outline w-full py-3 lg:w-auto">
+                  <span class="w-4 h-4 block" x-icon="'pencil'"></span> Edit
+                </button>
+              </div>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-sm">
-              <div class="p-3 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-white/[0.02]">
-                <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Kota</span>
-                <span class="font-medium text-gray-800 dark:text-white/90" x-text="selectedMember.city || '-'"></span>
-              </div>
-              <div class="p-3 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-white/[0.02]">
-                <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Provinsi</span>
-                <span class="font-medium text-gray-800 dark:text-white/90" x-text="selectedMember.province || '-'"></span>
-              </div>
-              <div class="p-3 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-white/[0.02]">
-                <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Kode Pos</span>
-                <span class="font-medium text-gray-800 dark:text-white/90" x-text="selectedMember.postalCode || '-'"></span>
-              </div>
-            </div>
-          </div>
 
-          <!-- Konten Tab: Catatan -->
-          <div x-show="detailTab === 'catatan'" x-cloak class="space-y-4">
-            <div class="p-3.5 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-white/[0.02] text-sm">
-              <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Bio / Catatan</span>
-              <p class="text-gray-700 dark:text-gray-300 italic leading-relaxed" x-text="selectedMember.bio || 'Belum ada catatan untuk member ini.'"></p>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-sm">
-              <div class="p-3 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-white/[0.02]">
-                <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Bergabung</span>
-                <span class="font-medium text-gray-800 dark:text-white/90" x-text="formatDate(selectedMember.createdat || selectedMember.createdAt)"></span>
+            <!-- Kartu Ringkasan Transaksi -->
+            <div class="p-5 mb-6 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
+              <h4 class="h4 mb-6">Ringkasan Transaksi</h4>
+              <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
+                <div>
+                  <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">Total Order</p>
+                  <p x-text="(selectedMember.totalorders || 0) + ' Order'" class="text-lg font-semibold text-gray-800 dark:text-white/90"></p>
+                </div>
+                <div>
+                  <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">Total Belanja</p>
+                  <p x-text="formatCurrency(selectedMember.totalspent)" class="text-lg font-semibold text-gray-800 dark:text-white/90"></p>
+                </div>
               </div>
-              <div class="p-3 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-white/[0.02]">
-                <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Update Terakhir</span>
-                <span class="font-medium text-gray-800 dark:text-white/90" x-text="formatDate(selectedMember.updatedAt)"></span>
+            </div>
+
+            <!-- Kartu Catatan -->
+            <div class="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
+              <h4 class="h4 mb-6">Catatan</h4>
+              <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
+                <div class="lg:col-span-2">
+                  <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">Bio / Catatan</p>
+                  <p x-text="selectedMember.bio || 'Belum ada catatan untuk member ini.'" class="text-sm font-medium italic text-gray-800 dark:text-white/90"></p>
+                </div>
+                <div>
+                  <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">Update Terakhir</p>
+                  <p x-text="formatDate(selectedMember.updatedAt)" class="text-sm font-medium text-gray-800 dark:text-white/90"></p>
+                </div>
               </div>
             </div>
           </div>
