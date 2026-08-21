@@ -116,7 +116,7 @@
     x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
     x-transition:leave="transition ease-in duration-150"
     x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-    class="modal fixed inset-0 z-[99999] flex items-center justify-center p-4 md:p-5 bg-black/50 backdrop-blur-sm isolate overflow-y-auto"
+    class="fixed inset-0 z-[99999] flex items-center justify-center p-4 md:p-5 bg-black/50 backdrop-blur-sm overflow-y-auto"
     @click.self="closeDetail()">
     <div x-show="selectedTesti" x-transition:enter="transition ease-out duration-200"
       x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
