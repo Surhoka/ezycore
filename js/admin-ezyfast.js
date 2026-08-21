@@ -253,12 +253,13 @@ Alpine.data('ezyfastSettings', () => ({
 }));
 
 // ================================================================
-// EZYFAST CUSTOMERS
+// EZYFAST CUSTOMERS & MEMBERS
 // ================================================================
 Alpine.data('ezyfastCustomers', () => ({
     loading: true,
     customers: [],
     searchQuery: '',
+    selectedCustomer: null,
 
     async init() {
         await this.loadCustomers();
@@ -272,7 +273,7 @@ Alpine.data('ezyfastCustomers', () => ({
                 this.customers = res.data || [];
             }
         } catch (e) {
-            if (window.showToast) window.showToast('Gagal memuat data pelanggan', 'error');
+            if (window.showToast) window.showToast('Gagal memuat data member', 'error');
         }
         this.loading = false;
     },
@@ -283,12 +284,35 @@ Alpine.data('ezyfastCustomers', () => ({
         return this.customers.filter(function(c) {
             return (c.name || '').toLowerCase().includes(q) ||
                    (c.email || '').toLowerCase().includes(q) ||
-                   (c.phone || '').includes(q);
+                   (c.phone || '').includes(q) ||
+                   (c.company || '').toLowerCase().includes(q) ||
+                   (c.role || '').toLowerCase().includes(q) ||
+                   (c.city || '').toLowerCase().includes(q) ||
+                   (c.memberId || '').toLowerCase().includes(q);
         });
+    },
+
+    viewDetail(customer) {
+        this.selectedCustomer = customer;
+    },
+
+    closeDetail() {
+        this.selectedCustomer = null;
     },
 
     formatCurrency(val) {
         return 'Rp ' + Number(val || 0).toLocaleString('id-ID');
+    },
+
+    formatDate(dateStr) {
+        if (!dateStr) return '-';
+        try {
+            var d = new Date(dateStr);
+            if (isNaN(d.getTime())) return String(dateStr).slice(0, 10);
+            return d.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' });
+        } catch (e) {
+            return String(dateStr).slice(0, 10);
+        }
     }
 }));
 
