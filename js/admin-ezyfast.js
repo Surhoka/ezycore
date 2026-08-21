@@ -325,6 +325,7 @@ Alpine.data('ezyfastMembers', () => ({
     members: [],
     searchQuery: '',
     selectedMember: null,
+    detailTab: 'profil',
     editOpen: false,
     editForm: {},
 
@@ -360,8 +361,10 @@ Alpine.data('ezyfastMembers', () => ({
         });
     },
 
+    // Buka tampilan detail (tab) — selalu mulai dari tab profil
     viewDetail(member) {
         this.selectedMember = member;
+        this.detailTab = 'profil';
     },
 
     closeDetail() {
