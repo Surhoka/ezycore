@@ -317,6 +317,121 @@ Alpine.data('ezyfastCustomers', () => ({
 }));
 
 // ================================================================
+// EZYFAST MEMBERS (Manajemen profil member)
+// ================================================================
+Alpine.data('ezyfastMembers', () => ({
+    loading: true,
+    isSaving: false,
+    members: [],
+    searchQuery: '',
+    selectedMember: null,
+    editOpen: false,
+    editForm: {},
+
+    async init() {
+        await this.loadMembers();
+    },
+
+    // Muat daftar member dari collection ef_customers (action: ef_getCustomers)
+    async loadMembers() {
+        this.loading = true;
+        try {
+            var res = await efApi('ef_getCustomers');
+            if (res && res.status === 'success') {
+                this.members = res.data || [];
+            }
+        } catch (e) {
+            if (window.showToast) window.showToast('Gagal memuat data member', 'error');
+        }
+        this.loading = false;
+    },
+
+    get filteredMembers() {
+        if (!this.searchQuery) return this.members;
+        var q = this.searchQuery.toLowerCase();
+        return this.members.filter(function(m) {
+            return (m.name || '').toLowerCase().includes(q) ||
+                   (m.email || '').toLowerCase().includes(q) ||
+                   (m.phone || '').includes(q) ||
+                   (m.company || '').toLowerCase().includes(q) ||
+                   (m.role || '').toLowerCase().includes(q) ||
+                   (m.city || '').toLowerCase().includes(q) ||
+                   (m.memberId || '').toLowerCase().includes(q);
+        });
+    },
+
+    viewDetail(member) {
+        this.selectedMember = member;
+    },
+
+    closeDetail() {
+        this.selectedMember = null;
+    },
+
+    // Buka modal edit dengan identitas member sebagai kunci update (uid/email/memberId)
+    openEdit(member) {
+        this.editForm = {
+            uid: member.uid || '',
+            email: member.email || '',
+            memberId: member.memberId || member.id || '',
+            name: member.name || '',
+            phone: member.phone || '',
+            company: member.company || '',
+            role: member.role || '',
+            address: member.address || '',
+            city: member.city || '',
+            province: member.province || '',
+            postalCode: member.postalCode || '',
+            bio: member.bio || ''
+        };
+        this.editOpen = true;
+    },
+
+    closeEdit() {
+        this.editOpen = false;
+        this.editForm = {};
+    },
+
+    // Simpan perubahan profil member (action: ef_saveMemberProfile)
+    async saveMember() {
+        if (!this.editForm.email && !this.editForm.uid && !this.editForm.memberId) {
+            if (window.showToast) window.showToast('Identitas member (email/UID) tidak ditemukan.', 'error');
+            return;
+        }
+        this.isSaving = true;
+        try {
+            var res = await efApi('ef_saveMemberProfile', this.editForm);
+            if (res && res.status === 'success') {
+                if (window.showToast) window.showToast(res.message || 'Profil member berhasil disimpan.', 'success');
+                this.closeEdit();
+                this.closeDetail();
+                await this.loadMembers();
+            } else {
+                if (window.showToast) window.showToast((res && res.message) || 'Gagal menyimpan profil member.', 'error');
+            }
+        } catch (e) {
+            if (window.showToast) window.showToast('Gagal menyimpan profil member.', 'error');
+        }
+        this.isSaving = false;
+    },
+
+    formatCurrency(val) {
+        return 'Rp ' + Number(val || 0).toLocaleString('id-ID');
+    },
+
+    formatDate(dateStr) {
+        if (!dateStr) return '-';
+        try {
+            var d = new Date(dateStr);
+            if (isNaN(d.getTime())) return String(dateStr).slice(0, 10);
+            return d.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' });
+        } catch (e) {
+            return String(dateStr).slice(0, 10);
+        }
+    }
+}));
+
+// ================================================================
 // EZYFAST ORDERS
 // ================================================================
 Alpine.data('ezyfastOrders', () => ({
