@@ -12,6 +12,9 @@
                 activeTab: 'general',
                 isProfileInfoModal: false,
                 isProfileAddressModal: false,
+                isSavingInfo: false,
+                isSavingAddress: false,
+                isClearingAddress: false,
 
                 // Data for display
                 profile: {
@@ -110,32 +113,36 @@
                 },
 
                 // --- SAVE ACTIONS ---
-                async savePersonalInfo(button) {
-                    window.setButtonLoading(button, true);
+                async savePersonalInfo() {
+                    this.isSavingInfo = true;
                     const payload = {
                         personalInfo: this.editableProfile.personalInfo,
                         socialLinks: this.editableProfile.socialLinks
                     };
-                    await this.updateProfile(payload, button, () => {
+                    await this.updateProfile(payload, () => {
                         this.isProfileInfoModal = false;
+                    }, () => {
+                        this.isSavingInfo = false;
                     });
                 },
 
-                async saveAddress(button) {
-                    window.setButtonLoading(button, true);
+                async saveAddress() {
+                    this.isSavingAddress = true;
                     const payload = {
                         address: this.editableProfile.address
                     };
-                    await this.updateProfile(payload, button, () => {
+                    await this.updateProfile(payload, () => {
                         this.isProfileAddressModal = false;
+                    }, () => {
+                        this.isSavingAddress = false;
                     });
                 },
 
-                async updateProfile(profileData, button, onSuccess) {
+                async updateProfile(profileData, onSuccess, onFinally) {
                     const userId = this.profile.id || JSON.parse(localStorage.getItem('signedInUser'))?.id;
                     if (!userId) {
                         window.showToast('User ID not found. Cannot save.', 'error');
-                        if (button) window.setButtonLoading(button, false);
+                        if (onFinally) onFinally();
                         return;
                     }
 
@@ -188,11 +195,11 @@
                         } else {
                             window.showToast(`Error: ${res.message}`, 'error');
                         }
-                        if (button) window.setButtonLoading(button, false);
+                        if (onFinally) onFinally();
                     }, (err) => {
                         console.error('Update profile error:', err);
                         window.showToast('API error while saving.', 'error');
-                        if (button) window.setButtonLoading(button, false);
+                        if (onFinally) onFinally();
                     });
                 },
 
@@ -293,12 +300,14 @@
                     window.showToast('Delete functionality not implemented in this example.', 'warning');
                 },
 
-                async clearAddress(button) {
+                async clearAddress() {
                     if (!confirm('Are you sure you want to clear address information?')) return;
-                    window.setButtonLoading(button, true);
+                    this.isClearingAddress = true;
                     const payload = { address: { country: '', cityState: '', postalCode: '', taxId: '' } };
-                    await this.updateProfile(payload, button, () => {
+                    await this.updateProfile(payload, () => {
                         this.isProfileAddressModal = false;
+                    }, () => {
+                        this.isClearingAddress = false;
                     });
                 },
 
