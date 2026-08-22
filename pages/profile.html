@@ -310,15 +310,31 @@
             </div>
           </div>
           <div class="modal-footer-actions">
-            <button @click="deleteAccount($el)" type="button" class="btn btn-danger w-full sm:w-auto">
+            <button @click="deleteAccount($el)" type="button" class="btn btn-danger w-full sm:w-auto min-w-[140px]">
               Delete Account
             </button>
             <div class="flex w-full sm:w-auto gap-3 ml-auto">
-              <button x-on:click="isProfileInfoModal = false" type="button" class="btn btn-outline w-full sm:w-auto">
+              <button x-on:click="isProfileInfoModal = false" type="button"
+                class="btn btn-outline w-full sm:w-auto min-w-[110px]">
                 Cancel
               </button>
-              <button @click="savePersonalInfo($el)" type="button" class="btn btn-primary w-full sm:w-auto">
-                Save Changes
+              <button @click="savePersonalInfo()" type="button" :disabled="isSavingInfo"
+                class="btn btn-primary w-full sm:w-auto min-w-[150px]">
+                <template x-if="!isSavingInfo">
+                  <span>Save Changes</span>
+                </template>
+                <template x-if="isSavingInfo">
+                  <span class="inline-flex items-center gap-2">
+                    <svg class="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none"
+                      viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                      </path>
+                    </svg>
+                    <span>Saving...</span>
+                  </span>
+                </template>
               </button>
             </div>
           </div>
@@ -382,15 +398,45 @@
             </div>
           </div>
           <div class="modal-footer-actions">
-            <button @click="clearAddress($el)" type="button" class="btn btn-danger w-full sm:w-auto">
-              Delete Address
+            <button @click="clearAddress()" type="button" :disabled="isClearingAddress"
+              class="btn btn-danger w-full sm:w-auto min-w-[140px]">
+              <template x-if="!isClearingAddress">
+                <span>Delete Address</span>
+              </template>
+              <template x-if="isClearingAddress">
+                <span class="inline-flex items-center gap-2">
+                  <svg class="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                    </path>
+                  </svg>
+                  <span>Clearing...</span>
+                </span>
+              </template>
             </button>
             <div class="flex w-full sm:w-auto gap-3 ml-auto">
-              <button x-on:click="isProfileAddressModal = false" type="button" class="btn btn-outline w-full sm:w-auto">
+              <button x-on:click="isProfileAddressModal = false" type="button"
+                class="btn btn-outline w-full sm:w-auto min-w-[110px]">
                 Cancel
               </button>
-              <button @click="saveAddress($el)" type="button" class="btn btn-primary w-full sm:w-auto">
-                Save Changes
+              <button @click="saveAddress()" type="button" :disabled="isSavingAddress"
+                class="btn btn-primary w-full sm:w-auto min-w-[150px]">
+                <template x-if="!isSavingAddress">
+                  <span>Save Changes</span>
+                </template>
+                <template x-if="isSavingAddress">
+                  <span class="inline-flex items-center gap-2">
+                    <svg class="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none"
+                      viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                      </path>
+                    </svg>
+                    <span>Saving...</span>
+                  </span>
+                </template>
               </button>
             </div>
           </div>
