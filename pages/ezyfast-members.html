@@ -251,106 +251,107 @@
   </div>
 
   <!-- Edit Member Modal -->
-  <div x-show="editOpen" x-cloak x-transition:enter="transition ease-out duration-200"
-    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-    x-transition:leave="transition ease-in duration-150"
-    x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-    class="fixed inset-0 z-[99999] flex items-center justify-center p-4 md:p-5 bg-black/50 backdrop-blur-sm overflow-hidden"
-    data-lenis-prevent
-    @click.self="closeEdit()">
-    <div x-show="editOpen" x-transition:enter="transition ease-out duration-200"
-      x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-      class="relative z-10 w-full max-w-xl rounded-2xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900 my-auto flex flex-col max-h-[90vh] overflow-hidden">
+  <div :class="{ 'show': editOpen }" x-cloak
+    class="fixed inset-0 flex justify-center items-center p-4 md:p-5 overflow-hidden modal"
+    data-lenis-prevent>
+    <div class="fixed inset-0 h-full w-full bg-gray-900/40 backdrop-blur-xl transition-opacity duration-300"
+      x-on:click="closeEdit()"></div>
+    <div class="modal-dialog rounded-2xl">
+      <!-- close btn -->
+      <button x-on:click="closeEdit()" class="modal-close-btn">
+        <span class="w-6 h-6 block" x-icon="'close'"></span>
+      </button>
 
-      <!-- Modal Header -->
-      <div class="flex-shrink-0 flex items-start justify-between px-6 pt-6 pb-4 border-b border-gray-100 dark:border-gray-800">
-        <div>
-          <h4 class="text-lg font-semibold text-gray-800 dark:text-white/90">Edit Profil Member</h4>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+      <div class="modal-content">
+        <div class="modal-header-sticky">
+          <h3 class="h3">
+            Edit Profil Member
+          </h3>
+          <p class="mt-2 text-sm text-theme-secondary">
             Email: <span class="font-mono" x-text="editForm.email || '-'"></span>
             <span x-show="editForm.memberId" class="ml-1 font-mono" x-text="'(' + editForm.memberId + ')'"></span>
           </p>
         </div>
-        <button @click="closeEdit()" class="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800">
-          <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
-          </svg>
-        </button>
+        <form @submit.prevent="saveMember()" class="flex flex-col">
+          <div class="modal-body-content custom-scrollbar">
+            <div>
+              <h5 class="h5 mb-4">Informasi Pribadi</h5>
+              <div class="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
+                <div>
+                  <label class="form-label">Nama Lengkap</label>
+                  <input type="text" x-model="editForm.name" placeholder="Nama member" class="form-input" />
+                </div>
+                <div>
+                  <label class="form-label">No. WhatsApp / Telepon</label>
+                  <input type="text" x-model="editForm.phone" placeholder="08xxxxxxxxxx" class="form-input" />
+                </div>
+                <div>
+                  <label class="form-label">Perusahaan</label>
+                  <input type="text" x-model="editForm.company" placeholder="Nama perusahaan" class="form-input" />
+                </div>
+                <div>
+                  <label class="form-label">Jabatan</label>
+                  <input type="text" x-model="editForm.role" placeholder="Jabatan member" class="form-input" />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h5 class="h5 mb-4">Alamat</h5>
+              <div class="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
+                <div class="col-span-2 lg:col-span-1">
+                  <label class="form-label">Alamat Lengkap</label>
+                  <textarea x-model="editForm.address" rows="2" placeholder="Alamat pengiriman / domisili"
+                    class="form-input"></textarea>
+                </div>
+                <div>
+                  <label class="form-label">Kota</label>
+                  <input type="text" x-model="editForm.city" placeholder="Kota" class="form-input" />
+                </div>
+                <div>
+                  <label class="form-label">Provinsi</label>
+                  <input type="text" x-model="editForm.province" placeholder="Provinsi" class="form-input" />
+                </div>
+                <div>
+                  <label class="form-label">Kode Pos</label>
+                  <input type="text" x-model="editForm.postalCode" placeholder="Kode pos" class="form-input" />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h5 class="h5 mb-4">Bio / Catatan Admin</h5>
+              <textarea x-model="editForm.bio" rows="2" placeholder="Catatan tambahan tentang member ini"
+                class="form-input"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer-actions">
+            <button type="button" x-on:click="closeEdit()" class="btn btn-outline w-full sm:w-auto min-w-[110px]">
+              Batal
+            </button>
+            <div class="flex w-full sm:w-auto gap-3 ml-auto">
+              <button type="submit" :disabled="isSaving"
+                class="btn btn-primary w-full sm:w-auto min-w-[150px]">
+                <template x-if="!isSaving">
+                  <span>Simpan Perubahan</span>
+                </template>
+                <template x-if="isSaving">
+                  <span class="inline-flex items-center gap-2">
+                    <svg class="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none"
+                      viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                      </path>
+                    </svg>
+                    <span>Menyimpan...</span>
+                  </span>
+                </template>
+              </button>
+            </div>
+          </div>
+        </form>
       </div>
-
-      <!-- Form Edit -->
-      <form @submit.prevent="saveMember()" class="flex-1 min-h-0 flex flex-col">
-        <div class="custom-scrollbar overflow-y-auto px-6 py-5 space-y-4">
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            <div>
-              <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Nama Lengkap</label>
-              <input type="text" x-model="editForm.name" placeholder="Nama member"
-                class="h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" />
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">No. WhatsApp / Telepon</label>
-              <input type="text" x-model="editForm.phone" placeholder="08xxxxxxxxxx"
-                class="h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" />
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Perusahaan</label>
-              <input type="text" x-model="editForm.company" placeholder="Nama perusahaan"
-                class="h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" />
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Jabatan</label>
-              <input type="text" x-model="editForm.role" placeholder="Jabatan member"
-                class="h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" />
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Alamat Lengkap</label>
-            <textarea x-model="editForm.address" rows="2" placeholder="Alamat pengiriman / domisili"
-              class="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"></textarea>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-            <div>
-              <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Kota</label>
-              <input type="text" x-model="editForm.city" placeholder="Kota"
-                class="h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" />
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Provinsi</label>
-              <input type="text" x-model="editForm.province" placeholder="Provinsi"
-                class="h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" />
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Kode Pos</label>
-              <input type="text" x-model="editForm.postalCode" placeholder="Kode pos"
-                class="h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" />
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Bio / Catatan Admin</label>
-            <textarea x-model="editForm.bio" rows="2" placeholder="Catatan tambahan tentang member ini"
-              class="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"></textarea>
-          </div>
-        </div>
-
-        <!-- Footer Actions -->
-        <div class="flex-shrink-0 flex items-center justify-end gap-2 px-6 py-4 border-t border-gray-100 dark:border-gray-800">
-          <button type="button" @click="closeEdit()"
-            class="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors">
-            Batal
-          </button>
-          <button type="submit" :disabled="isSaving"
-            class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600 disabled:opacity-60 disabled:cursor-not-allowed transition-colors">
-            <svg x-show="isSaving" class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-            </svg>
-            <span x-text="isSaving ? 'Menyimpan...' : 'Simpan Perubahan'"></span>
-          </button>
-        </div>
-      </form>
     </div>
   </div>
 
