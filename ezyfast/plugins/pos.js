@@ -941,6 +941,25 @@
       return !(el._x_dataStack && el._x_dataStack.length);
     } catch (e) { return false; }
   }
+  // Evaluasi x-data yang gagal TETAP meninggalkan penanda _x_marker pada
+  // elemen (walk Alpine lanjut ke elemen berikut sambil me-log tiap error —
+  // persis pola di Error.txt). initTree berikutnya akan MELEWATKAN elemen
+  // bertanda, sehingga perbaikan diam-diam tidak berjalan. Hapus penanda
+  // (+ stack basi) di seluruh subtree dulu agar init ulang benar-benar
+  // dieksekusi. Aman: hanya dipanggil bila root belum punya data stack
+  // (= tree tidak berfungsi sama sekali, tidak ada yang bisa double-bind).
+  function resetPosTree(root) {
+    try {
+      var els = [root];
+      if (root.querySelectorAll) {
+        els = els.concat(Array.prototype.slice.call(root.querySelectorAll('*')));
+      }
+      els.forEach(function (el) {
+        try { delete el._x_marker; } catch (e) {}
+        try { delete el._x_dataStack; } catch (e) {}
+      });
+    } catch (e) {}
+  }
   function maybeInitTree() {
     if (window.__posTreeInited) return;
     // Jalur normal: Alpine meng-init tree sendiri — jangan init ganda.
@@ -949,9 +968,13 @@
     try { if (document.readyState === 'loading') return; } catch (e) {}
     if (!window.Alpine || typeof window.Alpine.initTree !== 'function') return;
     if (!posPageNeedsInit()) return;
+    var root = null;
+    try { root = document.getElementById('pos-page'); } catch (e) {}
+    if (!root) return;
+    resetPosTree(root);
     try {
       window.__posTreeInited = true;
-      window.Alpine.initTree(document.getElementById('pos-page'));
+      window.Alpine.initTree(root);
     } catch (e) { window.__posTreeInited = false; }
   }
 
