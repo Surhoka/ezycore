@@ -277,6 +277,7 @@
     },
 
     fetchJsonp(url, params) {
+      var self = this;
       return new Promise(function (resolve, reject) {
         var cbName = '_ezyPosCb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
         var timeout = setTimeout(function () {
@@ -289,7 +290,7 @@
           try { resolve(typeof raw === 'string' ? JSON.parse(raw) : raw); }
           catch (e) { reject(e); }
         };
-        var allParams = Object.assign({ callback: cbName, blogId: this.blogId }, params);
+        var allParams = Object.assign({ callback: cbName, blogId: self.blogId }, params);
         var qs = Object.keys(allParams).map(function (k) { return k + '=' + encodeURIComponent(allParams[k]); }).join('&');
         var script = document.createElement('script');
         script.src = url + '?' + qs;
