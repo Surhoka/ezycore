@@ -995,6 +995,12 @@
 
   /* ===== AUTO-REGISTRATION (plugin.link_page, sekali per pageId) ===== */
   function runPosAutoReg() {
+    // pos.js dimuat template-wide: hanya daftarkan halaman yang benar-benar
+    // memuat UI POS, agar pageId halaman lain tidak tertaut ke plugin pos.
+    try {
+      if (typeof document.getElementById !== 'function') return;
+      if (!document.getElementById('pos-page')) return;
+    } catch (e) { return; }
   (function () {
     'use strict';
     var PLUGIN_ID = 'pos';
