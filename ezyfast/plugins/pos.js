@@ -7,6 +7,11 @@
 (function () {
   'use strict';
 
+  // Penanda eksekusi + versi: dibaca oleh diagnosis otomatis di pos.html
+  // untuk memastikan file YANG BARU benar-benar tersaji & tereksekusi.
+  window.__posJsRan = true;
+  window.__posJsVersion = '1.0.3';
+
   function registerPosAlpine() {
     if (window.__posAlpineRegistered) return;
     if (!window.Alpine || typeof window.Alpine.data !== 'function') return;
