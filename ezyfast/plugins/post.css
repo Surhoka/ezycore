@@ -1,0 +1,1001 @@
+  /* ===== Blogger Reset ===== */
+  #pos-page table,
+  #pos-page thead,
+  #pos-page tbody,
+  #pos-page tfoot,
+  #pos-page tr,
+  #pos-page th,
+  #pos-page td,
+  #pos-page .pos-table-wrap {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  #pos-page h3,
+  #pos-page h4,
+  #pos-page p {
+    margin: 0 !important;
+  }
+
+  #pos-page h3 {
+    padding-bottom: 0.25rem;
+  }
+
+  #pos-page {
+    background-color: #ffffff;
+  }
+
+  .dark #pos-page {
+    background-color: rgba(255, 255, 255, 0.03);
+  }
+
+  /* ===== Table core (products.html pattern) ===== */
+  #pos-page table {
+    display: table !important;
+    width: 100% !important;
+    min-width: 720px !important;
+    border-spacing: 0 !important;
+    border-collapse: separate !important;
+    table-layout: auto !important;
+  }
+
+  #pos-page th,
+  #pos-page td {
+    display: table-cell !important;
+    box-sizing: border-box !important;
+    border: 0 !important;
+    vertical-align: middle !important;
+    text-align: left !important;
+    padding: 12px 14px !important;
+  }
+
+  /* Empty/loading state: izinkan text-center (kalah vs text-align:left !important di atas) */
+  #pos-page td.text-center {
+    text-align: center !important;
+  }
+
+  @media (min-width: 1024px) {
+
+    #pos-page th,
+    #pos-page td {
+      padding: 14px 20px !important;
+    }
+  }
+
+  /* Header: transparan */
+  #pos-page th {
+    background: transparent !important;
+    font-weight: 600;
+    font-size: 0.75rem;
+    color: #6b7280;
+  }
+
+  :is(.dark) #pos-page th {
+    background: transparent !important;
+    color: #9ca3af;
+  }
+
+  :is(.dark) #pos-page td {
+    color: #9ca3af;
+  }
+
+  /* Garis pemisah horizontal (seperti products.html) */
+  #pos-page thead tr {
+    border-bottom: 1px solid #e5e7eb !important;
+  }
+
+  #pos-page tbody tr:not(:first-child) td {
+    border-top: 1px solid #f3f4f6 !important;
+  }
+
+  :is(.dark) #pos-page thead tr {
+    border-bottom-color: #1f2937 !important;
+  }
+
+  :is(.dark) #pos-page tbody tr:not(:first-child) td {
+    border-top-color: #1f2937 !important;
+  }
+
+  /* Hover */
+  #pos-page tbody tr:hover td {
+    background: rgba(0, 0, 0, 0.015);
+  }
+
+  :is(.dark) #pos-page tbody tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  /* Paginasi memakai <ul> — skin .post-body memberi list-style disc +
+     padding/margin sehingga muncul titik hitam & footer meninggi.
+     Samakan products.html. */
+  #pos-page ul {
+    margin: 0 !important;
+    padding: 0 !important;
+    list-style: none !important;
+  }
+  #pos-page li {
+    list-style: none !important;
+  }
+
+  /* Table wrapper */
+  #pos-page .pos-table-wrap {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+  }
+
+  #pos-page .pos-table-wrap::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  #pos-page .pos-table-wrap::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  #pos-page .pos-table-wrap::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 9999px;
+  }
+
+  :is(.dark) #pos-page .pos-table-wrap::-webkit-scrollbar-thumb {
+    background-color: #475569;
+  }
+
+  /* Override .post-body from Blogger template */
+  .post-body #pos-page table {
+    display: table !important;
+    width: 100% !important;
+    min-width: 720px !important;
+    overflow: visible !important;
+  }
+
+  .post-body #pos-page .pos-table-wrap {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+  }
+
+  /* Catalog Table Column Rules */
+  #pos-page #catalog-table th:nth-child(1),
+  #pos-page #catalog-table td:nth-child(1) {
+    min-width: 200px !important;
+    width: 30% !important;
+  }
+
+  #pos-page #catalog-table th:nth-child(2),
+  #pos-page #catalog-table td:nth-child(2) {
+    min-width: 110px !important;
+    width: 16% !important;
+    white-space: nowrap !important;
+  }
+
+  #pos-page #catalog-table th:nth-child(3),
+  #pos-page #catalog-table td:nth-child(3) {
+    min-width: 130px !important;
+    width: 18% !important;
+    white-space: nowrap !important;
+  }
+
+  #pos-page #catalog-table th:nth-child(4),
+  #pos-page #catalog-table td:nth-child(4) {
+    min-width: 80px !important;
+    width: 10% !important;
+    white-space: nowrap !important;
+  }
+
+  #pos-page #catalog-table th:nth-child(5),
+  #pos-page #catalog-table td:nth-child(5) {
+    min-width: 95px !important;
+    width: 12% !important;
+    white-space: nowrap !important;
+  }
+
+  #pos-page #catalog-table th:nth-child(6),
+  #pos-page #catalog-table td:nth-child(6) {
+    min-width: 90px !important;
+    width: 14% !important;
+    white-space: nowrap !important;
+    text-align: right !important;
+  }
+
+  /* Transactions Table: 1 baris per row TANPA ellipsis —
+     teks panjang dibiarkan meluap sehingga memicu scrollbar
+     horizontal wrapper (.pos-table-wrap); lebar kolom mengikuti
+     konten (proporsional, table-layout auto). */
+  #pos-page #tx-table { table-layout: auto !important; }
+  #pos-page #tx-table th,
+  #pos-page #tx-table td {
+    white-space: nowrap !important;
+  }
+
+  /* Menu aksi transaksi: gaya mandiri (tidak bergantung bundle Tailwind).
+     Tombol dipaksa block + full-width agar selalu menumpuk vertikal,
+     tidak berjejer horizontal. */
+  .pos-tx-menu {
+    width: 160px !important;
+    box-sizing: border-box !important;
+    border-radius: 16px !important;
+    border: 1px solid #e5e7eb !important;
+    background: #ffffff !important;
+    padding: 8px !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
+  }
+  .pos-tx-menu button {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    padding: 8px 12px !important;
+    border: 0 !important;
+    background: transparent !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+    color: #374151 !important;
+  }
+  .pos-tx-menu button + button { margin-top: 4px !important; }
+  .pos-tx-menu button:hover { background: #f3f4f6 !important; }
+  .pos-tx-menu button.pos-danger { color: #ef4444 !important; }
+  .pos-tx-menu button.pos-danger:hover { background: #fef2f2 !important; }
+  :is(.dark) .pos-tx-menu { background: #111827 !important; border-color: #1f2937 !important; }
+  :is(.dark) .pos-tx-menu button { color: #9ca3af !important; }
+  :is(.dark) .pos-tx-menu button:hover { background: rgba(255, 255, 255, 0.05) !important; }
+  :is(.dark) .pos-tx-menu button.pos-danger { color: #f87171 !important; }
+  :is(.dark) .pos-tx-menu button.pos-danger:hover { background: rgba(239, 68, 68, 0.1) !important; }
+
+  /* Allow flex/block inside table-cell for product name column */
+  #pos-page td .flex.items-center {
+    display: flex !important;
+  }
+
+  #pos-page td .flex.items-center>span {
+    display: block !important;
+  }
+
+  /* ===== Netralkan .post-body img bawaan Blogger (margin, height, max-width) ===== */
+  #pos-page img,
+  .pos-modal-card img,
+  .pos-modal-body img {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
+    border-radius: 0 !important;
+  }
+
+  /* Thumbnail: force dimensions inside table-cell (40x40) */
+  #pos-page td .pos-table-thumb,
+  #pos-page td .h-10,
+  #pos-page td .h-10.w-10 {
+    position: relative !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+    background-color: #f3f4f6 !important;
+    border: 1px solid #e5e7eb !important;
+    flex-shrink: 0 !important;
+    display: block !important;
+    box-sizing: border-box !important;
+  }
+
+  .dark #pos-page td .pos-table-thumb,
+  .dark #pos-page td .h-10,
+  .dark #pos-page td .h-10.w-10 {
+    background-color: #1f2937 !important;
+    border-color: #374151 !important;
+  }
+
+  #pos-page td .pos-table-thumb img,
+  #pos-page td .h-10 img,
+  #pos-page td .h-10.w-10 img,
+  #pos-page td img {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 100% !important;
+    min-height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+  }
+
+  #pos-page td .pos-placeholder {
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #9ca3af !important;
+  }
+
+  /* Preview gambar di Modal Tambah/Edit Produk (80x80) */
+  #pos-page .pos-modal-thumb,
+  #pos-page .pos-modal-body .h-20,
+  #pos-page .pos-modal-body .h-20.w-20,
+  .pos-modal-thumb,
+  .pos-modal-body .h-20,
+  .pos-modal-body .h-20.w-20 {
+    position: relative !important;
+    width: 80px !important;
+    height: 80px !important;
+    min-width: 80px !important;
+    max-width: 80px !important;
+    min-height: 80px !important;
+    max-height: 80px !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+    background-color: #f3f4f6 !important;
+    border: 1px solid #e5e7eb !important;
+    flex-shrink: 0 !important;
+    display: block !important;
+    box-sizing: border-box !important;
+  }
+
+  .dark #pos-page .pos-modal-thumb,
+  .dark .pos-modal-thumb {
+    background-color: #1f2937 !important;
+    border-color: #374151 !important;
+  }
+
+  #pos-page .pos-modal-thumb img,
+  #pos-page .pos-modal-body .h-20 img,
+  #pos-page .pos-modal-body .h-20.w-20 img,
+  .pos-modal-thumb img,
+  .pos-modal-body .h-20 img,
+  .pos-modal-body .h-20.w-20 img {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 100% !important;
+    min-height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+  }
+
+  .pos-modal-thumb .pos-placeholder {
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #9ca3af !important;
+  }
+
+  .pos-modal-thumb-loading {
+    position: absolute !important;
+    inset: 0 !important;
+    background-color: rgba(0, 0, 0, 0.4) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* ===== Spinner animasi (mirip profile.html) — animate-spin Tailwind
+     mungkin tidak ter-bundle di CSS Blogger statis. ===== */
+  .pos-btn-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: pos-spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes pos-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* ===== Table loading overlay (melayang di atas tabel) ===== */
+  #pos-page .pos-table-wrap {
+    position: relative;
+  }
+
+  #pos-page .pos-table-loading {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 120px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+
+  :is(.dark) #pos-page .pos-table-loading {
+    background: rgba(17, 24, 39, 0.6);
+  }
+
+  #pos-page .pos-table-spinner {
+    width: 22px;
+    height: 22px;
+    border: 3px solid #e5e7eb;
+    border-top-color: var(--brand-primary, #465fff);
+    border-radius: 50%;
+    animation: pos-spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+
+  /* Catalog table: fixed layout for proper column widths */
+  #catalog-table {
+    table-layout: fixed !important;
+  }
+
+  /* Card container */
+  #pos-page .pos-page-view>.overflow-hidden {
+    padding: 0 !important;
+  }
+
+  .pos-page-view {
+    animation: posFadeIn .22s ease;
+    min-height: 0;
+  }
+
+  @media (min-width: 1024px) {
+    .pos-page-view {
+      overflow: hidden;
+    }
+  }
+
+  @keyframes posFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* ===== Sale Tab Layout (Desktop Side-by-side & Mobile Stacked) ===== */
+  .pos-sale-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .pos-sale-main {
+    flex: 1 1 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    width: 100% !important;
+  }
+
+  .pos-sale-grid-wrap {
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+    min-height: 260px !important;
+    max-height: 480px !important;
+    padding-right: 2px !important;
+  }
+
+  .pos-sale-sidebar {
+    width: 100% !important;
+    flex-shrink: 0 !important;
+    min-height: 320px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Desktop (>= 1024px): Side-by-side Layout (Kiri Produk, Kanan Keranjang) */
+  @media (min-width: 1024px) {
+    .pos-sale-layout {
+      flex-direction: row !important;
+      height: calc(100vh - 204px) !important;
+      min-height: 520px !important;
+      overflow: hidden !important;
+    }
+
+    .pos-sale-main {
+      height: 100% !important;
+      overflow: hidden !important;
+    }
+
+    .pos-sale-grid-wrap {
+      max-height: none !important;
+      height: 100% !important;
+    }
+
+    .pos-sale-sidebar {
+      width: 340px !important;
+      min-width: 340px !important;
+      max-width: 340px !important;
+      height: 100% !important;
+      min-height: 0 !important;
+    }
+  }
+
+  /* ===== Sale: Product Grid ===== */
+  .pos-product-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  @media (min-width: 640px) {
+    .pos-product-grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .pos-product-grid {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+  }
+
+  .pos-product-card {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .dark .pos-product-card {
+    border-color: #1f2937;
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .pos-product-card:hover {
+    border-color: var(--brand-primary, #465fff);
+    box-shadow: 0 2px 8px rgba(70, 95, 255, 0.12);
+  }
+
+  .pos-product-thumb {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 6px;
+    background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    overflow: hidden;
+  }
+
+  .dark .pos-product-thumb {
+    background: #1f2937;
+  }
+
+  .pos-product-thumb img {
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 100% !important;
+    min-height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    display: block !important;
+    margin: 0 !important;
+  }
+
+  .pos-product-thumb .pos-product-icon {
+    font-size: 24px;
+    color: #9ca3af;
+  }
+
+  .pos-product-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #111827;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .dark .pos-product-name {
+    color: #f3f4f6;
+  }
+
+  .pos-product-price {
+    font-size: 12px;
+    color: var(--brand-primary, #465fff);
+    font-weight: 600;
+    margin-top: 2px;
+  }
+
+  .pos-product-stock {
+    font-size: 11px;
+    color: #9ca3af;
+    margin-top: 2px;
+  }
+
+  /* ===== Sale: Cart Panel ===== */
+  .pos-cart-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    min-height: 320px !important;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  @media (min-width: 1024px) {
+    .pos-cart-panel {
+      min-height: 0 !important;
+    }
+  }
+
+  .dark .pos-cart-panel {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: #1f2937;
+  }
+
+  .pos-cart-header {
+    padding: 12px 14px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .dark .pos-cart-header {
+    border-bottom-color: #1f2937;
+  }
+
+  .pos-cart-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 14px;
+    min-height: 0;
+  }
+
+  .pos-cart-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .dark .pos-cart-item {
+    border-bottom-color: #1f2937;
+  }
+
+  .pos-cart-item:last-child {
+    border-bottom: none;
+  }
+
+  .pos-cart-item-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .pos-cart-item-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: #111827;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .dark .pos-cart-item-name {
+    color: #e5e7eb;
+  }
+
+  .pos-cart-item-price {
+    font-size: 11px;
+    color: #6b7280;
+  }
+
+  .pos-cart-qty {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .pos-cart-qty button {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+  }
+
+  .dark .pos-cart-qty button {
+    border-color: #374151;
+    background: #1f2937;
+    color: #d1d5db;
+  }
+
+  .pos-cart-qty button:hover {
+    background: #f3f4f6;
+  }
+
+  .pos-cart-qty span {
+    font-size: 13px;
+    font-weight: 600;
+    min-width: 20px;
+    text-align: center;
+    color: #111827;
+  }
+
+  .dark .pos-cart-qty span {
+    color: #e5e7eb;
+  }
+
+  .pos-cart-item-subtotal {
+    font-size: 12px;
+    font-weight: 600;
+    color: #111827;
+    white-space: nowrap;
+  }
+
+  .dark .pos-cart-item-subtotal {
+    color: #e5e7eb;
+  }
+
+  .pos-cart-footer {
+    padding: 12px 14px;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .dark .pos-cart-footer {
+    border-top-color: #1f2937;
+  }
+
+  .pos-cart-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #6b7280;
+    padding: 3px 0;
+  }
+
+  .pos-cart-total {
+    display: flex;
+    justify-content: space-between;
+    font-size: 15px;
+    font-weight: 700;
+    color: #111827;
+    padding-top: 6px;
+    margin-top: 6px;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .dark .pos-cart-total {
+    color: #f3f4f6;
+    border-top-color: #1f2937;
+  }
+
+  .pos-cart-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 120px;
+    color: #9ca3af;
+    font-size: 13px;
+    text-align: center;
+    gap: 6px;
+  }
+
+  /* ===== Payment Modal ===== */
+  .pos-pay-input {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    font-size: 18px;
+    font-weight: 600;
+    text-align: right;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .pos-pay-input:focus {
+    border-color: var(--brand-primary, #465fff);
+  }
+
+  .dark .pos-pay-input {
+    border-color: #374151;
+    background: #1f2937;
+    color: #f3f4f6;
+  }
+
+  .pos-pay-method {
+    display: flex;
+    gap: 8px;
+  }
+
+  .pos-pay-method button {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .dark .pos-pay-method button {
+    border-color: #374151;
+    background: #1f2937;
+    color: #d1d5db;
+  }
+
+  .pos-pay-method button.active {
+    border-color: var(--brand-primary, #465fff);
+    background: var(--brand-50, #eef2ff);
+    color: var(--brand-primary, #465fff);
+  }
+
+  .dark .pos-pay-method button.active {
+    border-color: var(--brand-primary, #465fff);
+    background: rgba(70, 95, 255, 0.1);
+    color: var(--brand-primary, #465fff);
+  }
+
+  .pos-pay-change {
+    padding: 12px;
+    border-radius: 10px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    text-align: center;
+  }
+
+  .dark .pos-pay-change {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.2);
+  }
+
+  .pos-pay-change.negative {
+    background: #fef2f2;
+    border-color: #fecaca;
+  }
+
+  .dark .pos-pay-change.negative {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.2);
+  }
+
+  /* ===== Modal pola toko ===== */
+  [x-cloak] {
+    display: none !important;
+  }
+
+  .pos-modal-card {
+    display: flex !important;
+    flex-direction: column !important;
+    max-height: calc(100vh - 2.5rem) !important;
+    overflow: hidden !important;
+  }
+
+  .pos-modal-header,
+  .pos-modal-footer {
+    flex-shrink: 0 !important;
+  }
+
+  .pos-modal-header {
+    min-height: 4.25rem !important;
+    box-sizing: border-box !important;
+  }
+
+  .pos-modal-body {
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+  }
+
+  .pos-modal-body::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .pos-modal-body::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .pos-modal-body::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 9999px;
+  }
+
+  .dark .pos-modal-body::-webkit-scrollbar-thumb {
+    background-color: #374151;
+  }
+
+  .pos-modal-overlay {
+    background-color: rgba(17, 24, 39, 0.5) !important;
+  }
+
+  /* ===== Struk thermal (preview modal + print) ===== */
+  .pos-receipt-paper {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
+    font-size: 12px !important;
+    line-height: 1.55 !important;
+    padding: 4px 2px !important;
+    border: none !important;
+    border-radius: 0 !important;
+  }
+  .pos-receipt-paper p { margin: 0 !important; color: inherit !important; }
+  .pos-receipt-paper .rc-center { text-align: center !important; }
+  .pos-receipt-paper .rc-title { font-size: 14px !important; font-weight: 700 !important; }
+  .pos-receipt-paper .rc-row { display: flex !important; justify-content: space-between !important; gap: 8px !important; }
+  .pos-receipt-paper .rc-sep { border-top: 1px dashed #9ca3af !important; margin: 8px 0 !important; }
+  .pos-receipt-paper .rc-total { font-size: 13px !important; font-weight: 700 !important; }
+  .pos-receipt-paper .rc-mono { font-size: 11px !important; word-break: break-all !important; }
+
+  /* Area print: sembunyi di layar, hanya keluar saat print */
+  #pos-receipt-print { display: none; }
+  @media print {
+    body * { visibility: hidden !important; }
+    #pos-receipt-print, #pos-receipt-print * { visibility: visible !important; }
+    #pos-receipt-print {
+      display: block !important;
+      position: absolute !important;
+      left: 0 !important; top: 0 !important;
+      width: 100% !important;
+      padding: 0 !important;
+    }
+    #pos-receipt-print .pos-receipt-paper {
+      max-width: 280px !important;
+      border: none !important;
+      border-radius: 0 !important;
+    }
+  }
