@@ -1,7 +1,8 @@
 /* EzyFast POS — pos.js (di-load dari Github via jsDelivr, defer).
  * Split dari p/plugins/POS/pos.html: definisi Alpine.data + auto-registration.
  * Tahan late-load: bila Alpine sudah start sebelum file ini tiba,
- * registrasi tetap dijalankan via polling fallback (bukan hanya alpine:init).
+ * registrasi tetap dijalankan via polling fallback + subtree #pos-page
+ * di-init ulang manual (Alpine.initTree) agar x-data tidak gagal.
  */
 (function () {
   'use strict';
@@ -920,15 +921,48 @@
   }));
   }
 
-  if (document.addEventListener) {
-    document.addEventListener('alpine:init', registerPosAlpine);
+  // Registrasi normal: pos.js tiba SEBELUM Alpine.start() (kasus inline dulu).
+  function onAlpineInit() {
+    window.__posSawAlpineInit = true;
+    registerPosAlpine();
   }
+  if (document.addEventListener) {
+    document.addEventListener('alpine:init', onAlpineInit);
+  }
+
+  // Bila pos.js tiba SETELAH Alpine.start() (umum untuk script async CDN),
+  // Alpine sudah meng-init #pos-page dan gagal (posPlugin belum terdaftar).
+  // Registrasi saja tidak cukup — subtree harus di-init ulang manual.
+  function posPageNeedsInit() {
+    try {
+      if (typeof document.getElementById !== 'function') return false;
+      var el = document.getElementById('pos-page');
+      if (!el) return false;
+      return !(el._x_dataStack && el._x_dataStack.length);
+    } catch (e) { return false; }
+  }
+  function maybeInitTree() {
+    if (window.__posTreeInited) return;
+    // Jalur normal: Alpine meng-init tree sendiri — jangan init ganda.
+    if (window.__posSawAlpineInit) return;
+    // Parsing belum selesai = Alpine.start() belum jalan — jangan mendahului.
+    try { if (document.readyState === 'loading') return; } catch (e) {}
+    if (!window.Alpine || typeof window.Alpine.initTree !== 'function') return;
+    if (!posPageNeedsInit()) return;
+    try {
+      window.__posTreeInited = true;
+      window.Alpine.initTree(document.getElementById('pos-page'));
+    } catch (e) { window.__posTreeInited = false; }
+  }
+
   // Fallback: file eksternal (defer/async CDN) bisa tiba setelah alpine:init.
   try { registerPosAlpine(); } catch (e) {}
+  try { maybeInitTree(); } catch (e) {}
   var __posTries = 0;
   var __posTimer = setInterval(function () {
     try { registerPosAlpine(); } catch (e) {}
-    if (window.__posAlpineRegistered || ++__posTries > 100) clearInterval(__posTimer);
+    try { maybeInitTree(); } catch (e) {}
+    if ((window.__posAlpineRegistered && (window.__posSawAlpineInit || window.__posTreeInited || !posPageNeedsInit())) || ++__posTries > 100) clearInterval(__posTimer);
   }, 100);
 
   /* ===== AUTO-REGISTRATION (plugin.link_page, sekali per pageId) ===== */
