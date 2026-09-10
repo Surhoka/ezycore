@@ -10,7 +10,7 @@
   // Penanda eksekusi + versi: dibaca oleh diagnosis otomatis di pos.html
   // untuk memastikan file YANG BARU benar-benar tersaji & tereksekusi.
   window.__posJsRan = true;
-  window.__posJsVersion = '1.0.4';
+  window.__posJsVersion = '1.0.5';
 
   // Log konsol diagnostik (prefiks [POS]). Aktif default agar perbaikan
   // terlihat di DevTools; matikan via window.__POS_DEBUG = false.
@@ -350,7 +350,7 @@
       // di kontainer mana pun (capture: scroll tidak bubble) & saat resize.
       window.addEventListener('scroll', () => { this.closeTxMenus(); }, true);
       window.addEventListener('resize', () => { this.closeTxMenus(); });
-      this.checkDbReady();
+      await this.checkDbReady();
       if (this.dbReady) {
         await this.loadCatalog();
         await this.loadTransactions();
@@ -439,12 +439,38 @@
       });
     },
 
-    checkDbReady() {
+    async checkDbReady() {
+      var self = this;
       try {
         var cache = JSON.parse(localStorage.getItem('EzyfastConfig') || '{}');
         this.dbId = cache.PLUGIN_DB_pos || null;
-        this.dbReady = !!this.dbId;
       } catch (e) {
+        this.dbId = null;
+      }
+      if (this.dbId) {
+        this.dbReady = true;
+        return;
+      }
+      // Fallback: localStorage hilang (mis. localStorage.clear()) → tanya
+      // backend via get_plugin_meta (ScriptProperties cache), lalu laporkan
+      // pageId (dari pathname) lewat set_plugin_meta agar tersimpan di property.
+      try {
+        if (this.pageId) {
+          this.api('set_plugin_meta', { pluginId: 'pos', pageId: this.pageId });
+        }
+        var res = await this.api('get_plugin_meta', { pluginId: 'pos' });
+        if (res && res.status === 'success' && res.dbId) {
+          this.dbId = res.dbId;
+          this.dbReady = true;
+          try {
+            var cfg = JSON.parse(localStorage.getItem('EzyfastConfig') || '{}');
+            cfg.PLUGIN_DB_pos = res.dbId;
+            localStorage.setItem('EzyfastConfig', JSON.stringify(cfg));
+          } catch (e2) {}
+        } else {
+          this.dbReady = false;
+        }
+      } catch (err) {
         this.dbReady = false;
       }
     },
@@ -1029,7 +1055,7 @@
     }
   }, 100);
 
-  /* ===== AUTO-REGISTRATION (plugin.link_page, sekali per pageId) ===== */
+  /* ===== AUTO-REGISTRATION (plugin.link_page — kirim pageId tiap halaman ditampilkan) ===== */
   function runPosAutoReg() {
     // pos.js dimuat template-wide: hanya daftarkan halaman yang benar-benar
     // memuat UI POS, agar pageId halaman lain tidak tertaut ke plugin pos.
@@ -1044,19 +1070,19 @@
     var cfg = window.EzyFast.getConfig();
     if (!cfg || !cfg.pageId || !cfg.blogId) { return; }
 
-    var storageKey = 'ezy_plugin_linked_' + PLUGIN_ID;
-    if (localStorage.getItem(storageKey) === String(cfg.pageId)) { return; }
-    posLog('auto-link plugin "pos" untuk pageId=' + cfg.pageId);
-
     var apiBase = cfg.gasApiEndpoint;
     if (!apiBase || apiBase.indexOf('YOUR_WEB_APP_ID') !== -1) { return; }
+
+    // Dikirim SETIAP kali halaman plugin ditampilkan (bukan hanya sekali),
+    // agar kolom pageId di sheet Plugins_Active selalu sinkron/terisi.
+    posLog('auto-link plugin "pos" untuk pageId=' + cfg.pageId);
 
     var cbName = '_ezyAutoRegCb_' + PLUGIN_ID;
     window[cbName] = function (raw) {
       try {
         var res = typeof raw === 'string' ? JSON.parse(raw) : raw;
         if (res.status === 'success') {
-          localStorage.setItem(storageKey, String(cfg.pageId));
+          localStorage.setItem('ezy_plugin_linked_' + PLUGIN_ID, String(cfg.pageId));
           window.dispatchEvent(new CustomEvent('ezy:plugin:linked', {
             detail: { pluginId: PLUGIN_ID, pageId: cfg.pageId }
           }));
