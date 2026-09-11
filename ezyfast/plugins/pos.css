@@ -1,3 +1,7 @@
+/* EzyFast POS — pos.css (di-load dari Github via jsDelivr)
+ * Sumber split dari p/plugins/POS/pos.html. Jangan edit manual hasil split
+ * selain bump versi cache (?v=) di pos.html loader.
+ */
   /* ===== Blogger Reset ===== */
   #pos-page table,
   #pos-page thead,
@@ -445,6 +449,58 @@
     border-radius: 50%;
     animation: pos-spin 0.7s linear infinite;
     flex-shrink: 0;
+  }
+
+  /* ===== Card loader (tab Sale) & overlay positioning =====
+     Dipindahkan dari inline <style> pos.html — kini semua styling
+     halaman POS diambil dari pos.css (dimuat langsung via <link>). */
+  #pos-page .pos-page-view {
+    position: relative;
+  }
+
+  #pos-page .pos-sale-layout {
+    position: relative;
+  }
+
+  #pos-page .pos-card-loader {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 120px;
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+
+  :is(.dark) #pos-page .pos-card-loader {
+    background: rgba(17, 24, 39, 0.6);
+  }
+
+  #pos-page .pos-card-spinner {
+    width: 22px;
+    height: 22px;
+    border: 3px solid #e5e7eb;
+    border-top-color: var(--brand-primary, #465fff);
+    border-radius: 50%;
+    animation: pos-spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+
+  :is(.dark) #pos-page .pos-card-spinner {
+    border-color: #1f2937;
+  }
+
+  #pos-page .pos-card-loader-text {
+    font-size: 13px;
+    color: #4b5563;
+  }
+
+  :is(.dark) #pos-page .pos-card-loader-text {
+    color: #9ca3af;
   }
 
   /* Catalog table: fixed layout for proper column widths */
