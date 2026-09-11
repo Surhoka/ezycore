@@ -1119,6 +1119,11 @@
   }, 100);
 
   /* ===== AUTO-REGISTRATION (plugin.link_page — kirim pageId tiap halaman ditampilkan) ===== */
+  // Guard: satu request link_page aktif saja. runPosAutoReg dipanggil berulang
+  // (immediate + load + 2× timeout); tanpa guard, beberapa <script> dari request
+  // tumpang-tindih berbagi nama callback yang sama → Respons kedua menemukan
+  // callback sudah dihapus → ReferenceError (exec?...callback=_ezyAutoRegCb_pos).
+  var __posAutoRegPending = false;
   function runPosAutoReg() {
     // pos.js dimuat template-wide: hanya daftarkan halaman yang benar-benar
     // memuat UI POS, agar pageId halaman lain tidak tertaut ke plugin pos.
@@ -1135,23 +1140,35 @@
     var apiBase = cfg.gasApiEndpoint;
     if (!apiBase || apiBase.indexOf('YOUR_WEB_APP_ID') !== -1) { return; }
 
+    // Bila ada request link_page yang masih berjalan, tunggu yang selesai
+    // (retry berikutnya via window.load / timeout tetap akan jalan).
+    if (__posAutoRegPending) { return; }
+
     // Dikirim SETIAP kali halaman plugin ditampilkan (bukan hanya sekali),
     // agar kolom pageId di sheet Plugins_Active selalu sinkron/terisi.
     posLog('auto-link plugin "pos" untuk pageId=' + cfg.pageId);
 
-    var cbName = '_ezyAutoRegCb_' + PLUGIN_ID;
+    // Nama callback UNIK per invokasi (pola jsonp di template & fetchJsonp):
+    // tiap <script> punya callback sendiri sehingga respons yang tumpang-tindih
+    // tidak menghapus fungsi milik request lain.
+    var cbName = '_ezyAutoRegCb_' + PLUGIN_ID + '_' + Date.now() + '_' + Math.floor(Math.random() * 1e6);
+    var cleanup = function () {
+      try { window[cbName] = undefined; } catch (e) {}
+      __posAutoRegPending = false;
+    };
     window[cbName] = function (raw) {
       try {
         var res = typeof raw === 'string' ? JSON.parse(raw) : raw;
-        if (res.status === 'success') {
+        if (res && res.status === 'success') {
           localStorage.setItem('ezy_plugin_linked_' + PLUGIN_ID, String(cfg.pageId));
           window.dispatchEvent(new CustomEvent('ezy:plugin:linked', {
             detail: { pluginId: PLUGIN_ID, pageId: cfg.pageId }
           }));
         }
       } catch (e) { }
-      try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
+      cleanup();
     };
+    __posAutoRegPending = true;
 
     var params = [
       'action=plugin.link_page',
@@ -1162,6 +1179,8 @@
     ];
     var s = document.createElement('script');
     s.src = apiBase + '?' + params.join('&');
+    // Gagal dimuat (network/offline) → lepas pending agar retry bisa berjalan.
+    s.onerror = cleanup;
     document.head.appendChild(s);
   })();
   }
