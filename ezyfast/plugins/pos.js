@@ -357,28 +357,59 @@
         return (cfg && cfg.pageId) || '';
       },
 
-      fetchJsonp(url, params) {
+      fetchJsonp(url, params, _attempt) {
         var self = this;
+        var attempt = _attempt || 0;
+        var MAX_RETRIES = 2;
+        var TIMEOUT_MS = 30000;
         return new Promise(function (resolve, reject) {
+          if (!url) { reject(new Error('apiUrl empty')); return; }
           var cbName = '_ezyPosCb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-          var timeout = setTimeout(function () {
-            delete window[cbName];
-            reject(new Error('JSONP timeout'));
-          }, 20000);
+          var settled = false;
+          var script = null;
+          var done = function () {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            if (script) {
+              if (script.parentNode) script.parentNode.removeChild(script);
+              script.onerror = null;
+              script = null;
+            }
+          };
           window[cbName] = function (raw) {
-            clearTimeout(timeout);
-            delete window[cbName];
+            if (settled) return;
+            done();
             try { resolve(typeof raw === 'string' ? JSON.parse(raw) : raw); }
             catch (e) { reject(e); }
           };
+          var timer = setTimeout(function () {
+            // Respons GAS yang tiba SESUDAH timeout dieksekusi aman oleh
+            // browser (callback masih terdefinisi) → tanpa ReferenceError.
+            if (settled) return;
+            done();
+            if (attempt < MAX_RETRIES) {
+              setTimeout(function () {
+                self.fetchJsonp(url, params, attempt + 1).then(resolve).catch(reject);
+              }, 1000 * (attempt + 1));
+            } else {
+              reject(new Error('JSONP timeout. Cek endpoint GAS & coba lagi.'));
+            }
+          }, TIMEOUT_MS);
           var allParams = Object.assign({ callback: cbName, blogId: self.blogId }, params);
           var qs = Object.keys(allParams).map(function (k) { return k + '=' + encodeURIComponent(allParams[k]); }).join('&');
-          var script = document.createElement('script');
+          script = document.createElement('script');
           script.src = url + '?' + qs;
           script.onerror = function () {
-            clearTimeout(timeout);
-            delete window[cbName];
-            reject(new Error('Script load error'));
+            if (settled) return;
+            done();
+            if (attempt < MAX_RETRIES) {
+              setTimeout(function () {
+                self.fetchJsonp(url, params, attempt + 1).then(resolve).catch(reject);
+              }, 1000 * (attempt + 1));
+            } else {
+              reject(new Error('Script load error'));
+            }
           };
           document.head.appendChild(script);
         });
