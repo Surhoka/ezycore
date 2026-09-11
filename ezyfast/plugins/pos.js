@@ -10,7 +10,7 @@
   // Penanda eksekusi + versi: dibaca oleh diagnosis otomatis di pos.html
   // untuk memastikan file YANG BARU benar-benar tersaji & tereksekusi.
   window.__posJsRan = true;
-  window.__posJsVersion = '1.0.8';
+  window.__posJsVersion = '1.0.9';
 
   // Log konsol diagnostik (prefiks [POS]). Aktif default agar perbaikan
   // terlihat di DevTools; matikan via window.__POS_DEBUG = false.
@@ -112,10 +112,12 @@
   }));
   Alpine.data('posPlugin', () => ({
     activeTab: 'Sale',
-    // Default TRUE agar spinner per-kartu tampil sejak Alpine meng-init —
-    // bahkan saat checkDbReady masih menunggu pemulihan (__ezyPosDbReady)
-    // atau proses load data belum selesai. Direset false di akhir init.
-    loading: true,
+    catalogLoading: true,
+    txLoading: true,
+    shiftsLoading: true,
+    catalogLoaded: false,
+    txLoaded: false,
+    shiftsLoaded: false,
     submitting: false,
     dbReady: false,
     dbId: null,
@@ -395,11 +397,18 @@
       window.addEventListener('resize', () => { this.closeTxMenus(); });
       await this.checkDbReady();
       if (this.dbReady) {
+        // Hybrid SPA: tab aktif (Sale) dimuat saat init; tab lain dimuat
+        // lazy via selectTab/ensureTabLoaded pada kunjungan pertamanya —
+        // loader per-kartunya ikut aktif di kunjungan pertama tiap tab.
         await this.loadCatalog();
-        await this.loadTransactions();
-        await this.loadShifts();
+        // Deep-link langsung (#Transactions/#Shifts/#Catalog): tab aktif
+        // saat boot ikut dimuat (dbId sudah tersedia sekarang).
+        this.ensureTabLoaded(this.activeTab);
+      } else {
+        this.catalogLoading = false;
+        this.txLoading = false;
+        this.shiftsLoading = false;
       }
-      this.loading = false;
       // Prefill kasir dari user login agar tidak jatuh ke 'default'
       if (!this.shiftForm.cashier_id) {
         var loginName = this.loginCashierName();
@@ -413,10 +422,22 @@
       var hash = window.location.hash.replace(/^#/, '');
       var map = { Sale: 'Sale', Catalog: 'Catalog', Transactions: 'Transactions', Shifts: 'Shifts' };
       if (map[hash]) this.activeTab = hash;
+      this.ensureTabLoaded(hash);
+    },
+
+    // Hybrid SPA: tab yang belum pernah dimuat (loader masih true) dimuat
+    // saat pertama kali dikunjungi (hash direct atau klik tab) agar loader
+    // per-kartu tampil di kunjungan pertama, bukan hanya saat page-load.
+    ensureTabLoaded(tabId) {
+      if (!this.dbId) return;
+      if (tabId === 'Catalog' && !this.catalogLoaded) { this.loadCatalog(); }
+      else if (tabId === 'Transactions' && !this.txLoaded) { this.loadTransactions(); }
+      else if (tabId === 'Shifts' && !this.shiftsLoaded) { this.loadShifts(); }
     },
 
     selectTab(tabId) {
       this.activeTab = tabId;
+      this.ensureTabLoaded(tabId);
       this.closeTxMenus();
       if (window.location.hash !== '#' + tabId) {
         try { window.location.hash = tabId; } catch (e) { }
@@ -551,15 +572,16 @@
 
     /* ===== Catalog: Load ===== */
     async loadCatalog() {
-      if (!this.dbId) return;
-      this.loading = true;
+      if (!this.dbId) { this.catalogLoading = false; return; }
+      this.catalogLoading = true;
       var res = await this.api('pos.read', { dbId: this.dbId, sheetName: 'Catalog' });
-      this.loading = false;
+      this.catalogLoading = false;
       if (res && res.status === 'success') {
         this.catalogProducts = this.uniqById(res.records);
         if ((res.records || []).length !== this.catalogProducts.length) {
           console.warn('[POS] Catalog: baris duplikat/tanpa id dibuang.');
         }
+        this.catalogLoaded = true;
       }
       var self = this;
       setTimeout(function () { self.paintSortArrows(); }, 50);
@@ -735,16 +757,17 @@
 
     /* ===== Transactions: Load / Delete ===== */
     async loadTransactions() {
-      if (!this.dbId) return;
+      if (!this.dbId) { this.txLoading = false; return; }
       this.closeTxMenus();
-      this.loading = true;
+      this.txLoading = true;
       var res = await this.api('pos.read', { dbId: this.dbId, sheetName: 'Transactions' });
-      this.loading = false;
+      this.txLoading = false;
       if (res && res.status === 'success') {
         this.transactions = this.uniqById(res.records);
         if ((res.records || []).length !== this.transactions.length) {
           console.warn('[POS] Transactions: baris duplikat/tanpa id dibuang.');
         }
+        this.txLoaded = true;
         if (this.txPage > this.txTotalPages) this.txPage = this.txTotalPages;
       }
       var self = this;
@@ -974,15 +997,16 @@
 
     /* ===== Shifts: Load / Open / Close ===== */
     async loadShifts() {
-      if (!this.dbId) return;
-      this.loading = true;
+      if (!this.dbId) { this.shiftsLoading = false; return; }
+      this.shiftsLoading = true;
       var res = await this.api('pos.read', { dbId: this.dbId, sheetName: 'Shifts' });
-      this.loading = false;
+      this.shiftsLoading = false;
       if (res && res.status === 'success') {
         this.shifts = this.uniqById(res.records);
         if ((res.records || []).length !== this.shifts.length) {
           console.warn('[POS] Shifts: baris duplikat/tanpa id dibuang.');
         }
+        this.shiftsLoaded = true;
         var open = this.shifts.find(function (s) { return s.status === 'open'; });
         this.currentShift = open || null;
       }
