@@ -10,7 +10,7 @@
   // Penanda eksekusi + versi: dibaca oleh diagnosis otomatis di pos.html
   // untuk memastikan file YANG BARU benar-benar tersaji & tereksekusi.
   window.__posJsRan = true;
-  window.__posJsVersion = '1.0.6';
+  window.__posJsVersion = '1.0.7';
 
   // Log konsol diagnostik (prefiks [POS]). Aktif default agar perbaikan
   // terlihat di DevTools; matikan via window.__POS_DEBUG = false.
@@ -481,6 +481,13 @@
 
     async checkDbReady() {
       var self = this;
+      // Bootstrap inline pos.html (self-recovery setelah localStorage.clear())
+      // mungkin masih memulihkan dbId via get/set_plugin_meta — tunggu dulu
+      // agar fast-path cache terpakai & tidak memicu JSONP ganda. Halaman
+      // tanpa bootstrap → promise tak ada → langsung lanjut.
+      if (window.__ezyPosDbReady && typeof window.__ezyPosDbReady.then === 'function') {
+        try { await window.__ezyPosDbReady; } catch (e) {}
+      }
       try {
         var cache = JSON.parse(localStorage.getItem('EzyfastConfig') || '{}');
         this.dbId = cache.PLUGIN_DB_pos || null;
