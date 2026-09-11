@@ -10,7 +10,7 @@
   // Penanda eksekusi + versi: dibaca oleh diagnosis otomatis di pos.html
   // untuk memastikan file YANG BARU benar-benar tersaji & tereksekusi.
   window.__posJsRan = true;
-  window.__posJsVersion = '1.0.7';
+  window.__posJsVersion = '1.0.8';
 
   // Log konsol diagnostik (prefiks [POS]). Aktif default agar perbaikan
   // terlihat di DevTools; matikan via window.__POS_DEBUG = false.
@@ -112,7 +112,10 @@
   }));
   Alpine.data('posPlugin', () => ({
     activeTab: 'Sale',
-    loading: false,
+    // Default TRUE agar spinner per-kartu tampil sejak Alpine meng-init —
+    // bahkan saat checkDbReady masih menunggu pemulihan (__ezyPosDbReady)
+    // atau proses load data belum selesai. Direset false di akhir init.
+    loading: true,
     submitting: false,
     dbReady: false,
     dbId: null,
@@ -396,6 +399,7 @@
         await this.loadTransactions();
         await this.loadShifts();
       }
+      this.loading = false;
       // Prefill kasir dari user login agar tidak jatuh ke 'default'
       if (!this.shiftForm.cashier_id) {
         var loginName = this.loginCashierName();
