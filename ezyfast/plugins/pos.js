@@ -10,7 +10,7 @@
   // Penanda eksekusi + versi: dibaca oleh diagnosis otomatis di pos.html
   // untuk memastikan file YANG BARU benar-benar tersaji & tereksekusi.
   window.__posJsRan = true;
-  window.__posJsVersion = '1.0.5';
+  window.__posJsVersion = '1.0.6';
 
   // Log konsol diagnostik (prefiks [POS]). Aktif default agar perbaikan
   // terlihat di DevTools; matikan via window.__POS_DEBUG = false.
@@ -30,6 +30,46 @@
       (window.Alpine ? 'ada' : 'belum ada') + '; readyState=' +
       ((typeof document !== 'undefined' && document.readyState) || '?'));
   } catch (e) {}
+
+  /* ===== Config mandiri (pola getCfg() di calendar.html) =================
+     EzyFast bridge (`window.EzyFast.getConfig`) TIDAK dijadikan satu-satunya
+     sumber: bila bridge belum siap atau CONFIG-nya terkunci kosong, baca
+     langsung dari elemen #ezyfast-core-config (widget Blogger) via regex.
+     Ini membuat pos.js mampu menghubungi server walau localStorage di-clear
+     atau bridge gagal — behavior yang sama dgn plugin inline (calendar). */
+  var __posCfg = null;
+  function resolveConfig() {
+    if (__posCfg) { return __posCfg; }
+    var cfg = null;
+    try {
+      if (window.EzyFast && typeof window.EzyFast.getConfig === 'function') {
+        var c = window.EzyFast.getConfig();
+        if (c && c.gasApiEndpoint && !/YOUR_WEB_APP_ID|YOUR_SCRIPT_ID|PASTE_/i.test(c.gasApiEndpoint)) {
+          cfg = c;
+        }
+      }
+    } catch (e) {}
+    if (!cfg) {
+      try {
+        var el = document.getElementById('ezyfast-core-config');
+        var raw = (el && el.textContent) || '';
+        var m, d = {};
+        m = raw.match(/"gasApiEndpoint"\s*:\s*"([^"]*)"/);
+        if (m) { d.gasApiEndpoint = m[1]; }
+        m = raw.match(/"blogId"\s*:\s*"([^"]*)"/);
+        if (m) { d.blogId = m[1]; }
+        m = raw.match(/"pageId"\s*:\s*"([^"]*)"/);
+        if (m) { d.pageId = m[1]; }
+        if (d.gasApiEndpoint && /YOUR_WEB_APP_ID|YOUR_SCRIPT_ID|PASTE_/i.test(d.gasApiEndpoint)) {
+          d.gasApiEndpoint = '';
+        }
+        if (!d.pageId) { d.pageId = window.location.pathname.replace(/\/+$/, '') || ''; }
+        if (d.gasApiEndpoint || d.blogId || d.pageId) { cfg = d; }
+      } catch (e2) {}
+    }
+    if (cfg && cfg.gasApiEndpoint) { __posCfg = cfg; }
+    return cfg || null;
+  }
 
   function registerPosAlpine() {
     if (window.__posAlpineRegistered) return;
@@ -290,15 +330,15 @@
 
     /* ===== Config & JSONP ===== */
     get apiUrl() {
-      var cfg = window.EzyFast && window.EzyFast.getConfig ? window.EzyFast.getConfig() : null;
+      var cfg = resolveConfig();
       return (cfg && cfg.gasApiEndpoint) || '';
     },
     get blogId() {
-      var cfg = window.EzyFast && window.EzyFast.getConfig ? window.EzyFast.getConfig() : null;
+      var cfg = resolveConfig();
       return (cfg && cfg.blogId) || '';
     },
     get pageId() {
-      var cfg = window.EzyFast && window.EzyFast.getConfig ? window.EzyFast.getConfig() : null;
+      var cfg = resolveConfig();
       return (cfg && cfg.pageId) || '';
     },
 
@@ -449,6 +489,27 @@
       }
       if (this.dbId) {
         this.dbReady = true;
+        // Reconcile ringan ke backend (paritas dgn pola calendar yang selalu
+        // verifikasi dbId saat boot): non-blocking, perbaiki cache lokal bila
+        // dbId di server berubah (mis. user mengulang Setup Database) dan
+        // laporkan pageId agar sheet Plugins_Active tetap sinkron.
+        try {
+          var self = this;
+          if (this.pageId) {
+            this.api('set_plugin_meta', { pluginId: 'pos', pageId: this.pageId }).catch(function () {});
+          }
+          this.api('get_plugin_meta', { pluginId: 'pos' }).then(function (res) {
+            if (res && res.status === 'success' && res.dbId && String(res.dbId) !== String(self.dbId)) {
+              self.dbId = res.dbId;
+              try {
+                var cfg = JSON.parse(localStorage.getItem('EzyfastConfig') || '{}');
+                cfg.PLUGIN_DB_pos = res.dbId;
+                localStorage.setItem('EzyfastConfig', JSON.stringify(cfg));
+              } catch (e) {}
+              posLog('reconcile: dbId diperbarui dari backend -> ' + res.dbId);
+            }
+          }).catch(function () {});
+        } catch (e) {}
         return;
       }
       // Fallback: localStorage hilang (mis. localStorage.clear()) → tanya
@@ -456,7 +517,7 @@
       // pageId (dari pathname) lewat set_plugin_meta agar tersimpan di property.
       try {
         if (this.pageId) {
-          this.api('set_plugin_meta', { pluginId: 'pos', pageId: this.pageId });
+          await this.api('set_plugin_meta', { pluginId: 'pos', pageId: this.pageId });
         }
         var res = await this.api('get_plugin_meta', { pluginId: 'pos' });
         if (res && res.status === 'success' && res.dbId) {
@@ -469,9 +530,11 @@
           } catch (e2) {}
         } else {
           this.dbReady = false;
+          this.toast('Database plugin belum terpasang — buka Plugin Manager', 'error');
         }
       } catch (err) {
         this.dbReady = false;
+        this.toast('Gagal memulihkan koneksi database POS', 'error');
       }
     },
 
@@ -826,7 +889,7 @@
     },
 
     _postProductUpload: function (params, callback) {
-      var cfg = window.EzyFast && window.EzyFast.getConfig ? window.EzyFast.getConfig() : null;
+      var cfg = resolveConfig();
       var endpoint = cfg && cfg.gasApiEndpoint ? cfg.gasApiEndpoint : '';
       if (!endpoint) {
         callback({ status: 'error', error: 'Endpoint GAS belum dikonfigurasi.' });
@@ -1066,8 +1129,7 @@
   (function () {
     'use strict';
     var PLUGIN_ID = 'pos';
-    if (!window.EzyFast || !window.EzyFast.getConfig) { return; }
-    var cfg = window.EzyFast.getConfig();
+    var cfg = resolveConfig();
     if (!cfg || !cfg.pageId || !cfg.blogId) { return; }
 
     var apiBase = cfg.gasApiEndpoint;
