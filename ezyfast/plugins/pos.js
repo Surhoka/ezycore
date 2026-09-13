@@ -10,7 +10,7 @@
   // Penanda eksekusi + versi: dibaca oleh diagnosis otomatis di pos.html
   // untuk memastikan file YANG BARU benar-benar tersaji & tereksekusi.
   window.__posJsRan = true;
-  window.__posJsVersion = '1.0.9';
+  window.__posJsVersion = '1.1.0';
 
   // Log konsol diagnostik (prefiks [POS]). Aktif default agar perbaikan
   // terlihat di DevTools; matikan via window.__POS_DEBUG = false.
@@ -566,22 +566,32 @@
           // verifikasi dbId saat boot): non-blocking, perbaiki cache lokal bila
           // dbId di server berubah (mis. user mengulang Setup Database) dan
           // laporkan pageId agar sheet Plugins_Active tetap sinkron.
+          // Sengaja ditunda ±1 dtk agar tidak ikut membanjiri 6+ JSONP paralel
+          // saat GAS cold start (bootstrap + menu + verify + notifications) —
+          // request transien yang menyusul VANILLA biasanya lolos saat proses
+          // GAS sudah hangat.
           try {
             var self = this;
-            if (this.pageId) {
-              this.api('set_plugin_meta', { pluginId: 'pos', pageId: this.pageId }).catch(function () { });
-            }
-            this.api('get_plugin_meta', { pluginId: 'pos' }).then(function (res) {
-              if (res && res.status === 'success' && res.dbId && String(res.dbId) !== String(self.dbId)) {
-                self.dbId = res.dbId;
-                try {
-                  var cfg = JSON.parse(localStorage.getItem('EzyfastConfig') || '{}');
-                  cfg.PLUGIN_DB_pos = res.dbId;
-                  localStorage.setItem('EzyfastConfig', JSON.stringify(cfg));
-                } catch (e) { }
-                posLog('reconcile: dbId diperbarui dari backend -> ' + res.dbId);
-              }
-            }).catch(function () { });
+            var dbId = this.dbId;
+            var pid = this.pageId;
+            setTimeout(function () {
+              try {
+                if (pid) {
+                  self.api('set_plugin_meta', { pluginId: 'pos', pageId: pid }).catch(function () { });
+                }
+                self.api('get_plugin_meta', { pluginId: 'pos' }).then(function (res) {
+                  if (res && res.status === 'success' && res.dbId && String(res.dbId) !== String(dbId)) {
+                    self.dbId = res.dbId;
+                    try {
+                      var cfg = JSON.parse(localStorage.getItem('EzyfastConfig') || '{}');
+                      cfg.PLUGIN_DB_pos = res.dbId;
+                      localStorage.setItem('EzyfastConfig', JSON.stringify(cfg));
+                    } catch (e) { }
+                    posLog('reconcile: dbId diperbarui dari backend -> ' + res.dbId);
+                  }
+                }).catch(function () { });
+              } catch (e2) { }
+            }, 1000);
           } catch (e) { }
           return;
         }
