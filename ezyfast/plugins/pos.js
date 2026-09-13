@@ -31,6 +31,25 @@
       ((typeof document !== 'undefined' && document.readyState) || '?'));
   } catch (e) { }
 
+  // Mirror log diagnostik ke buffer global (EzyFast.debug → sessionStorage
+  // 'ezy_debug_log') agar urutannya tahan lintas reload & terbaca via panel
+  // Debug / diagnosis box. No-op bila shell belum tersedia.
+  function ezyDebug(ev, details) {
+    try {
+      if (window.EzyFast && typeof window.EzyFast.debug === 'function') {
+        window.EzyFast.debug(ev, details);
+      }
+    } catch (e) { }
+  }
+  try {
+    ezyDebug('pos:loaded', {
+      v: window.__posJsVersion,
+      Alpine: !!window.Alpine,
+      readyState: (typeof document !== 'undefined' && document.readyState) || '?',
+      posPage: !!(typeof document !== 'undefined' && document.getElementById && document.getElementById('pos-page'))
+    });
+  } catch (e) { }
+
   /* ===== Config mandiri (pola getCfg() di calendar.html) =================
      EzyFast bridge (`window.EzyFast.getConfig`) TIDAK dijadikan satu-satunya
      sumber: bila bridge belum siap atau CONFIG-nya terkunci kosong, baca
@@ -86,6 +105,7 @@
     if (!window.Alpine || typeof window.Alpine.data !== 'function') return;
     window.__posAlpineRegistered = true;
     posLog('Alpine.data terdaftar: posTxDropdown, posPlugin');
+    ezyDebug('pos:register', { components: ['posTxDropdown', 'posPlugin'], sawInit: !!window.__posSawAlpineInit });
     var Alpine = window.Alpine;
     // Dropdown aksi per-baris ala TailAdmin (demo products-list):
     // panel fixed + flip ke atas terukur bila overflow viewport.
@@ -429,6 +449,7 @@
           // Popup global: toast shell (bila ada) + banner POS dengan tombol
           // "Coba Lagi" (retry = reload penuh, hash dipertahankan).
           var msg = (e && e.message) || 'Gagal terhubung ke server.';
+          ezyDebug('pos:api-error', { action: action, msg: msg });
           this.toast('POS gagal terhubung ke server: ' + msg, 'error');
           try {
             window.dispatchEvent(new CustomEvent('pos:api-error', { detail: { action: action, message: msg } }));
@@ -571,6 +592,7 @@
         }
         if (this.dbId) {
           this.dbReady = true;
+          ezyDebug('pos:dbready', { source: 'cache', ok: true, dbId: this.dbId });
           // Reconcile ringan ke backend (paritas dgn pola calendar yang selalu
           // verifikasi dbId saat boot): non-blocking, perbaiki cache lokal bila
           // dbId di server berubah (mis. user mengulang Setup Database) dan
@@ -615,6 +637,7 @@
           if (res && res.status === 'success' && res.dbId) {
             this.dbId = res.dbId;
             this.dbReady = true;
+            ezyDebug('pos:dbready', { source: 'api', ok: true, dbId: res.dbId });
             try {
               var cfg = JSON.parse(localStorage.getItem('EzyfastConfig') || '{}');
               cfg.PLUGIN_DB_pos = res.dbId;
@@ -622,10 +645,12 @@
             } catch (e2) { }
           } else {
             this.dbReady = false;
+            ezyDebug('pos:dbready', { source: 'api', ok: false, err: 'tidak ada dbId dari backend (plugin belum ter-link?)' });
             this.toast('Database plugin belum terpasang — buka Plugin Manager', 'error');
           }
         } catch (err) {
           this.dbReady = false;
+          ezyDebug('pos:dbready', { source: 'api', ok: false, err: (err && err.message) || String(err) });
           this.toast('Gagal memulihkan koneksi database POS', 'error');
         }
       },
@@ -636,6 +661,12 @@
         this.catalogLoading = true;
         var res = await this.api('pos.read', { dbId: this.dbId, sheetName: 'Catalog' });
         this.catalogLoading = false;
+        ezyDebug('pos:read', {
+          sheet: 'Catalog',
+          ok: !!(res && res.status === 'success'),
+          n: (res && res.records) ? res.records.length : 0,
+          dbId: this.dbId || ''
+        });
         if (res && res.status === 'success') {
           this.catalogProducts = this.uniqById(res.records);
           if ((res.records || []).length !== this.catalogProducts.length) {
@@ -822,6 +853,12 @@
         this.txLoading = true;
         var res = await this.api('pos.read', { dbId: this.dbId, sheetName: 'Transactions' });
         this.txLoading = false;
+        ezyDebug('pos:read', {
+          sheet: 'Transactions',
+          ok: !!(res && res.status === 'success'),
+          n: (res && res.records) ? res.records.length : 0,
+          dbId: this.dbId || ''
+        });
         if (res && res.status === 'success') {
           this.transactions = this.uniqById(res.records);
           if ((res.records || []).length !== this.transactions.length) {
@@ -1182,14 +1219,17 @@
     try { root = document.getElementById('pos-page'); } catch (e) { }
     if (!root) return;
     posLog('late-load terdeteksi: init ulang #pos-page ...');
+    ezyDebug('pos:late-load:init', {});
     resetPosTree(root);
     try {
       window.__posTreeInited = true;
       window.Alpine.initTree(root);
       posLog('#pos-page berhasil di-init ulang');
+      ezyDebug('pos:late-load:ok', {});
     } catch (e) {
       window.__posTreeInited = false;
       posLog('init ulang GAGAL:', (e && e.message) || e);
+      ezyDebug('pos:late-load:fail', { err: (e && e.message) || String(e) });
     }
   }
 
@@ -1209,6 +1249,7 @@
     }
     if (stopReason) {
       posLog('watchdog berhenti: ' + stopReason);
+      ezyDebug('pos:watchdog-stop', { reason: stopReason });
       clearInterval(__posTimer);
     }
   }, 100);
