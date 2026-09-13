@@ -421,9 +421,18 @@
           return null;
         }
         try {
-          return await this.fetchJsonp(this.apiUrl, Object.assign({ action: action }, params || {}));
+          var result = await this.fetchJsonp(this.apiUrl, Object.assign({ action: action }, params || {}));
+          try { window.dispatchEvent(new CustomEvent('pos:api-error:clear', { detail: {} })); } catch (e) {}
+          return result;
         } catch (e) {
           console.error('[POS] API error:', e);
+          // Popup global: toast shell (bila ada) + banner POS dengan tombol
+          // "Coba Lagi" (retry = reload penuh, hash dipertahankan).
+          var msg = (e && e.message) || 'Gagal terhubung ke server.';
+          this.toast('POS gagal terhubung ke server: ' + msg, 'error');
+          try {
+            window.dispatchEvent(new CustomEvent('pos:api-error', { detail: { action: action, message: msg } }));
+          } catch (e3) {}
           return null;
         }
       },
