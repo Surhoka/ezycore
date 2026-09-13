@@ -158,6 +158,8 @@
       catalogProducts: [],
       catalogQuery: '',
       catalogSort: { key: 'name', asc: true },
+      catalogPage: 1,
+      catalogPerPage: 10,
 
       /* ===== Cart ===== */
       cart: [],
@@ -238,6 +240,28 @@
           if (va > vb) return asc ? 1 : -1;
           return 0;
         });
+      },
+
+      get catalogTotalPages() {
+        return Math.max(1, Math.ceil(this.catalogFiltered.length / this.catalogPerPage));
+      },
+      get catalogPaged() {
+        var page = Math.min(this.catalogPage, this.catalogTotalPages);
+        var start = (page - 1) * this.catalogPerPage;
+        return this.catalogFiltered.slice(start, start + this.catalogPerPage);
+      },
+      get catalogStart() {
+        var page = Math.min(this.catalogPage, this.catalogTotalPages);
+        return this.catalogFiltered.length === 0 ? 0 : (page - 1) * this.catalogPerPage + 1;
+      },
+      get catalogEnd() {
+        var page = Math.min(this.catalogPage, this.catalogTotalPages);
+        return Math.min(page * this.catalogPerPage, this.catalogFiltered.length);
+      },
+      get catalogPageNumbers() {
+        var arr = [];
+        for (var n = 1; n <= this.catalogTotalPages; n++) arr.push(n);
+        return arr;
       },
 
       /* ===== Computed: Transactions ===== */
@@ -524,6 +548,7 @@
         } else {
           this.catalogSort = { key: key, asc: true };
         }
+        this.catalogPage = 1;
         this.paintSortArrows();
       },
       txSortBy(key) {
@@ -659,6 +684,7 @@
       async loadCatalog() {
         if (!this.dbId) { this.catalogLoading = false; return; }
         this.catalogLoading = true;
+        this.catalogPage = 1;
         var res = await this.api('pos.read', { dbId: this.dbId, sheetName: 'Catalog' });
         this.catalogLoading = false;
         ezyDebug('pos:read', {
