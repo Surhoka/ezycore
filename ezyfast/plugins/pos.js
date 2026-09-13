@@ -1178,14 +1178,31 @@
   }
 
   // Bila pos.js tiba SETELAH Alpine.start() (umum untuk script async CDN),
-  // Alpine sudah meng-init #pos-page dan gagal (posPlugin belum terdaftar).
-  // Registrasi saja tidak cukup — subtree harus di-init ulang manual.
-  function posPageNeedsInit() {
+  // Alpine sudah meng-init #pos-page dan GAGAL (posPlugin belum terdaftar).
+  // PALING PENTING (terbukti di Error.txt): Alpine yang gagal meng-eval
+  // x-data tetap MEMBUAT data stack kosong `{}` lalu meneruskan walk ke
+  // anak — seluruh binding di dalam #pos-page me-render error "X is not
+  // defined" selamanya. Karena itu "ceklis ada dataStack" TIDAK bisa
+  // dipakai sebagai bukti hidup: tree rusak pun punya stack.
+  //
+  // Cek sungguhan: stack teratas harus mengekspos `activeTab` — properti
+  // yang SELALU ada di data posPlugin. Status:
+  //   'alive'   → ter-bind benar (posPlugin). Diam.
+  //   'unbound' → Alpine belum memroses node. Tunggu (start/bind normal).
+  //   'broken'  → stack kosong/fallback (x-data gagal). Paksa init ulang.
+  function posTreeState(root) {
+    try {
+      var s = root && root._x_dataStack;
+      if (!s || !s.length) return 'unbound';
+      var top = s[s.length - 1];
+      return (top && ('activeTab' in top)) ? 'alive' : 'broken';
+    } catch (e) { return 'broken'; }
+  }
+  function isPosTreeAlive() {
     try {
       if (typeof document.getElementById !== 'function') return false;
       var el = document.getElementById('pos-page');
-      if (!el) return false;
-      return !(el._x_dataStack && el._x_dataStack.length);
+      return !!el && posTreeState(el) === 'alive';
     } catch (e) { return false; }
   }
   // Evaluasi x-data yang gagal TETAP meninggalkan penanda _x_marker pada
@@ -1193,8 +1210,7 @@
   // persis pola di Error.txt). initTree berikutnya akan MELEWATKAN elemen
   // bertanda, sehingga perbaikan diam-diam tidak berjalan. Hapus penanda
   // (+ stack basi) di seluruh subtree dulu agar init ulang benar-benar
-  // dieksekusi. Aman: hanya dipanggil bila root belum punya data stack
-  // (= tree tidak berfungsi sama sekali, tidak ada yang bisa double-bind).
+  // dieksekusi. Aman: hanya dipanggil bila root TERBUKTI broken.
   function resetPosTree(root) {
     try {
       var els = [root];
@@ -1204,9 +1220,13 @@
       els.forEach(function (el) {
         try { delete el._x_marker; } catch (e) { }
         try { delete el._x_dataStack; } catch (e) { }
+        // Alpine menandai elemen yang sudah di-init via _x_initialized;
+        // bila tidak dihapus, initTree ulang akan dilewati diam-diam.
+        try { delete el._x_initialized; } catch (e) { }
       });
     } catch (e) { }
   }
+  var __posTries = 0;
   function maybeInitTree() {
     if (window.__posTreeInited) return;
     // Jalur normal: Alpine meng-init tree sendiri — jangan init ganda.
@@ -1214,18 +1234,35 @@
     // Parsing belum selesai = Alpine.start() belum jalan — jangan mendahului.
     try { if (document.readyState === 'loading') return; } catch (e) { }
     if (!window.Alpine || typeof window.Alpine.initTree !== 'function') return;
-    if (!posPageNeedsInit()) return;
     var root = null;
     try { root = document.getElementById('pos-page'); } catch (e) { }
     if (!root) return;
-    posLog('late-load terdeteksi: init ulang #pos-page ...');
-    ezyDebug('pos:late-load:init', {});
+    var state = posTreeState(root);
+    if (state === 'alive') return;
+    if (state === 'unbound') {
+      // Hati-hati: belum tentu rusak. Bila alamiah, Alpine.start() akan
+      // menghasilkan 'alive' atau 'broken' sendiri beberapa tick berikutnya.
+      // APA BILA TIDAK PERNAH? Beri pagar: >30 tick (~3 dtk) dengan posisi
+      // dokument sudah ter-parse dan Alpine ada ⇒ start sudah pasti selesai
+      // namun tidak menyentuh node ini ⇒ paksa init juga (bukan 'unbound'
+      // alami, melainkan x-data tidak ada dari markup/terlewat).
+      if (__posTries < 30) return;
+      state = 'broken';
+    }
+    posLog('late-load terdeteksi: #pos-page ' + state + ' — init ulang ...');
+    ezyDebug('pos:late-load:init', { state: state });
     resetPosTree(root);
     try {
       window.__posTreeInited = true;
       window.Alpine.initTree(root);
-      posLog('#pos-page berhasil di-init ulang');
-      ezyDebug('pos:late-load:ok', {});
+      if (posTreeState(root) === 'alive') {
+        posLog('#pos-page berhasil di-init ulang');
+        ezyDebug('pos:late-load:ok', {});
+      } else {
+        window.__posTreeInited = false;
+        posLog('init ulang selesai tapi #pos-page masih belum hidup — dibiarkan (polling lanjut)');
+        ezyDebug('pos:late-load:still-broken', {});
+      }
     } catch (e) {
       window.__posTreeInited = false;
       posLog('init ulang GAGAL:', (e && e.message) || e);
@@ -1236,12 +1273,11 @@
   // Fallback: file eksternal (defer/async CDN) bisa tiba setelah alpine:init.
   try { registerPosAlpine(); } catch (e) { }
   try { maybeInitTree(); } catch (e) { }
-  var __posTries = 0;
   var __posTimer = setInterval(function () {
     try { registerPosAlpine(); } catch (e) { }
     try { maybeInitTree(); } catch (e) { }
     var stopReason = '';
-    if (window.__posAlpineRegistered && (window.__posSawAlpineInit || window.__posTreeInited || !posPageNeedsInit())) {
+    if (window.__posAlpineRegistered && (window.__posSawAlpineInit || window.__posTreeInited || isPosTreeAlive())) {
       stopReason = window.__posSawAlpineInit ? 'jalur normal (alpine:init)' :
         (window.__posTreeInited ? 'perbaikan late-load selesai' : '#pos-page sudah hidup');
     } else if (++__posTries > 100) {
@@ -1249,7 +1285,12 @@
     }
     if (stopReason) {
       posLog('watchdog berhenti: ' + stopReason);
-      ezyDebug('pos:watchdog-stop', { reason: stopReason });
+      ezyDebug('pos:watchdog-stop', { reason: stopReason, state: (function () {
+        try {
+          var el = document.getElementById('pos-page');
+          return el ? posTreeState(el) : 'no-node';
+        } catch (e) { return 'error'; }
+      })() });
       clearInterval(__posTimer);
     }
   }, 100);
