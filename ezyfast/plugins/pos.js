@@ -1237,7 +1237,20 @@
   // bertanda, sehingga perbaikan diam-diam tidak berjalan. Hapus penanda
   // (+ stack basi) di seluruh subtree dulu agar init ulang benar-benar
   // dieksekusi. Aman: hanya dipanggil bila root TERBUKTI broken.
+  // SPA-HARDENING: selain menghapus marker, WAJIB memanggil Alpine.destroyTree
+  // terlebih dahulu. Tree "broken" hasil initTree yang gagal TETAP memiliki
+  // reactive effects tersendiri yang terdaftar di scheduler Alpine. Bila
+  // marker dihapus lalu initTree dijalankan tanpa destroy, efek pohon lama
+  // yang yatim menjadi DUPLIKAT dari pohon baru → saat store/state berubah,
+  // Alpine mengeksekusi kedua set efek; set lama mereferensikan closure yang
+  // sudah dibuang → badai 'Uncaught ReferenceError: p/n is not defined' di
+  // cdn.min.js (ribuan, tanpa henti) setiap kali activeRoute/hash berganti.
   function resetPosTree(root) {
+    try {
+      if (root && window.Alpine && typeof window.Alpine.destroyTree === 'function') {
+        window.Alpine.destroyTree(root);
+      }
+    } catch (e) { }
     try {
       var els = [root];
       if (root.querySelectorAll) {
