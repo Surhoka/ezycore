@@ -1296,6 +1296,19 @@
   }
   function maybeInitTree() {
     if (window.__posTreeInited) return;
+    // SPA-HARDENING #2: rute navigasi sedang mengganti konten #ezy-admin-content
+    // (injectContent aktif). Pohon #pos-page yang 'unbound' selama window ini
+    // ADALAH hal normal — SPA akan memanggil initTree sendiri setelah script
+    // plugin selesai di-wait. Rehydrate/manipulasi di sini BALAP DENGAN inject
+    // nav → dua siklus safeClear/initTree pada node yang sama → Alpine observer
+    // crash 'Cannot convert undefined or null to object' + scope hilang
+    // (formatRupiah is not defined). Reset counter & menunggu adalah benar.
+    if (window.EzyFast && typeof window.EzyFast.isInjecting === 'function') {
+      if (window.EzyFast.isInjecting()) {
+        __posTries = 0;
+        return;
+      }
+    }
     if (window.__posRehydrating) {
       if (isPosTreeAlive()) { window.__posRehydrating = false; }
       return;
@@ -1348,7 +1361,17 @@
   // Fallback: file eksternal (defer/async CDN) bisa tiba setelah alpine:init.
   try { registerPosAlpine(); } catch (e) { }
   try { maybeInitTree(); } catch (e) { }
+  // SPA-HARDENING #3: setiap kunjungan SPA ke /p/pos.html meng-evaluasi pos.js
+  // ULANG (inject script baru) → tanpa guard, interval watchdog N menumpuk
+  // (satu per nav). Instance lama harus bunuh diri: simpan ID instance global,
+  // yang baru menaikkannya; interval lama mengecek & berhenti sendiri.
+  window.__posWatchdogInst = (window.__posWatchdogInst || 0) + 1;
+  var __posInstId = window.__posWatchdogInst;
   var __posTimer = setInterval(function () {
+    if (window.__posWatchdogInst !== __posInstId) {
+      clearInterval(__posTimer);
+      return;
+    }
     try { registerPosAlpine(); } catch (e) { }
     try { maybeInitTree(); } catch (e) { }
     var stopReason = '';
