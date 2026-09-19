@@ -1288,7 +1288,16 @@
     try {
       if (window.EzyFast && typeof window.EzyFast.rehydratePluginTree === 'function') {
         window.__posRehydrating = true;
-        window.EzyFast.rehydratePluginTree('pos');
+        var p = window.EzyFast.rehydratePluginTree('pos');
+        // SPA bisa MENOLAK (sedang inject nav / cache kosong) → promise resolve
+        // false. Kalau __posRehydrating dibiarkan true, watchdog menunggu
+        // sampai isPosTreeAlive() yang tak kunjung datang → request tidak
+        // pernah diulang (deadlock). Lepas flag agar polling berikutnya bisa
+        // meng-request ulang setelah inject nav selesai.
+        if (p && typeof p.then === 'function') {
+          p.then(function (ok) { if (!ok) { window.__posRehydrating = false; } },
+                 function () { window.__posRehydrating = false; });
+        }
         return true;
       }
     } catch (e) {}
