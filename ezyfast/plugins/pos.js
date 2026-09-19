@@ -50,6 +50,21 @@
     });
   } catch (e) { }
 
+  /* ===== formatRupiah GLOBAL (fallback scope) =======================
+     Method formatRupiah() tetap ada di komponen posPlugin — dipakai saat
+     scope komponen sehat. Fungsi global ini hanya penjamin: ekspresi
+     Alpine (mis. `formatRupiah(p.price)`) yang dievaluasi pada pass/clone
+     dengan scope posPlugin hilang tetap resolve ke sini, sehingga badai
+     'formatRupiah is not defined' tidak pernah muncul lagi dan harga tetap
+     ter-format. Idempoten: didefinisikan sekali.
+  */
+  if (typeof window.formatRupiah !== 'function') {
+    window.formatRupiah = function (val) {
+      var n = Number(val);
+      return isNaN(n) ? (val || 'Rp 0') : 'Rp ' + n.toLocaleString('id-ID');
+    };
+  }
+
   /* ===== Config mandiri (pola getCfg() di calendar.html) =================
      EzyFast bridge (`window.EzyFast.getConfig`) TIDAK dijadikan satu-satunya
      sumber: bila bridge belum siap atau CONFIG-nya terkunci kosong, baca
