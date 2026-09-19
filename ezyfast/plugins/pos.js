@@ -1245,6 +1245,14 @@
   // Alpine mengeksekusi kedua set efek; set lama mereferensikan closure yang
   // sudah dibuang → badai 'Uncaught ReferenceError: p/n is not defined' di
   // cdn.min.js (ribuan, tanpa henti) setiap kali activeRoute/hash berganti.
+  //
+  // CATATAN (perilaku saat ini): di bawah SPA, maybeInitTree TIDAK memakai
+  // resetPosTree+initTree — ia meminta clean re-inject dari cache via
+  // EzyFast.rehydratePluginTree. resetPosTree hanya fallback MPA.
+  // PERINGATAN: resetPosTree menghapus _x_initialized tapi TIDAK menghapus
+  // clone x-for yang sudah ter-render; initTree ulang di atas DOM seperti itu
+  // mere-evaluasi binding clone (mis. p.image_url) di luar scope loop → badai
+  // ReferenceError p/n. Karena itu jangan gunakan jalur ini selama ada SPA.
   function resetPosTree(root) {
     try {
       if (root && window.Alpine && typeof window.Alpine.destroyTree === 'function') {
@@ -1266,8 +1274,32 @@
     } catch (e) { }
   }
   var __posTries = 0;
+  // Kunci rehydrate: setelah request clean re-inject dikirim, polling menunggu
+  // sampai #pos-page hidup sebelum mengirim request berikutnya (mencegah loop
+  // rehydrate gegabah saat inject pipeline masih bekerja).
+  // SPA-HARDENING: di bawah SPA, pohon yang unbound/broken TIDAK boleh
+  // di-re-init in-place di atas DOM yang sudah berisi clone render (marker
+  // dihapus tapi clone tersisa → init pass berikutnya mengeksekusi ulang
+  // x-bind/x-text clone (p.image_url dll) di luar scope loop → badai
+  // 'ReferenceError: p/n is not defined'). Solusinya minta router SPA
+  // melakukan CLEAN re-inject dari cache.
+  window.__posRehydrating = false;
+  function requestCleanRehydrate() {
+    try {
+      if (window.EzyFast && typeof window.EzyFast.rehydratePluginTree === 'function') {
+        window.__posRehydrating = true;
+        window.EzyFast.rehydratePluginTree('pos');
+        return true;
+      }
+    } catch (e) {}
+    return false;
+  }
   function maybeInitTree() {
     if (window.__posTreeInited) return;
+    if (window.__posRehydrating) {
+      if (isPosTreeAlive()) { window.__posRehydrating = false; }
+      return;
+    }
     // Jalur normal: Alpine meng-init tree sendiri — jangan init ganda.
     if (window.__posSawAlpineInit) return;
     // Parsing belum selesai = Alpine.start() belum jalan — jangan mendahului.
@@ -1283,13 +1315,17 @@
       // menghasilkan 'alive' atau 'broken' sendiri beberapa tick berikutnya.
       // APA BILA TIDAK PERNAH? Beri pagar: >30 tick (~3 dtk) dengan posisi
       // dokument sudah ter-parse dan Alpine ada ⇒ start sudah pasti selesai
-      // namun tidak menyentuh node ini ⇒ paksa init juga (bukan 'unbound'
-      // alami, melainkan x-data tidak ada dari markup/terlewat).
+      // namun tidak menyentuh node ini ⇒ paksa pemulihan juga (bukan
+      // 'unbound' alami, melainkan x-data tidak ada dari markup/terlewat).
       if (__posTries < 30) return;
       state = 'broken';
     }
-    posLog('late-load terdeteksi: #pos-page ' + state + ' — init ulang ...');
+    posLog('late-load terdeteksi: #pos-page ' + state + ' — pemulihan ...');
     ezyDebug('pos:late-load:init', { state: state });
+    if (requestCleanRehydrate()) {
+      posLog('clean rehydrate diminta (SPA) — menunggu sampai #pos-page hidup');
+      return;
+    }
     resetPosTree(root);
     try {
       window.__posTreeInited = true;
@@ -1319,8 +1355,10 @@
     if (window.__posAlpineRegistered && (window.__posSawAlpineInit || window.__posTreeInited || isPosTreeAlive())) {
       stopReason = window.__posSawAlpineInit ? 'jalur normal (alpine:init)' :
         (window.__posTreeInited ? 'perbaikan late-load selesai' : '#pos-page sudah hidup');
+      window.__posRehydrating = false;
     } else if (++__posTries > 100) {
       stopReason = 'batas 100x polling tercapai (Alpine tak kunjung ada / halaman bukan POS)';
+      window.__posRehydrating = false;
     }
     if (stopReason) {
       posLog('watchdog berhenti: ' + stopReason);
