@@ -1042,6 +1042,10 @@
               // Popup global: beri tahu user bila request GAS benar-benar
               // gagal (sudah lewat retry). Kecuali poller notifikasi —
               // kalau endpoint-nya down, toast sekali tiap menit = spam.
+              // CATATAN: 'get_notifications' sejak migrasi ke this.api()
+              // (lihat loadNotifications) sudah tidak lewat jsonp() lagi,
+              // jadi guard ini praktis hanya relevan untuk aksi auth/menu
+              // (get_config, get_admin_menu, auth.*) yang masih via JSONP.
               if (action !== 'get_notifications') {
                 try {
                   window.dispatchEvent(new CustomEvent('ezy:toast', {
@@ -1199,28 +1203,53 @@
       },
 
       /* == Notifications: fetch, mark-read, helpers ===================
-         Mengambil data notifikasi dari backend via JSONP (get_notifications).
+         [MIGRASI JSONP -> fetch] Sebelumnya SEMUA aksi notifikasi (termasuk
+         polling get_notifications tiap 60 detik) lewat jsonp() — token
+         Bearer ikut tampil sebagai query string pada URL tag script JSONP
+         (?...&token=...&callback=...), tercatat berulang di riwayat
+         browser & log akses server. Kelima
+         method di bawah ini (loadNotifications, markNotificationRead,
+         markAllNotificationsRead, deleteNotification, deleteAllNotifications)
+         kini memakai this.api() — fetch POST dengan token HANYA di header
+         'Authorization: Bearer <token>', tidak pernah di URL.
+         PENTING (butuh penyesuaian backend GAS): action-action berikut
+         WAJIB ditangani juga di doPost (sebelumnya cuma perlu doGet untuk
+         jalur JSONP): get_notifications, notification.mark_read,
+         notification.mark_all_read, notification.delete, notification.clear_all.
+         Jika doPost belum meng-cover action tsb, panggilan ini gagal — cek
+         Network tab: respons akan lewat sebagai { success:false, error:... }
+         dari catch internal api(), bukan exception yang berisik.
          Setiap notifikasi memiliki struktur:
            { id, type, title, message, url, is_read, created_at }
-         Endpoint mengembalikan: { notifications: [...], unreadCount: N }
+         Kontrak respons get_notifications yang DIDUKUNG (frontend menormalkan
+         keduanya, lihat loadNotifications — pastikan backend konsisten pakai
+         salah satu, idealnya shape kedua sesuai konvensi api() di §9.3):
+           1) { notifications: [...], unreadCount: N }                     (shape lama/flat, warisan doGet)
+           2) { success: true, data: { notifications: [...], unreadCount } } (shape standar api())
          Jika endpoint belum tersedia atau user belum login, diam saja. */
       loadNotifications: function () {
         var self = this;
         if (!self.token) { console.warn('[Notifications] No token, skipping fetch'); return; }
         if (self.notificationsLoading) { return; }
         self.notificationsLoading = true;
-        self.jsonp('get_notifications', { token: self.token }).then(function (json) {
-          self.notifications = (json && json.notifications) ? json.notifications : [];
-          self.unreadCount = (json && typeof json.unreadCount === 'number') ? json.unreadCount : 0;
+        // this.api() TIDAK PERNAH reject — kegagalan transport (offline, GAS
+        // cold start, dsb.) tetap resolve sebagai { success:false, error }.
+        // Kegagalan cold-start dibiarkan pulih sendiri di poll berikutnya
+        // (60 detik), sama seperti perilaku lama.
+        self.api('get_notifications', {}).then(function (json) {
+          if (!json || json.success === false) {
+            window.EzyFast.debug('notif:fetch-fail', { err: (json && json.error) || 'unknown' });
+            self.notificationsLoading = false;
+            return;
+          }
+          // Normalisasi: backend boleh balas flat (shape 1) atau dibungkus
+          // { success, data } (shape 2) — lihat catatan kontrak di atas.
+          var payload = (json.data && typeof json.data === 'object') ? json.data : json;
+          self.notifications = payload.notifications || [];
+          self.unreadCount = (typeof payload.unreadCount === 'number') ? payload.unreadCount : 0;
           self.notificationsLoading = false;
         }).catch(function (err) {
-          // Timeout biasanya karena GAS sedang cold start — polling berikutnya
-          // akan otomatis pulih, jadi tidak perlu dilaporkan sebagai error.
-          if (err && err.message === 'JSONP timeout') {
-            console.debug('[Notifications] timeout (cold start), dilanjutkan di poll berikutnya');
-          } else {
-            console.error('[Notifications] Fetch error:', err);
-          }
+          window.EzyFast.debug('notif:fetch-error', { err: String(err) });
           self.notificationsLoading = false;
         });
       },
@@ -1228,7 +1257,10 @@
       markNotificationRead: function (notifId) {
         var self = this;
         if (!self.token || !notifId) { return; }
-        self.jsonp('notification.mark_read', { token: self.token, id: notifId }).then(function () {
+        // api() selalu resolve — cek success:false eksplisit sebelum optimistic
+        // update lokal (jsonp lama otomatis reject jadi .catch() cukup; fetch tidak).
+        self.api('notification.mark_read', { id: notifId }).then(function (json) {
+          if (json && json.success === false) { return; }
           self.notifications = self.notifications.map(function (n) {
             if (n.id === notifId) { n.is_read = true; }
             return n;
@@ -1240,7 +1272,8 @@
       markAllNotificationsRead: function () {
         var self = this;
         if (!self.token) { return; }
-        self.jsonp('notification.mark_all_read', { token: self.token }).then(function () {
+        self.api('notification.mark_all_read', {}).then(function (json) {
+          if (json && json.success === false) { return; }
           self.notifications = self.notifications.map(function (n) { n.is_read = true; return n; });
           self.unreadCount = 0;
         }).catch(function () {});
@@ -1249,7 +1282,9 @@
       deleteNotification: function (notifId) {
         var self = this;
         if (!self.token || !notifId) { return Promise.resolve({ status: 'error', error: 'TOKEN_MISSING' }); }
-        return self.jsonp('notification.delete', { token: self.token, id: notifId }).then(function (res) {
+        return self.api('notification.delete', { id: notifId }).then(function (res) {
+          // Kegagalan transport dari api() sendiri (bukan respons bisnis backend).
+          if (res && res.success === false) { return { status: 'error', error: res.error || 'NETWORK' }; }
           if (res && res.status === 'success') {
             self.notifications = self.notifications.filter(function (n) { return n.id !== notifId; });
             self.unreadCount = Math.max(0, self.notifications.filter(function (n) { return !n.is_read; }).length);
@@ -1261,7 +1296,8 @@
       deleteAllNotifications: function () {
         var self = this;
         if (!self.token) { return Promise.resolve({ status: 'error', error: 'TOKEN_MISSING' }); }
-        return self.jsonp('notification.clear_all', { token: self.token }).then(function (res) {
+        return self.api('notification.clear_all', {}).then(function (res) {
+          if (res && res.success === false) { return { status: 'error', error: res.error || 'NETWORK' }; }
           if (res && res.status === 'success') {
             self.notifications = [];
             self.unreadCount = 0;
