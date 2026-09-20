@@ -684,7 +684,7 @@
         if (!this.dbId) { this.catalogLoading = false; return; }
         this.catalogLoading = true;
         this.catalogPage = 1;
-        showPosLoader('Memuat katalog...');
+        showPosLoader(this.activeTab === 'Sale' ? 'Memuat data Sale...' : 'Memuat katalog...');
         try {
           var res = await this.api('pos.read', { dbId: this.dbId, sheetName: 'Catalog' });
           this.catalogLoading = false;
