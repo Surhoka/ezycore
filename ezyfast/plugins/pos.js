@@ -390,7 +390,7 @@
         setTimeout(function () { self.toastMsg = ''; }, 3000);
       },
 
-      /* ===== Config & JSONP ===== */
+      /* ===== Config & API (fetch/POST CORS-safe) ===== */
       get apiUrl() {
         var cfg = resolveConfig();
         return (cfg && cfg.gasApiEndpoint) || '';
@@ -404,61 +404,50 @@
         return (cfg && cfg.pageId) || '';
       },
 
-      fetchJsonp(url, params, _attempt) {
+      apiFetch(action, options) {
+        // fetch/POST CORS-safe (pola store.api): Content-Type
+        // text/plain;charset=utf-8 + TANPA header Authorization agar request
+        // "simple" (tanpa preflight OPTIONS yang diblokir GAS); blogId &
+        // token dikirim di body. GAS membalas ACAO:* → res.json() terbaca.
+        if (!this.apiUrl) { return Promise.resolve(null); }
         var self = this;
-        var attempt = _attempt || 0;
+        var payload = Object.assign({}, options || {});
+        payload.action = action;
+        if (self.blogId && !('blogId' in payload)) { payload.blogId = self.blogId; }
+        try {
+          var token = localStorage.getItem('ezy_auth_token');
+          if (token && !('token' in payload)) { payload.token = token; }
+        } catch (e) { }
+        var attempt = 0;
         var MAX_RETRIES = 2;
         var TIMEOUT_MS = 30000;
         return new Promise(function (resolve, reject) {
-          if (!url) { reject(new Error('apiUrl empty')); return; }
-          var cbName = '_ezyPosCb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-          var settled = false;
-          var script = null;
-          var done = function () {
-            if (settled) return;
-            settled = true;
-            clearTimeout(timer);
-            if (script) {
-              if (script.parentNode) script.parentNode.removeChild(script);
-              script.onerror = null;
-              script = null;
-            }
-          };
-          window[cbName] = function (raw) {
-            if (settled) return;
-            done();
-            try { resolve(typeof raw === 'string' ? JSON.parse(raw) : raw); }
-            catch (e) { reject(e); }
-          };
-          var timer = setTimeout(function () {
-            // Respons GAS yang tiba SESUDAH timeout dieksekusi aman oleh
-            // browser (callback masih terdefinisi) → tanpa ReferenceError.
-            if (settled) return;
-            done();
-            if (attempt < MAX_RETRIES) {
-              setTimeout(function () {
-                self.fetchJsonp(url, params, attempt + 1).then(resolve).catch(reject);
-              }, 1000 * (attempt + 1));
-            } else {
-              reject(new Error('JSONP timeout. Cek endpoint GAS & coba lagi.'));
-            }
-          }, TIMEOUT_MS);
-          var allParams = Object.assign({ callback: cbName, blogId: self.blogId }, params);
-          var qs = Object.keys(allParams).map(function (k) { return k + '=' + encodeURIComponent(allParams[k]); }).join('&');
-          script = document.createElement('script');
-          script.src = url + '?' + qs;
-          script.onerror = function () {
-            if (settled) return;
-            done();
-            if (attempt < MAX_RETRIES) {
-              setTimeout(function () {
-                self.fetchJsonp(url, params, attempt + 1).then(resolve).catch(reject);
-              }, 1000 * (attempt + 1));
-            } else {
-              reject(new Error('Script load error'));
-            }
-          };
-          document.head.appendChild(script);
+          function exec() {
+            var controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+            var timer = controller ? setTimeout(function () { controller.abort(); }, TIMEOUT_MS) : null;
+            var done = function () { if (timer) { clearTimeout(timer); } };
+            fetch(self.apiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify(payload),
+              signal: controller ? controller.signal : undefined
+            }).then(function (res) {
+              if (!res.ok) { throw new Error('HTTP ' + res.status); }
+              return res.json();
+            }).then(function (data) {
+              done();
+              resolve(data);
+            }).catch(function (err) {
+              done();
+              if (attempt < MAX_RETRIES) {
+                attempt++;
+                setTimeout(exec, 1000 * attempt);
+              } else {
+                reject(err);
+              }
+            });
+          }
+          exec();
         });
       },
 
@@ -468,7 +457,7 @@
           return null;
         }
         try {
-          var result = await this.fetchJsonp(this.apiUrl, Object.assign({ action: action }, params || {}));
+          var result = await this.apiFetch(action, params || {});
           try { window.dispatchEvent(new CustomEvent('pos:api-error:clear', { detail: {} })); } catch (e) {}
           return result;
         } catch (e) {
@@ -619,7 +608,7 @@
         var self = this;
         // Bootstrap inline pos.html (self-recovery setelah localStorage.clear())
         // mungkin masih memulihkan dbId via get/set_plugin_meta — tunggu dulu
-        // agar fast-path cache terpakai & tidak memicu JSONP ganda. Halaman
+        // agar fast-path cache terpakai & tidak memicu request ganda. Halaman
         // tanpa bootstrap → promise tak ada → langsung lanjut.
         if (window.__ezyPosDbReady && typeof window.__ezyPosDbReady.then === 'function') {
           try { await window.__ezyPosDbReady; } catch (e) { }
@@ -636,7 +625,7 @@
           // verifikasi dbId saat boot): non-blocking, perbaiki cache lokal bila
           // dbId di server berubah (mis. user mengulang Setup Database) dan
           // laporkan pageId agar sheet Plugins_Active tetap sinkron.
-          // Sengaja ditunda ±1 dtk agar tidak ikut membanjiri 6+ JSONP paralel
+          // Sengaja ditunda ±1 dtk agar tidak ikut membanjiri 6+ request paralel
           // saat GAS cold start (bootstrap + menu + verify + notifications) —
           // request transien yang menyusul VANILLA biasanya lolos saat proses
           // GAS sudah hangat.
@@ -1392,9 +1381,8 @@
 
   /* ===== AUTO-REGISTRATION (plugin.link_page — kirim pageId tiap halaman ditampilkan) ===== */
   // Guard: satu request link_page aktif saja. runPosAutoReg dipanggil berulang
-  // (immediate + load + 2× timeout); tanpa guard, beberapa <script> dari request
-  // tumpang-tindih berbagi nama callback yang sama → Respons kedua menemukan
-  // callback sudah dihapus → ReferenceError (exec?...callback=_ezyAutoRegCb_pos).
+  // (immediate + load + 2× timeout); tanpa guard, beberapa request POST yang
+  // tumpang-tindih bisa menulis pageId dari halaman lain.
   var __posAutoRegPending = false;
   function runPosAutoReg() {
     // pos.js dimuat template-wide: hanya daftarkan halaman yang benar-benar
@@ -1419,40 +1407,39 @@
       // Dikirim SETIAP kali halaman plugin ditampilkan (bukan hanya sekali),
       // agar kolom pageId di sheet Plugins_Active selalu sinkron/terisi.
 
-      // Nama callback UNIK per invokasi (pola jsonp di template & fetchJsonp):
-      // tiap <script> punya callback sendiri sehingga respons yang tumpang-tindih
-      // tidak menghapus fungsi milik request lain.
-      var cbName = '_ezyAutoRegCb_' + PLUGIN_ID + '_' + Date.now() + '_' + Math.floor(Math.random() * 1e6);
-      var cleanup = function () {
-        try { window[cbName] = undefined; } catch (e) { }
-        __posAutoRegPending = false;
+      // fetch/POST CORS-safe (pola apiFetch): action + params di body JSON,
+      // TANPA callback/script-injection. Guard pending dibebaskan di mana pun
+      // chain berakhir (sukses/gagal) agar request berikutnya bisa jalan.
+      var storageKey = 'ezy_plugin_linked_' + PLUGIN_ID;
+      var payload = {
+        action: 'plugin.link_page',
+        pluginId: PLUGIN_ID,
+        blogId: cfg.blogId,
+        pageId: cfg.pageId
       };
-      window[cbName] = function (raw) {
-        try {
-          var res = typeof raw === 'string' ? JSON.parse(raw) : raw;
-          if (res && res.status === 'success') {
-            localStorage.setItem('ezy_plugin_linked_' + PLUGIN_ID, String(cfg.pageId));
-            window.dispatchEvent(new CustomEvent('ezy:plugin:linked', {
-              detail: { pluginId: PLUGIN_ID, pageId: cfg.pageId }
-            }));
-          }
-        } catch (e) { }
-        cleanup();
-      };
-      __posAutoRegPending = true;
+      try {
+        var token = localStorage.getItem('ezy_auth_token');
+        if (token) { payload.token = token; }
+      } catch (e) { }
 
-      var params = [
-        'action=plugin.link_page',
-        'pluginId=' + encodeURIComponent(PLUGIN_ID),
-        'blogId=' + encodeURIComponent(cfg.blogId),
-        'pageId=' + encodeURIComponent(cfg.pageId),
-        'callback=' + cbName
-      ];
-      var s = document.createElement('script');
-      s.src = apiBase + '?' + params.join('&');
-      // Gagal dimuat (network/offline) → lepas pending agar retry bisa berjalan.
-      s.onerror = cleanup;
-      document.head.appendChild(s);
+      __posAutoRegPending = true;
+      var clean = function () { __posAutoRegPending = false; };
+
+      fetch(apiBase, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      }).then(function (res) { return res.json(); }).then(function (res) {
+        if (res && res.status === 'success') {
+          localStorage.setItem(storageKey, String(cfg.pageId));
+          window.dispatchEvent(new CustomEvent('ezy:plugin:linked', {
+            detail: { pluginId: PLUGIN_ID, pageId: cfg.pageId }
+          }));
+        }
+      }).catch(function () {
+        // Gagal dimuat (network/offline/preflight) → lepas pending agar retry
+        // berikutnya (window load / timeout) bisa berjalan.
+      }).then(clean);
     })();
   }
   try { runPosAutoReg(); } catch (e) { }
