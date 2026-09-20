@@ -7,48 +7,9 @@
 (function () {
   'use strict';
 
-  // Penanda eksekusi + versi: dibaca oleh diagnosis otomatis di pos.html
-  // untuk memastikan file YANG BARU benar-benar tersaji & tereksekusi.
+  // Penanda eksekusi: dibaca oleh watchdog di pos.html untuk memastikan
+  // file YANG BARU benar-benar tersaji & tereksekusi.
   window.__posJsRan = true;
-  window.__posJsVersion = '1.1.1';
-
-  // Log konsol diagnostik (prefiks [POS]). Aktif default agar perbaikan
-  // terlihat di DevTools; matikan via window.__POS_DEBUG = false.
-  var POS_DEBUG = window.__POS_DEBUG !== false;
-  function posLog() {
-    if (!POS_DEBUG) return;
-    try {
-      var args = Array.prototype.slice.call(arguments);
-      args.unshift('[POS]');
-      if (window.console && typeof window.console.log === 'function') {
-        window.console.log.apply(window.console, args);
-      }
-    } catch (e) { }
-  }
-  try {
-    posLog('pos.js v' + window.__posJsVersion + ' tereksekusi; Alpine=' +
-      (window.Alpine ? 'ada' : 'belum ada') + '; readyState=' +
-      ((typeof document !== 'undefined' && document.readyState) || '?'));
-  } catch (e) { }
-
-  // Mirror log diagnostik ke buffer global (EzyFast.debug → sessionStorage
-  // 'ezy_debug_log') agar urutannya tahan lintas reload & terbaca via panel
-  // Debug / diagnosis box. No-op bila shell belum tersedia.
-  function ezyDebug(ev, details) {
-    try {
-      if (window.EzyFast && typeof window.EzyFast.debug === 'function') {
-        window.EzyFast.debug(ev, details);
-      }
-    } catch (e) { }
-  }
-  try {
-    ezyDebug('pos:loaded', {
-      v: window.__posJsVersion,
-      Alpine: !!window.Alpine,
-      readyState: (typeof document !== 'undefined' && document.readyState) || '?',
-      posPage: !!(typeof document !== 'undefined' && document.getElementById && document.getElementById('pos-page'))
-    });
-  } catch (e) { }
 
   /* ===== formatRupiah GLOBAL (fallback scope) =======================
      Method formatRupiah() tetap ada di komponen posPlugin — dipakai saat
@@ -119,8 +80,6 @@
     if (window.__posAlpineRegistered) return;
     if (!window.Alpine || typeof window.Alpine.data !== 'function') return;
     window.__posAlpineRegistered = true;
-    posLog('Alpine.data terdaftar: posTxDropdown, posPlugin');
-    ezyDebug('pos:register', { components: ['posTxDropdown', 'posPlugin'], sawInit: !!window.__posSawAlpineInit });
     var Alpine = window.Alpine;
     // Dropdown aksi per-baris ala TailAdmin (demo products-list):
     // panel fixed + flip ke atas terukur bila overflow viewport.
@@ -484,11 +443,9 @@
           try { window.dispatchEvent(new CustomEvent('pos:api-error:clear', { detail: {} })); } catch (e) {}
           return result;
         } catch (e) {
-          console.error('[POS] API error:', e);
           // Popup global: toast shell (bila ada) + banner POS dengan tombol
           // "Coba Lagi" (retry = reload penuh, hash dipertahankan).
           var msg = (e && e.message) || 'Gagal terhubung ke server.';
-          ezyDebug('pos:api-error', { action: action, msg: msg });
           this.toast('POS gagal terhubung ke server: ' + msg, 'error');
           try {
             window.dispatchEvent(new CustomEvent('pos:api-error', { detail: { action: action, message: msg } }));
@@ -632,7 +589,6 @@
         }
         if (this.dbId) {
           this.dbReady = true;
-          ezyDebug('pos:dbready', { source: 'cache', ok: true, dbId: this.dbId });
           // Reconcile ringan ke backend (paritas dgn pola calendar yang selalu
           // verifikasi dbId saat boot): non-blocking, perbaiki cache lokal bila
           // dbId di server berubah (mis. user mengulang Setup Database) dan
@@ -658,7 +614,6 @@
                       cfg.PLUGIN_DB_pos = res.dbId;
                       localStorage.setItem('EzyfastConfig', JSON.stringify(cfg));
                     } catch (e) { }
-                    posLog('reconcile: dbId diperbarui dari backend -> ' + res.dbId);
                   }
                 }).catch(function () { });
               } catch (e2) { }
@@ -677,7 +632,6 @@
           if (res && res.status === 'success' && res.dbId) {
             this.dbId = res.dbId;
             this.dbReady = true;
-            ezyDebug('pos:dbready', { source: 'api', ok: true, dbId: res.dbId });
             try {
               var cfg = JSON.parse(localStorage.getItem('EzyfastConfig') || '{}');
               cfg.PLUGIN_DB_pos = res.dbId;
@@ -685,12 +639,10 @@
             } catch (e2) { }
           } else {
             this.dbReady = false;
-            ezyDebug('pos:dbready', { source: 'api', ok: false, err: 'tidak ada dbId dari backend (plugin belum ter-link?)' });
             this.toast('Database plugin belum terpasang — buka Plugin Manager', 'error');
           }
         } catch (err) {
           this.dbReady = false;
-          ezyDebug('pos:dbready', { source: 'api', ok: false, err: (err && err.message) || String(err) });
           this.toast('Gagal memulihkan koneksi database POS', 'error');
         }
       },
@@ -702,17 +654,8 @@
         this.catalogPage = 1;
         var res = await this.api('pos.read', { dbId: this.dbId, sheetName: 'Catalog' });
         this.catalogLoading = false;
-        ezyDebug('pos:read', {
-          sheet: 'Catalog',
-          ok: !!(res && res.status === 'success'),
-          n: (res && res.records) ? res.records.length : 0,
-          dbId: this.dbId || ''
-        });
         if (res && res.status === 'success') {
           this.catalogProducts = this.uniqById(res.records);
-          if ((res.records || []).length !== this.catalogProducts.length) {
-            console.warn('[POS] Catalog: baris duplikat/tanpa id dibuang.');
-          }
           this.catalogLoaded = true;
         }
         var self = this;
@@ -894,17 +837,8 @@
         this.txLoading = true;
         var res = await this.api('pos.read', { dbId: this.dbId, sheetName: 'Transactions' });
         this.txLoading = false;
-        ezyDebug('pos:read', {
-          sheet: 'Transactions',
-          ok: !!(res && res.status === 'success'),
-          n: (res && res.records) ? res.records.length : 0,
-          dbId: this.dbId || ''
-        });
         if (res && res.status === 'success') {
           this.transactions = this.uniqById(res.records);
-          if ((res.records || []).length !== this.transactions.length) {
-            console.warn('[POS] Transactions: baris duplikat/tanpa id dibuang.');
-          }
           this.txLoaded = true;
           if (this.txPage > this.txTotalPages) this.txPage = this.txTotalPages;
         }
@@ -1141,9 +1075,6 @@
         this.shiftsLoading = false;
         if (res && res.status === 'success') {
           this.shifts = this.uniqById(res.records);
-          if ((res.records || []).length !== this.shifts.length) {
-            console.warn('[POS] Shifts: baris duplikat/tanpa id dibuang.');
-          }
           this.shiftsLoaded = true;
           var open = this.shifts.find(function (s) { return s.status === 'open'; });
           this.currentShift = open || null;
@@ -1211,7 +1142,6 @@
   // Registrasi normal: pos.js tiba SEBELUM Alpine.start() (kasus inline dulu).
   function onAlpineInit() {
     window.__posSawAlpineInit = true;
-    posLog('alpine:init tertangkap (jalur normal)');
     registerPosAlpine();
   }
   if (document.addEventListener) {
@@ -1357,28 +1287,18 @@
       if (__posTries < 30) return;
       state = 'broken';
     }
-    posLog('late-load terdeteksi: #pos-page ' + state + ' — pemulihan ...');
-    ezyDebug('pos:late-load:init', { state: state });
     if (requestCleanRehydrate()) {
-      posLog('clean rehydrate diminta (SPA) — menunggu sampai #pos-page hidup');
       return;
     }
     resetPosTree(root);
     try {
       window.__posTreeInited = true;
       window.Alpine.initTree(root);
-      if (posTreeState(root) === 'alive') {
-        posLog('#pos-page berhasil di-init ulang');
-        ezyDebug('pos:late-load:ok', {});
-      } else {
+      if (posTreeState(root) !== 'alive') {
         window.__posTreeInited = false;
-        posLog('init ulang selesai tapi #pos-page masih belum hidup — dibiarkan (polling lanjut)');
-        ezyDebug('pos:late-load:still-broken', {});
       }
     } catch (e) {
       window.__posTreeInited = false;
-      posLog('init ulang GAGAL:', (e && e.message) || e);
-      ezyDebug('pos:late-load:fail', { err: (e && e.message) || String(e) });
     }
   }
 
@@ -1408,13 +1328,6 @@
       window.__posRehydrating = false;
     }
     if (stopReason) {
-      posLog('watchdog berhenti: ' + stopReason);
-      ezyDebug('pos:watchdog-stop', { reason: stopReason, state: (function () {
-        try {
-          var el = document.getElementById('pos-page');
-          return el ? posTreeState(el) : 'no-node';
-        } catch (e) { return 'error'; }
-      })() });
       clearInterval(__posTimer);
     }
   }, 100);
@@ -1447,7 +1360,6 @@
 
       // Dikirim SETIAP kali halaman plugin ditampilkan (bukan hanya sekali),
       // agar kolom pageId di sheet Plugins_Active selalu sinkron/terisi.
-      posLog('auto-link plugin "pos" untuk pageId=' + cfg.pageId);
 
       // Nama callback UNIK per invokasi (pola jsonp di template & fetchJsonp):
       // tiap <script> punya callback sendiri sehingga respons yang tumpang-tindih
