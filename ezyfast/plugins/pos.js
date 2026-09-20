@@ -26,6 +26,35 @@
     };
   }
 
+  /* ===== Loader overlay GLOBAL (pola calendar.html) ======================
+     SATU loader overlay untuk SEMUA halaman modul via
+     window.EzyFast.loader.show('...')/hide() — didefinisikan di template
+     (blok "Global Overlay Loader", ref-count: show/hide boleh bertumpuk).
+     Dipakai untuk fase boot (pemulihan dbId + muat data awal) DAN refetch
+     per-tab (Catalog/Transactions/Shifts) — overlay menutupi seluruh area
+     konten pada tab yang sedang aktif. Ref-count template membuat show/hide
+     bersarang aman: setiap show menaikkan counter, tiap hide menurunkannya.
+     Overlay per-kartu (.ezy-card-loader/.ezy-table-loading) dipertahankan
+     sebagai fallback bila shell loader belum tersedia (preview standalone /
+     guard `window.EzyFast.loader` kosong). Idempoten & aman dipanggil
+     berulang (text berubah tiap show). */
+  function showPosLoader(text) {
+    try {
+      if (window.EzyFast && window.EzyFast.loader &&
+        typeof window.EzyFast.loader.show === 'function') {
+        window.EzyFast.loader.show(text || 'Memuat data POS...');
+      }
+    } catch (e) { }
+  }
+  function hidePosLoader() {
+    try {
+      if (window.EzyFast && window.EzyFast.loader &&
+        typeof window.EzyFast.loader.hide === 'function') {
+        window.EzyFast.loader.hide();
+      }
+    } catch (e) { }
+  }
+
   /* ===== Config mandiri (pola getCfg() di calendar.html) =================
      EzyFast bridge (`window.EzyFast.getConfig`) TIDAK dijadikan satu-satunya
      sumber: bila bridge belum siap atau CONFIG-nya terkunci kosong, baca
@@ -462,19 +491,33 @@
         // di kontainer mana pun (capture: scroll tidak bubble) & saat resize.
         window.addEventListener('scroll', () => { this.closeTxMenus(); }, true);
         window.addEventListener('resize', () => { this.closeTxMenus(); });
-        await this.checkDbReady();
-        if (this.dbReady) {
-          // Hybrid SPA: tab aktif (Sale) dimuat saat init; tab lain dimuat
-          // lazy via selectTab/ensureTabLoaded pada kunjungan pertamanya —
-          // loader per-kartunya ikut aktif di kunjungan pertama tiap tab.
-          await this.loadCatalog();
-          // Deep-link langsung (#Transactions/#Shifts/#Catalog): tab aktif
-          // saat boot ikut dimuat (dbId sudah tersedia sekarang).
-          this.ensureTabLoaded(this.activeTab);
-        } else {
+        // Boot: overlay loader GLOBAL (pola calendar.html) — tampil selama
+        // pemulihan dbId (__ezyPosDbReady) + muat katalog awal, lalu hide di
+        // SEMUA jalur selesai (try/catch/finally) agar show/hide berpasangan
+        // (loader global ref-counted; show tanpa hide = overlay menggantung).
+        showPosLoader('Memuat data POS...');
+        try {
+          await this.checkDbReady();
+          if (this.dbReady) {
+            // Hybrid SPA: tab aktif (Sale) dimuat saat init; tab lain dimuat
+            // lazy via selectTab/ensureTabLoaded pada kunjungan pertamanya —
+            // loader per-kartunya ikut aktif di kunjungan pertama tiap tab.
+            await this.loadCatalog();
+            // Deep-link langsung (#Transactions/#Shifts/#Catalog): tab aktif
+            // saat boot ikut dimuat (dbId sudah tersedia sekarang).
+            this.ensureTabLoaded(this.activeTab);
+          } else {
+            this.catalogLoading = false;
+            this.txLoading = false;
+            this.shiftsLoading = false;
+          }
+        } catch (e) {
+          // Jalur error: matikan loader per-kartu & tetap hide overlay global.
           this.catalogLoading = false;
           this.txLoading = false;
           this.shiftsLoading = false;
+        } finally {
+          hidePosLoader();
         }
         // Prefill kasir dari user login agar tidak jatuh ke 'default'
         if (!this.shiftForm.cashier_id) {
@@ -652,11 +695,16 @@
         if (!this.dbId) { this.catalogLoading = false; return; }
         this.catalogLoading = true;
         this.catalogPage = 1;
-        var res = await this.api('pos.read', { dbId: this.dbId, sheetName: 'Catalog' });
-        this.catalogLoading = false;
-        if (res && res.status === 'success') {
-          this.catalogProducts = this.uniqById(res.records);
-          this.catalogLoaded = true;
+        showPosLoader('Memuat katalog...');
+        try {
+          var res = await this.api('pos.read', { dbId: this.dbId, sheetName: 'Catalog' });
+          this.catalogLoading = false;
+          if (res && res.status === 'success') {
+            this.catalogProducts = this.uniqById(res.records);
+            this.catalogLoaded = true;
+          }
+        } finally {
+          hidePosLoader();
         }
         var self = this;
         setTimeout(function () { self.paintSortArrows(); }, 50);
@@ -835,12 +883,17 @@
         if (!this.dbId) { this.txLoading = false; return; }
         this.closeTxMenus();
         this.txLoading = true;
-        var res = await this.api('pos.read', { dbId: this.dbId, sheetName: 'Transactions' });
-        this.txLoading = false;
-        if (res && res.status === 'success') {
-          this.transactions = this.uniqById(res.records);
-          this.txLoaded = true;
-          if (this.txPage > this.txTotalPages) this.txPage = this.txTotalPages;
+        showPosLoader('Memuat transaksi...');
+        try {
+          var res = await this.api('pos.read', { dbId: this.dbId, sheetName: 'Transactions' });
+          this.txLoading = false;
+          if (res && res.status === 'success') {
+            this.transactions = this.uniqById(res.records);
+            this.txLoaded = true;
+            if (this.txPage > this.txTotalPages) this.txPage = this.txTotalPages;
+          }
+        } finally {
+          hidePosLoader();
         }
         var self = this;
         setTimeout(function () { self.paintSortArrows(); }, 50);
@@ -1071,13 +1124,18 @@
       async loadShifts() {
         if (!this.dbId) { this.shiftsLoading = false; return; }
         this.shiftsLoading = true;
-        var res = await this.api('pos.read', { dbId: this.dbId, sheetName: 'Shifts' });
-        this.shiftsLoading = false;
-        if (res && res.status === 'success') {
-          this.shifts = this.uniqById(res.records);
-          this.shiftsLoaded = true;
-          var open = this.shifts.find(function (s) { return s.status === 'open'; });
-          this.currentShift = open || null;
+        showPosLoader('Memuat shift...');
+        try {
+          var res = await this.api('pos.read', { dbId: this.dbId, sheetName: 'Shifts' });
+          this.shiftsLoading = false;
+          if (res && res.status === 'success') {
+            this.shifts = this.uniqById(res.records);
+            this.shiftsLoaded = true;
+            var open = this.shifts.find(function (s) { return s.status === 'open'; });
+            this.currentShift = open || null;
+          }
+        } finally {
+          hidePosLoader();
         }
         var self = this;
         setTimeout(function () { self.paintSortArrows(); }, 50);
