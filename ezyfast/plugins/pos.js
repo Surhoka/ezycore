@@ -86,13 +86,22 @@
     } catch (e) { }
   }
 
-  // Instance posPlugin yang sedang hidup (top data stack #pos-page).
+  // Instance posPlugin yang sedang hidup. Pindai SELURUH _x_dataStack untuk
+  // objek yang benar-benar scope posPlugin (punya resolveFeedMode) — elemen
+  // teratas stack bisa berupa scope Alpine lain (nested x-data / root), bukan
+  // selalu data component kita. Fallback: elemen teratas.
   function getPosInst() {
     try {
       var el = document.getElementById('pos-page');
       if (!el) { return null; }
       var s = el._x_dataStack;
-      if (s && s.length) { return s[s.length - 1]; }
+      if (s && s.length) {
+        for (var i = s.length - 1; i >= 0; i--) {
+          var c = s[i];
+          if (c && typeof c.resolveFeedMode === 'function') { return c; }
+        }
+        return s[s.length - 1];
+      }
     } catch (e) { }
     return null;
   }
@@ -779,7 +788,7 @@
           window.__posHashBound = true;
           window.addEventListener('hashchange', function () {
             var inst = getPosInst();
-            if (!inst) { return; }
+            if (!inst || typeof inst.syncHashRoute !== 'function') { return; }
             inst.syncHashRoute().then(function () {
               try { inst.resolveFeedMode(); } catch (e) { }
             }).catch(function () { });
@@ -1677,8 +1686,10 @@
     try {
       var s = root && root._x_dataStack;
       if (!s || !s.length) return 'unbound';
-      var top = s[s.length - 1];
-      return (top && ('activeTab' in top)) ? 'alive' : 'broken';
+      for (var i = 0; i < s.length; i++) {
+        if (s[i] && ('activeTab' in s[i])) return 'alive';
+      }
+      return 'broken';
     } catch (e) { return 'broken'; }
   }
   function isPosTreeAlive() {
@@ -1904,7 +1915,7 @@
   function goPosTab(slug) {
     if (!POS_TAB_SLUG_TO_ID[slug]) { return; }
     var inst = getPosInst();
-    if (!inst) { return; }
+    if (!inst || typeof inst.resolveFeedMode !== 'function') { return; }
     // Navigasi tab = hash shell (bukan permalink post). Meta feed hanya
     // dipakai resolveFeedMode saat mengambil konten, bukan untuk URL.
     adoptPosUrl(slug);
@@ -1987,7 +1998,7 @@
         var slug = posTabSlugForPath(path);
         if (posShellActive()) {
           var inst = getPosInst();
-          if (inst) {
+          if (inst && typeof inst.resolveFeedMode === 'function') {
             if (slug) {
               if (slug !== inst.posFeedSlug) {
                 inst.posFeedSlug = slug;
