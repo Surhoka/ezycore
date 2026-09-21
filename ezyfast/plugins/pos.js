@@ -11,6 +11,181 @@
   // file YANG BARU benar-benar tersaji & tereksekusi.
   window.__posJsRan = true;
 
+  /* ===== POS Feed Engine (Fase 2: dual-mode shell + tab-permalink) =======
+     Setiap tab POS = post Blogger independen berlabel `ezy-pos-tab` +
+     `ezy-tab-<slug>` (URL /yyyy/mm/<slug>.html). Ketika shell #pos-page
+     aktif dan URL sedang di salah satu permalink tab, konten tab TIDAK lagi
+     dibaca dari blok x-show di pos.html, melainkan di-fetch utuh dari feed
+     Blogger (GET biasa, bebas CORS `*`; TANPA JSONP — lihat REFACTOR_PLAN
+     keputusan #1) lalu di-inject ke #pos-tab-content oleh engine ini.
+     Seluruh state (cart, dbId, token) tetap hidup di scope posPlugin shell —
+     konten feed hanya "markup murni" yang ter-bind ke scope tersebut.   */
+  var POS_SHELL_PATH = '/p/pos.html';
+  var POS_FEED_LABEL = 'ezy-pos-tab';
+  var POS_FEED_TTL = 5 * 60 * 1000; // indeks & konten tab di-cache 5 menit
+  var POS_TAB_SLUG_TO_ID = { sale: 'Sale', catalog: 'Catalog', transactions: 'Transactions', shifts: 'Shifts' };
+  var POS_TAB_TITLES = { sale: 'Kasir', catalog: 'Katalog', transactions: 'Transaksi', shifts: 'Shift' };
+  var POS_TAB_ID_TO_SLUG = {};
+  (function () {
+    for (var k in POS_TAB_SLUG_TO_ID) {
+      if (Object.prototype.hasOwnProperty.call(POS_TAB_SLUG_TO_ID, k)) {
+        POS_TAB_ID_TO_SLUG[POS_TAB_SLUG_TO_ID[k]] = k;
+      }
+    }
+  })();
+
+  // Slug tab dari pathname permalink post Blogger (/yyyy/mm/<slug>.html).
+  // '' bila bukan permalink tab POS. Satu-satunya sumber kebenaran pemetaan
+  // URL ke tab (dipakai router SPA & engine feed secara seragam).
+  function posTabSlugForPath(path) {
+    var m = String(path || '').match(/^\/(\d{4})\/(\d{2})\/([a-z0-9-]+)\.html$/);
+    if (m && POS_TAB_SLUG_TO_ID[m[3]]) { return m[3]; }
+    return '';
+  }
+  function posTabTitleFor(slug) {
+    return POS_TAB_TITLES[slug] || (slug ? slug.charAt(0).toUpperCase() + slug.slice(1) : 'POS');
+  }
+
+  // Instance posPlugin yang sedang hidup (top data stack #pos-page).
+  function getPosInst() {
+    try {
+      var el = document.getElementById('pos-page');
+      if (!el) { return null; }
+      var s = el._x_dataStack;
+      if (s && s.length) { return s[s.length - 1]; }
+    } catch (e) { }
+    return null;
+  }
+
+  /* Indeks feed: url + POSTID per slug (label ezy-pos-tab). Cache TTL 5 min.
+     Beban ringan (summary feed) & idempoten — anti-race antar-tab ditangani
+     caller lewat perbandingan slug sesudah await, bukan di sini. */
+  var __posFeedIndex = null;
+  var __posFeedIndexAt = 0;
+  function loadPosFeedIndex(force) {
+    if (!force && __posFeedIndex && (Date.now() - __posFeedIndexAt) < POS_FEED_TTL) {
+      return Promise.resolve(__posFeedIndex);
+    }
+    var url = '/feeds/posts/summary/-/' + POS_FEED_LABEL + '?alt=json';
+    return window.fetch(url).then(function (r) {
+      if (!r.ok) { throw new Error('HTTP ' + r.status); }
+      return r.json();
+    }).then(function (json) {
+      var map = {};
+      var entries = (json && json.feed && json.feed.entry) || [];
+      for (var i = 0; i < entries.length; i++) {
+        var en = entries[i] || {};
+        var idm;
+        try { idm = String(en.id && en.id.$t || '').match(/post-(\d+)/); } catch (e) { idm = null; }
+        if (!idm) { continue; }
+        var urlPath = '';
+        var links = en.link || [];
+        for (var li = 0; li < links.length; li++) {
+          var lk = links[li] || {};
+          if (lk.rel === 'alternate' && lk.href) {
+            try { urlPath = new URL(lk.href, window.location.href).pathname; } catch (e) { urlPath = ''; }
+            break;
+          }
+        }
+        if (!urlPath) { continue; }
+        var sm = urlPath.match(/\/(\d{4})\/(\d{2})\/([a-z0-9-]+)\.html$/);
+        var slug = sm ? sm[3] : '';
+        if (!slug || !POS_TAB_SLUG_TO_ID[slug]) { continue; }
+        map[slug] = { id: idm[1], slug: slug, url: urlPath, title: String(en.title && en.title.$t || '') };
+      }
+      __posFeedIndex = map;
+      __posFeedIndexAt = Date.now();
+      return map;
+    });
+  }
+
+  // Kartu error feed (Fase 4): satu-satunya fallback bila feed gagal — blok
+  // tab legacy sudah DIHAPUS dari shell, jadi error TIDAK lagi jatuh ke tab
+  // lama. markup & @click via Alpine (initTree di injectTabContent) sehingga
+  // tombol "Coba Lagi" memanggil method retry aktif (resolveFeedMode /
+  // resolveHashCompat).
+  function escFeedText(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function posFeedErrorCard(msg, retryFn) {
+    return '<div class="pos-page-view flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">' +
+      '<div class="flex w-full flex-col gap-2">' +
+      '<span class="font-semibold">Gagal memuat konten tab.</span>' +
+      '<span class="text-xs">' + escFeedText(msg) + '</span>' +
+      '<div><button type="button" @click="' + (retryFn || 'resolveFeedMode') + '()" ' +
+      'class="mt-1 rounded-lg border border-red-300 bg-white px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 dark:border-red-800 dark:bg-red-950/60 dark:text-red-300 dark:hover:bg-red-900/40">Coba Lagi</button></div>' +
+      '</div></div>';
+  }
+
+  // Bersihkan output feed menjadi HTML murni: buang bungkus CDATA, <script>
+  // & <link> (post Blogger bisa menyimpan keduanya sembarangan). <style>
+  // DISIMPAN — scoped CSS inline per tab (Fase 5, §9.5) menumpang di sini.
+  // Wrapper #<slug>-page dibiarkan utuh.
+  function cleanupFeedContent(raw) {
+    var html = String(raw || '');
+    html = html.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1');
+    html = html.replace(/<script[\s\S]*?<\/script>/gi, '');
+    html = html.replace(/<link[^>]*>/gi, '');
+    return html;
+  }
+
+  // Ambil HTML konten tab via feed per-post (/feeds/posts/default/<POSTID>).
+  // Cache TTL 5 menit per slug. Reject bila post tidak ada / konten kosong.
+  function loadPosTabContent(slug) {
+    var c = window.__posTabCache && window.__posTabCache[slug];
+    if (c && (Date.now() - c.at) < POS_FEED_TTL) { return Promise.resolve(c.html); }
+    return loadPosFeedIndex().then(function (idx) {
+      var meta = (idx && idx[slug]) || null;
+      if (!meta || !meta.id) { throw new Error('Post tab tidak ditemukan: ' + slug); }
+      return window.fetch('/feeds/posts/default/' + meta.id + '?alt=json').then(function (r) {
+        if (!r.ok) { throw new Error('HTTP ' + r.status); }
+        return r.json();
+      });
+    }).then(function (json) {
+      var raw = '';
+      try { raw = String((json.feed.entry[0] && json.feed.entry[0].content && json.feed.entry[0].content.$t) || ''); } catch (e) { raw = ''; }
+      if (!raw) { throw new Error('Konten tab kosong: ' + slug); }
+      return cleanupFeedContent(raw);
+    }).then(function (html) {
+      window.__posTabCache = window.__posTabCache || {};
+      window.__posTabCache[slug] = { html: html, at: Date.now() };
+      return html;
+    });
+  }
+
+  // Bangun markup shell POS dari halaman nyata /p/pos.html (fetch + parse
+  // #pos-page). CSS layout TIDAK lagi via <link> CDN (Fase 5, §9.5) — sudah
+  // di-*inline* minified ke blok <style> DI DALAM #pos-page, jadi ikut
+  // terbawa otomatis oleh outerHTML. Prosedur ini hanya bertahan sebagai
+  // fallback kompat: bila ada versi /p/pos.html tua yang masih memakai
+  // <link ... pos.css>, stylesheet-nya tetap disalin ke <head>.
+  function adoptPosShellCss(doc) {
+    try {
+      var links = doc.querySelectorAll('link[rel="stylesheet"]');
+      for (var i = 0; i < links.length; i++) {
+        var href = links[i].getAttribute('href') || '';
+        if (href.indexOf('pos.css') === -1) { continue; }
+        if (document.querySelector('link[rel="stylesheet"][href*="pos.css"]')) { continue; }
+        var L = document.createElement('link');
+        L.rel = 'stylesheet';
+        L.href = href;
+        (document.head || document.documentElement).appendChild(L);
+      }
+    } catch (e) { }
+  }
+  function fetchPosShellMarkup() {
+    return window.fetch(POS_SHELL_PATH, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+      .then(function (r) {
+        if (!r.ok) { throw new Error('HTTP ' + r.status); }
+        return r.text();
+      })
+      .then(function (html) {
+        var doc = new DOMParser().parseFromString(html, 'text/html');
+        var el = doc && doc.getElementById ? doc.getElementById('pos-page') : null;
+        if (!el) { throw new Error('Shell POS tidak ditemukan di ' + POS_SHELL_PATH); }
+        adoptPosShellCss(doc);
+        return el.outerHTML;
+      });
+  }
+
   /* ===== formatRupiah GLOBAL (fallback scope) =======================
      Method formatRupiah() tetap ada di komponen posPlugin — dipakai saat
      scope komponen sehat. Fungsi global ini hanya penjamin: ekspresi
@@ -228,6 +403,14 @@
     }));
     Alpine.data('posPlugin', () => ({
       activeTab: 'Sale',
+      // Mode feed (Fase 2): posFeedActive=true saat URL berada di permalink
+      // tab (/yyyy/mm/<slug>.html) & konten tab di-render dari feed Blogger
+      // ke #pos-tab-content. posFeedSlug = slug aktif; posFeedError pesan
+      // kegagalan feed. (Fase 4: blok tab legacy sudah dihapus dari shell —
+      posFeedActive: false,
+      posFeedSlug: '',
+      posFeedError: '',
+      posTabLoading: false,
       catalogLoading: true,
       txLoading: true,
       shiftsLoading: true,
@@ -504,24 +687,29 @@
         }
         try {
           var result = await this.apiFetch(action, params || {});
-          try { window.dispatchEvent(new CustomEvent('pos:api-error:clear', { detail: {} })); } catch (e) {}
           return result;
         } catch (e) {
-          // Popup global: toast shell (bila ada) + banner POS dengan tombol
-          // "Coba Lagi" (retry = reload penuh, hash dipertahankan).
+          // Error jaringan terekposisi ke toast POS (unifikasi Fase 5: modal
+          // #pos-api-error sudah dihapus — sebelumnya hanya overlay pemisahan
+          // arsitektur lama yang mana-dipakai sebagai lapisan kedua blokir).
           var msg = (e && e.message) || 'Gagal terhubung ke server.';
           this.toast('POS gagal terhubung ke server: ' + msg, 'error');
-          try {
-            window.dispatchEvent(new CustomEvent('pos:api-error', { detail: { action: action, message: msg } }));
-          } catch (e3) {}
           return null;
         }
       },
 
       /* ===== Init ===== */
       async init() {
-        this.syncTabFromHash();
-        window.addEventListener('hashchange', () => this.syncTabFromHash());
+        // Slug tab aktif dari URL. Pathname permalink (/yyyy/mm/<slug>.html)
+        // → mode feed; window.__posBootSlug hanya diisi saat shell dibangun
+        // lewat fetch (pos.js belum ter-eksekusi saat pathname dibaca).
+        this.posFeedSlug = posTabSlugForPath(window.location.pathname) || window.__posBootSlug || '';
+        // Shell feed-first (Fase 4): saat tiba di /p/pos.html (langsung atau
+        // via URL lama /p/pos.html#X) redirect diam-diam ke permalink tab
+        // (default 'sale'; #X → tab terkait) agar mode feed selalu aktif —
+        // tanpa blok tab legacy lagi (sudah dihapus dari pos.html).
+        await this.resolveHashCompat();
+        window.addEventListener('hashchange', () => this.resolveHashCompat());
         // Menu aksi fixed tidak mengikuti scroll — tutup saat ada scroll
         // di kontainer mana pun (capture: scroll tidak bubble) & saat resize.
         window.addEventListener('scroll', () => { this.closeTxMenus(); }, true);
@@ -559,6 +747,11 @@
           var loginName = this.loginCashierName();
           if (loginName) this.shiftForm.cashier_id = loginName;
         }
+        // Mode feed: setelah db datang (state shell sehat), render konten tab
+        // dari feed Blogger ke #pos-tab-content — independen dari boot db.
+        if (this.posFeedSlug) {
+          try { this.resolveFeedMode(); } catch (e) { }
+        }
         var self = this;
         setTimeout(function () { self.paintSortArrows(); }, 100);
         // Jaga halaman tetap valid saat hasil filter menyusut: perbesar
@@ -578,11 +771,38 @@
         }
       },
 
-      syncTabFromHash() {
-        var hash = window.location.hash.replace(/^#/, '');
-        var map = { Sale: 'Sale', Catalog: 'Catalog', Transactions: 'Transactions', Shifts: 'Shifts' };
-        if (map[hash]) this.activeTab = hash;
-        this.ensureTabLoaded(hash);
+      // Fase 4 — kompat backward URL lama `/p/pos.html#X` + redirect shell
+      // feed-first. Saat pathname SUDAH permalink tab → no-op. Saat masih di
+      // shell /p/pos.html: set posFeedSlug + history.replaceState ke permalink
+      // (hash #X/tab terkait, default 'sale') TANPA reload; render feed
+      // dilakukan init lewat blok `if (this.posFeedSlug) resolveFeedMode()`.
+      async resolveHashCompat() {
+        if (posTabSlugForPath(window.location.pathname)) { return; }
+        var hash = String(window.location.hash || '').replace(/^#/, '');
+        var slugFromHash = '';
+        if (hash) {
+          slugFromHash = POS_TAB_ID_TO_SLUG[hash] || POS_TAB_SLUG_TO_ID[String(hash).toLowerCase()] || '';
+        }
+        var idx = null;
+        try { idx = await loadPosFeedIndex(); } catch (e) { idx = null; }
+        var targetSlug = slugFromHash || (idx && idx.sale ? 'sale' : '');
+        if (!targetSlug && idx) {
+          for (var s in idx) {
+            if (Object.prototype.hasOwnProperty.call(idx, s)) { targetSlug = s; break; }
+          }
+        }
+        var meta = (idx && targetSlug && idx[targetSlug]) || null;
+        if (!meta || !meta.url) {
+          this.posFeedError = 'Post tab POS belum terbit. Publikasikan 4 post berlabel ezy-pos-tab (sale, catalog, transactions, shifts).';
+          this.injectTabContent(posFeedErrorCard(this.posFeedError, 'resolveHashCompat'));
+          this.posFeedActive = true;
+          return;
+        }
+        this.posFeedSlug = targetSlug;
+        if (POS_TAB_SLUG_TO_ID[targetSlug]) { this.activeTab = POS_TAB_SLUG_TO_ID[targetSlug]; }
+        if (window.location.pathname !== meta.url) {
+          try { window.history.replaceState({ spa: true, path: meta.url }, '', meta.url); } catch (e) { }
+        }
       },
 
       // Hybrid SPA: tab yang belum pernah dimuat (loader masih true) dimuat
@@ -596,14 +816,95 @@
       },
 
       selectTab(tabId) {
+        // Fase 4: tidak ada lagi tab legacy di shell — berpindah tab = navigasi
+        // ke permalink tab via engine feed (pushState + render, tanpa reload).
+        var slug = POS_TAB_ID_TO_SLUG[tabId] || '';
+        this.closeTxMenus();
+        if (slug) {
+          goPosTab(slug);
+          return;
+        }
         this.activeTab = tabId;
         this.ensureTabLoaded(tabId);
-        this.closeTxMenus();
-        if (window.location.hash !== '#' + tabId) {
-          try { window.location.hash = tabId; } catch (e) { }
+      },
+
+      /* ===== Feed Mode (Fase 2) ===== */
+      // Render konten tab dari feed Blogger ke #pos-tab-content. Membaca slug
+      // dari posFeedSlug (set di init / goTab / route handler). Anti-race
+      // sinkron vs async dilakukan oleh pemanggil lewat perbandingan slug
+      // sesudah await (lihat resolveFeedMode).
+      injectTabContent(html) {
+        var host = document.getElementById('pos-tab-content');
+        if (!host) {
+          try {
+            host = document.createElement('div');
+            host.id = 'pos-tab-content';
+            host.className = 'w-full';
+            document.getElementById('pos-page').appendChild(host);
+          } catch (e) { return; }
         }
-        var self = this;
-        setTimeout(function () { self.paintSortArrows(); }, 50);
+        try {
+          var prev = host.firstChild;
+          if (prev && window.Alpine && typeof window.Alpine.destroyTree === 'function') {
+            window.Alpine.destroyTree(prev);
+          }
+        } catch (e) { }
+        host.innerHTML = html;
+        try {
+          if (window.Alpine && typeof window.Alpine.initTree === 'function') {
+            window.Alpine.initTree(host);
+          }
+        } catch (e) { }
+      },
+      setPosFeedTitle(slug) {
+        try {
+          var t = posTabTitleFor(slug);
+          var bt = document.getElementById('ezy-blog-title');
+          var blogName = bt ? (bt.textContent || '').trim() : '';
+          document.title = t + (blogName ? ' | ' + blogName : '');
+        } catch (e) { }
+      },
+      async resolveFeedMode() {
+        var slug = this.posFeedSlug || posTabSlugForPath(window.location.pathname);
+        if (!slug || !POS_TAB_SLUG_TO_ID[slug]) {
+          if (this.posTabLoading) { this.posTabLoading = false; }
+          if (this.posFeedActive) { this.posFeedActive = false; }
+          return;
+        }
+        this.posFeedSlug = slug;
+        if (POS_TAB_SLUG_TO_ID[slug]) { this.activeTab = POS_TAB_SLUG_TO_ID[slug]; }
+        this.posTabLoading = true;
+        this.posFeedError = '';
+        // Indikator loading memakai state komponen (#pos-tab-loader di shell),
+        // TIDAK memakai global ref-counted loader agar tidak bocor/bentrokan
+        // ref-count saat job feed disusul job lain (anti-race slug guard).
+        try {
+          var html = await loadPosTabContent(slug);
+          if (this.posFeedSlug !== slug) { return; }
+          this.injectTabContent(html);
+          this.posFeedActive = true;
+          this.posFeedError = '';
+          this.setPosFeedTitle(slug);
+          try {
+            if (window.__EzySpa && typeof window.__EzySpa.handleHashChange === 'function') {
+              window.__EzySpa.handleHashChange();
+            }
+          } catch (e) { }
+        } catch (err) {
+          if (this.posFeedSlug !== slug) { return; }
+          this.posFeedError = (err && err.message) || 'Gagal memuat konten tab via feed.';
+          // Fase 4: blok tab legacy sudah dihapus dari shell → tidak ada
+          // fallback tab lama lagi; sajikan kartu error yang bisa di-retry.
+          this.posFeedActive = false;
+          this.injectTabContent(posFeedErrorCard(this.posFeedError, 'resolveFeedMode'));
+          this.posFeedActive = true;
+        } finally {
+          // Hanya job feed yang terakhir (masih memegang slug) yang
+          // mematikan spinner — job yang disusul tidak menyentuh state.
+          if (this.posFeedSlug === slug) {
+            this.posTabLoading = false;
+          }
+        }
       },
 
       /* ===== Sort Methods ===== */
@@ -1358,6 +1659,11 @@
     return false;
   }
   function maybeInitTree() {
+    // Shell dibangun oleh POS feed engine (boot permalink / route handler)
+    // memakai resilientCLEAN innerHTML+initTree-nya sendiri; watchdog TIDAK
+    // boleh rehydrate via CACHE halaman post (isi cache saat itu = markup tab
+    // mentah, BUKAN shell) — akan merusak tree. Lihat juga __posShellOwned.
+    if (window.__posShellOwned) { return; }
     if (window.__posTreeInited) return;
     // SPA-HARDENING #2: rute navigasi sedang mengganti konten #ezy-admin-content
     // (injectContent aktif). Pohon #pos-page yang 'unbound' selama window ini
@@ -1441,6 +1747,186 @@
     }
   }, 100);
 
+  /* ===== Fase 2 — Engine energi: navigasi permalink & interaksi feed =====
+     - Klik pada tautan tab (link permalink antar-tab, atau /p/pos.html#X lama)
+       dicegat → pushState + feed render (tanpa reload, tanpa template Pjax).
+     - Route 'pos-tab' (matcher + handler) DIDAFTARKAN OLEH PLUGIN ini
+       (registerRoute + registerRouteHandler) — template hanya menyediakan
+       mekanisme generik registerRoute/registerRouteHandler, TIDAK ada daftar
+       slug POS. Cold-load full page ditembak loader generik marker-based
+       (data-ezy-plugin="pos" pada post tab → template muat pos.js).
+     - Direct-hit permalink: pos.js (dimuat oleh loader generik template)
+       mengambil alih: bangun shell /p/pos.html lalu render tab dari feed.
+     Semua idempoten terhadap re-exec pos.js oleh inject SPA. */
+  function posShellActive() { return !!document.getElementById('pos-page'); }
+  function resolvePosTarget(hrefAttr, hrefAbs) {
+    if (!posShellActive()) { return null; }
+    var path = '';
+    var hash = String(hrefAbs || hrefAttr || '').split('#')[1] || '';
+    try {
+      var u = new URL(hrefAbs || hrefAttr, window.location.href);
+      path = u.pathname;
+    } catch (e) { return null; }
+    var slug = posTabSlugForPath(path);
+    if (slug) { return { slug: slug }; }
+    if (path.replace(/\/$/, '') === '/p/pos.html') {
+      for (var idName in POS_TAB_ID_TO_SLUG) {
+        if (Object.prototype.hasOwnProperty.call(POS_TAB_ID_TO_SLUG, idName) &&
+          '#' + idName === '#' + hash) {
+          return { slug: POS_TAB_ID_TO_SLUG[idName] };
+        }
+      }
+    }
+    return null;
+  }
+  function posFeedClick(e) {
+    var a = e.target && e.target.closest ? e.target.closest('a') : null;
+    if (!a) { return; }
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) { return; }
+    if (e.button !== 0) { return; }
+    if (a.target === '_blank') { return; }
+    var hrefAttr = a.getAttribute('href');
+    if (!hrefAttr) { return; }
+    var target = resolvePosTarget(hrefAttr, a.href);
+    if (!target) { return; }
+    // Di pathname non-permalink (/p/pos.html), biarkan router template &
+    // hashchange menanganinya — shell akan me-redirect ke permalink via
+    // resolveHashCompat; interceptor ini hanya berlaku di URL permalink.
+    if (!posTabSlugForPath(window.location.pathname)) { return; }
+    e.preventDefault();
+    goPosTab(target.slug);
+  }
+  function goPosTab(slug) {
+    if (!POS_TAB_SLUG_TO_ID[slug]) { return; }
+    var inst = getPosInst();
+    if (!inst) { return; }
+    loadPosFeedIndex().then(function (idx) {
+      var meta = (idx && idx[slug]) || null;
+      var inst2 = getPosInst();
+      if (!inst2 || !meta || !meta.url) { return; }
+      if (window.location.pathname !== meta.url) {
+        try { window.history.pushState({ spa: true, path: meta.url }, '', meta.url); } catch (e) { }
+      }
+      inst2.posFeedSlug = slug;
+      if (POS_TAB_SLUG_TO_ID[slug]) { inst2.activeTab = POS_TAB_SLUG_TO_ID[slug]; }
+      inst2.resolveFeedMode();
+    });
+  }
+  function bootPosTabPage(slug) {
+    if (window.__posShellBuilding) { return; }
+    window.__posShellBuilding = true;
+    window.__posBootSlug = slug || window.__posBootSlug || '';
+    fetchPosShellMarkup().then(function (shellHtml) {
+      var target = document.getElementById('ezy-admin-content');
+      if (!target) { window.__posShellBuilding = false; return; }
+      try {
+        if (window.Alpine && typeof window.Alpine.destroyTree === 'function') {
+          window.Alpine.destroyTree(target);
+        }
+      } catch (e) { }
+      target.innerHTML = shellHtml;
+      try { registerPosAlpine(); } catch (e) { }
+      var initDone = function () {
+        try {
+          if (window.Alpine && typeof window.Alpine.initTree === 'function') {
+            window.Alpine.initTree(target);
+          }
+        } catch (e) { }
+        window.__posShellOwned = true;
+        window.__posShellBuilding = false;
+        try {
+          var st = window.Alpine && window.Alpine.store('admin');
+          if (st) {
+            if (typeof st.syncSidebarFromRoute === 'function') { st.syncSidebarFromRoute(); }
+            if (typeof st.updateBreadcrumb === 'function') { st.updateBreadcrumb(); }
+          }
+        } catch (e) { }
+      };
+      if (window.Alpine && typeof window.Alpine.initTree === 'function') {
+        initDone();
+      } else {
+        var _iv = 0;
+        var _timer = setInterval(function () {
+          if (window.Alpine && typeof window.Alpine.initTree === 'function') {
+            clearInterval(_timer);
+            initDone();
+          } else if (++_iv > 50) {
+            clearInterval(_timer);
+            window.__posShellBuilding = false;
+          }
+        }, 100);
+      }
+    }).catch(function () {
+      window.__posShellBuilding = false;
+    });
+  }
+  // One-Core: matcher 'pos-tab' adalah milik plugin (bukan template). Route
+  // ini membuat pageKindFor()/render() router mengenali /yyyy/mm/<slug>.html
+  // sebagai milik POS saat pos.js sudah termuat. Idempoten: diregistrasi satu
+  // kali per dokumen (duplicate push tidak berbahaya karena pageKindFor
+  // mengambil kecocokan pertama, tapi dijaga agar registry bersih).
+  function registerPosRoute() {
+    try {
+      if (!window.EzyFast || typeof window.EzyFast.registerRoute !== 'function') { return; }
+      if (window.__posRouteRegistered) { return; }
+      window.__posRouteRegistered = true;
+      window.EzyFast.registerRoute({
+        kind: 'pos-tab',
+        match: function (path) { return posTabSlugForPath(path) ? true : false; }
+      });
+    } catch (e) {}
+  }
+  function registerPosRouteHandler() {
+    try {
+      if (!window.EzyFast || typeof window.EzyFast.registerRouteHandler !== 'function') { return; }
+      window.EzyFast.registerRouteHandler('pos-tab', function (path) {
+        try {
+          var st = window.Alpine && window.Alpine.store('admin');
+          if (st && typeof st.guard === 'function') { st.guard(); }
+        } catch (e) { }
+        var slug = posTabSlugForPath(path);
+        if (posShellActive()) {
+          var inst = getPosInst();
+          if (inst) {
+            if (slug && slug !== inst.posFeedSlug) {
+              inst.posFeedSlug = slug;
+              if (POS_TAB_SLUG_TO_ID[slug]) { inst.activeTab = POS_TAB_SLUG_TO_ID[slug]; }
+              inst.resolveFeedMode();
+            }
+            try {
+              var st2 = window.Alpine && window.Alpine.store('admin');
+              if (st2) {
+                if (typeof st2.syncSidebarFromRoute === 'function') { st2.syncSidebarFromRoute(); }
+                if (typeof st2.updateBreadcrumb === 'function') { st2.updateBreadcrumb(); }
+              }
+            } catch (e) { }
+            return;
+          }
+        }
+        // Shell belum ada (popstate/SOA ke permalink dari halaman non-POS):
+        // bangun shell pos.html lalu render tab dari feed.
+        bootPosTabPage(slug);
+      });
+    } catch (e) { }
+  }
+  if (!window.__posFeedEngineInstalled) {
+    window.__posFeedEngineInstalled = true;
+    if (document.addEventListener) { document.addEventListener('click', posFeedClick, true); }
+  }
+  registerPosRoute();
+  registerPosRouteHandler();
+  // Takeover direct-hit: pos.js tiba di permalink tab & shell belum ada.
+  // (saat full-load permalink, loader generik marker-based template memuat
+  // pos.js ini lewat data-ezy-plugin="pos"; saat SPA-inject, script inline
+  // pos.js di-exec oleh reExecuteDynamicContent)
+  try {
+    var __bootSlugNow = posTabSlugForPath(window.location.pathname);
+    if (__bootSlugNow && !posShellActive() && window.__posShellBuilding !== true) {
+      window.__posBootSlug = __bootSlugNow;
+      bootPosTabPage(__bootSlugNow);
+    }
+  } catch (e) { }
+
   /* ===== AUTO-REGISTRATION (plugin.link_page — kirim pageId tiap halaman ditampilkan) ===== */
   // Guard: satu request link_page aktif saja. runPosAutoReg dipanggil berulang
   // (immediate + load + 2× timeout); tanpa guard, beberapa request POST yang
@@ -1473,11 +1959,17 @@
       // TANPA callback/script-injection. Guard pending dibebaskan di mana pun
       // chain berakhir (sukses/gagal) agar request berikutnya bisa jalan.
       var storageKey = 'ezy_plugin_linked_' + PLUGIN_ID;
+      // Canonical pageId (rencana Fase 3, §7 REFACTOR_PLAN): saat pos.js
+      // berjalan di permalink tab (/yyyy/mm/<slug>.html) setelah takeover
+      // shell, plugin harus tetap tertaut ke SHELL POS, bukan ke post tab —
+      // kalau tidak, Plugins_Active & recovery dbId terpecah ke 4 halaman.
+      var pageIdCanon = String(cfg.pageId || '');
+      if (posTabSlugForPath(window.location.pathname)) { pageIdCanon = POS_SHELL_PATH; }
       var payload = {
         action: 'plugin.link_page',
         pluginId: PLUGIN_ID,
         blogId: cfg.blogId,
-        pageId: cfg.pageId
+        pageId: pageIdCanon
       };
       try {
         var token = localStorage.getItem('ezy_auth_token');
