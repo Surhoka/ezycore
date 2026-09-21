@@ -982,6 +982,10 @@
         }
         this.posFeedSlug = slug;
         if (POS_TAB_SLUG_TO_ID[slug]) { this.activeTab = POS_TAB_SLUG_TO_ID[slug]; }
+        // Lazy-load DATA tab yang baru diaktifkan (Catalog/Transactions/Shifts)
+        // — tanpa ini tabel Transactions/Shifts tetap `*Loading=true` (overlay
+        // kartu menggantung) karena load* hanya dipicu di init untuk tab awal.
+        try { this.ensureTabLoaded(this.activeTab); } catch (e) { }
         this.posFeedError = '';
         // Indikator loading memakai overlay GLOBAL ref-counted
         // (window.EzyFast.loader via showPosLoader/hidePosLoader) — konsisten
