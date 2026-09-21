@@ -62,6 +62,35 @@
      caller lewat perbandingan slug sesudah await, bukan di sini. */
   var __posFeedIndex = null;
   var __posFeedIndexAt = 0;
+  // Petakan feed summary → { slug: {id, slug, url, title} }. Hanya post yang
+  // URL permalinknya cocok dengan slug tab POS yang dipakai (aman dari noise
+  // post lain pada fallback "semua post").
+  function indexFromEntries(json) {
+    var map = {};
+    var entries = (json && json.feed && json.feed.entry) || [];
+    for (var i = 0; i < entries.length; i++) {
+      var en = entries[i] || {};
+      var idm;
+      try { idm = String(en.id && en.id.$t || '').match(/post-(\d+)/); } catch (e) { idm = null; }
+      if (!idm) { continue; }
+      var urlPath = '';
+      var links = en.link || [];
+      for (var li = 0; li < links.length; li++) {
+        var lk = links[li] || {};
+        if (lk.rel === 'alternate' && lk.href) {
+          try { urlPath = new URL(lk.href, window.location.href).pathname; } catch (e) { urlPath = ''; }
+          break;
+        }
+      }
+      if (!urlPath) { continue; }
+      var sm = urlPath.match(/\/(\d{4})\/(\d{2})\/([a-z0-9-]+)\.html$/);
+      var slug = sm ? sm[3] : '';
+      if (!slug || !POS_TAB_SLUG_TO_ID[slug]) { continue; }
+      map[slug] = { id: idm[1], slug: slug, url: urlPath, title: String(en.title && en.title.$t || '') };
+    }
+    return map;
+  }
+  function cachePosFeedIndex(map) { __posFeedIndex = map; __posFeedIndexAt = Date.now(); }
   function loadPosFeedIndex(force) {
     if (!force && __posFeedIndex && (Date.now() - __posFeedIndexAt) < POS_FEED_TTL) {
       return Promise.resolve(__posFeedIndex);
@@ -70,32 +99,20 @@
     return window.fetch(url).then(function (r) {
       if (!r.ok) { throw new Error('HTTP ' + r.status); }
       return r.json();
-    }).then(function (json) {
-      var map = {};
-      var entries = (json && json.feed && json.feed.entry) || [];
-      for (var i = 0; i < entries.length; i++) {
-        var en = entries[i] || {};
-        var idm;
-        try { idm = String(en.id && en.id.$t || '').match(/post-(\d+)/); } catch (e) { idm = null; }
-        if (!idm) { continue; }
-        var urlPath = '';
-        var links = en.link || [];
-        for (var li = 0; li < links.length; li++) {
-          var lk = links[li] || {};
-          if (lk.rel === 'alternate' && lk.href) {
-            try { urlPath = new URL(lk.href, window.location.href).pathname; } catch (e) { urlPath = ''; }
-            break;
-          }
-        }
-        if (!urlPath) { continue; }
-        var sm = urlPath.match(/\/(\d{4})\/(\d{2})\/([a-z0-9-]+)\.html$/);
-        var slug = sm ? sm[3] : '';
-        if (!slug || !POS_TAB_SLUG_TO_ID[slug]) { continue; }
-        map[slug] = { id: idm[1], slug: slug, url: urlPath, title: String(en.title && en.title.$t || '') };
-      }
-      __posFeedIndex = map;
-      __posFeedIndexAt = Date.now();
-      return map;
+    }).then(indexFromEntries).then(function (map) {
+      if (Object.getOwnPropertyNames(map).length) { cachePosFeedIndex(map); return map; }
+      // Label feed kosong (label 'ezy-pos-tab' belum dipakai post) → fallback:
+      // scan seluruh post lalu petakan via slug permalink. Label tetap cara
+      // kanonik (PRD), fallback ini menjaga engine tetap jalan walau label
+      // post tidak konsisten.
+      return window.fetch('/feeds/posts/summary?alt=json&max-results=500').then(function (r2) {
+        if (!r2.ok) { throw new Error('HTTP ' + r2.status); }
+        return r2.json();
+      }).then(indexFromEntries).then(function (m) {
+        if (!Object.getOwnPropertyNames(m).length) { throw new Error('Tidak ada post tab POS ditemukan'); }
+        cachePosFeedIndex(m);
+        return m;
+      });
     });
   }
 
@@ -141,7 +158,13 @@
       });
     }).then(function (json) {
       var raw = '';
-      try { raw = String((json.feed.entry[0] && json.feed.entry[0].content && json.feed.entry[0].content.$t) || ''); } catch (e) { raw = ''; }
+      try {
+        // Feed per-post (default/<POSTID>) membungkus entry di ROOT
+        // {"entry":{...}}; feed list (summary) memakai {"feed":{entry:[...]}}.
+        var jid = json || {};
+        var single = jid.entry || (jid.feed && jid.feed.entry && jid.feed.entry[0]) || null;
+        raw = String((single && single.content && single.content.$t) || '');
+      } catch (e) { raw = ''; }
       if (!raw) { throw new Error('Konten tab kosong: ' + slug); }
       return cleanupFeedContent(raw);
     }).then(function (html) {
