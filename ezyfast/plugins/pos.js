@@ -482,7 +482,6 @@
       posFeedActive: false,
       posFeedSlug: '',
       posFeedError: '',
-      posTabLoading: false,
       catalogLoading: true,
       txLoading: true,
       shiftsLoading: true,
@@ -978,17 +977,18 @@
       async resolveFeedMode() {
         var slug = this.posFeedSlug || posSlugFromLocation();
         if (!slug || !POS_TAB_SLUG_TO_ID[slug]) {
-          if (this.posTabLoading) { this.posTabLoading = false; }
           if (this.posFeedActive) { this.posFeedActive = false; }
           return;
         }
         this.posFeedSlug = slug;
         if (POS_TAB_SLUG_TO_ID[slug]) { this.activeTab = POS_TAB_SLUG_TO_ID[slug]; }
-        this.posTabLoading = true;
         this.posFeedError = '';
-        // Indikator loading memakai state komponen (#pos-tab-loader di shell),
-        // TIDAK memakai global ref-counted loader agar tidak bocor/bentrokan
-        // ref-count saat job feed disusul job lain (anti-race slug guard).
+        // Indikator loading memakai overlay GLOBAL ref-counted
+        // (window.EzyFast.loader via showPosLoader/hidePosLoader) — konsisten
+        // dengan boot & load data tab. show/hide WAJIB berpasangan, termasuk
+        // job yang disusul job lain (hide di finally tanpa syarat slug) agar
+        // ref-count tidak bocor. Konten tab tetap di-fetch dari feed post.
+        showPosLoader('Memuat tab ' + posTabTitleFor(slug) + '...');
         try {
           var html = await loadPosTabContent(slug);
           if (this.posFeedSlug !== slug) { return; }
@@ -1010,11 +1010,8 @@
           this.injectTabContent(posFeedErrorCard(this.posFeedError, 'resolveFeedMode'));
           this.posFeedActive = true;
         } finally {
-          // Hanya job feed yang terakhir (masih memegang slug) yang
-          // mematikan spinner — job yang disusul tidak menyentuh state.
-          if (this.posFeedSlug === slug) {
-            this.posTabLoading = false;
-          }
+          // Setiap show dipasangkan tepat satu hide (job yang disusul pun).
+          hidePosLoader();
         }
       },
 
