@@ -105,6 +105,89 @@
     return cfg || null;
   }
 
+  /* ===== Pagination/Filter — memo + windowed page =====================
+     Pipeline filter+sort dipanggil berkali-kali dalam SATU render pass
+     (catalogFiltered, catalogTotalPages, catalogPaged, catalogStart/End,
+     page-window — masing-masing menjalankan ulang filter & sort penuh).
+     Memo berbasis (referensi array sumber + kunci query/sort) membuat
+     kerja berat hanya berjalan sekali per perubahan data bersangkutan.
+     Keunikan Alpine: getter tetap menulis ulang kunci dari nilai reaktif
+     di SETIAP akses (mendaftarkan dependensi untuk re-render), tapi hasil
+     sort/filter bila kunci sama & sumber identik cukup dibaca dari cache.
+  */
+  var __posMemoCatalog = null;
+  var __posMemoTx = null;
+  function catalogMemo(self) {
+    var key = (self.catalogQuery || '').toLowerCase() + '|' + self.catalogSort.key + '|' + (self.catalogSort.asc ? '1' : '0');
+    var m = __posMemoCatalog;
+    if (m && m.src === self.catalogProducts && m.key === key) { return m.val; }
+    var q = (self.catalogQuery || '').toLowerCase();
+    var list = self.catalogProducts.filter(function (p) {
+      if (!p || p.status === 'inactive') return false;
+      var hay = String((p.name || '') + ' ' + (p.category || '')).toLowerCase();
+      return hay.indexOf(q) !== -1;
+    });
+    var sk = self.catalogSort.key;
+    var asc = self.catalogSort.asc;
+    var sorted = list.slice().sort(function (a, b) {
+      var va, vb;
+      if (sk === 'price' || sk === 'stock') {
+        va = Number(a[sk]) || 0; vb = Number(b[sk]) || 0;
+      } else {
+        va = String(a[sk] || '').toLowerCase();
+        vb = String(b[sk] || '').toLowerCase();
+      }
+      if (va < vb) return asc ? -1 : 1;
+      if (va > vb) return asc ? 1 : -1;
+      return 0;
+    });
+    __posMemoCatalog = { src: self.catalogProducts, key: key, val: sorted };
+    return sorted;
+  }
+  function txMemo(self) {
+    var key = (self.txQuery || '').toLowerCase() + '|' + self.txSort.key + '|' + (self.txSort.asc ? '1' : '0');
+    var m = __posMemoTx;
+    if (m && m.src === self.transactions && m.key === key) { return m.val; }
+    var q = (self.txQuery || '').toLowerCase();
+    var filtered = self.transactions.filter(function (t) {
+      if (!t) return false;
+      var hay = String((t.id || '') + ' ' + (t.cashier_id || '') + ' ' + (t.payment_method || '') + ' ' + (t.status || '')).toLowerCase();
+      return hay.indexOf(q) !== -1;
+    });
+    var sk = self.txSort.key;
+    var asc = self.txSort.asc;
+    var sorted = filtered.slice().sort(function (a, b) {
+      var va = String(a[sk] || '').toLowerCase();
+      var vb = String(b[sk] || '').toLowerCase();
+      if (va < vb) return asc ? -1 : 1;
+      if (va > vb) return asc ? 1 : -1;
+      return 0;
+    });
+    __posMemoTx = { src: self.transactions, key: key, val: sorted };
+    return sorted;
+  }
+  // Jendela nomor halaman ber-ellipsis: selalu 1 & terakhir, ±spread di
+  // sekitar halaman aktif, gap ditandai {type:'gap'} — bukan ratusan tombol.
+  function posPageWindow(page, total, spread) {
+    if (total <= 1) { return [{ type: 'p', n: 1, key: 'p1' }]; }
+    var s = spread || 2;
+    var items = [];
+    var pushBtn = function (n) { items.push({ type: 'p', n: n, key: 'p' + n }); };
+    var pushGap = function (k) { items.push({ type: 'gap', n: null, key: 'g' + k }); };
+    if (total <= s * 2 + 1) {
+      for (var i = 1; i <= total; i++) { pushBtn(i); }
+      return items;
+    }
+    var start = Math.max(2, page - s);
+    var end = Math.min(total - 1, page + s);
+    pushBtn(1);
+    if (start > 2) { pushGap('l'); }
+    for (var j = start; j <= end; j++) { pushBtn(j); }
+    if (end < total - 1) { pushGap('r'); }
+    pushBtn(total);
+    return items;
+  }
+
   function registerPosAlpine() {
     if (window.__posAlpineRegistered) return;
     if (!window.Alpine || typeof window.Alpine.data !== 'function') return;
@@ -222,27 +305,7 @@
 
       /* ===== Computed: Catalog ===== */
       get catalogFiltered() {
-        var q = (this.catalogQuery || '').toLowerCase();
-        var self = this;
-        var list = this.catalogProducts.filter(function (p) {
-          if (!p || p.status === 'inactive') return false;
-          var hay = String((p.name || '') + ' ' + (p.category || '')).toLowerCase();
-          return hay.indexOf(q) !== -1;
-        });
-        var key = self.catalogSort.key;
-        var asc = self.catalogSort.asc;
-        return list.slice().sort(function (a, b) {
-          var va, vb;
-          if (key === 'price' || key === 'stock') {
-            va = Number(a[key]) || 0; vb = Number(b[key]) || 0;
-          } else {
-            va = String(a[key] || '').toLowerCase();
-            vb = String(b[key] || '').toLowerCase();
-          }
-          if (va < vb) return asc ? -1 : 1;
-          if (va > vb) return asc ? 1 : -1;
-          return 0;
-        });
+        return catalogMemo(this);
       },
 
       get catalogTotalPages() {
@@ -261,31 +324,16 @@
         var page = Math.min(this.catalogPage, this.catalogTotalPages);
         return Math.min(page * this.catalogPerPage, this.catalogFiltered.length);
       },
-      get catalogPageNumbers() {
-        var arr = [];
-        for (var n = 1; n <= this.catalogTotalPages; n++) arr.push(n);
-        return arr;
+      get catalogPageWindow() {
+        return posPageWindow(this.catalogPage, this.catalogTotalPages, 2);
       },
 
       /* ===== Computed: Transactions ===== */
       get txFiltered() {
-        var q = (this.txQuery || '').toLowerCase();
-        return this.transactions.filter(function (t) {
-          if (!t) return false;
-          var hay = String((t.id || '') + ' ' + (t.cashier_id || '') + ' ' + (t.payment_method || '') + ' ' + (t.status || '')).toLowerCase();
-          return hay.indexOf(q) !== -1;
-        });
+        return txMemo(this);
       },
       get txSorted() {
-        var key = this.txSort.key;
-        var asc = this.txSort.asc;
-        return this.txFiltered.slice().sort(function (a, b) {
-          var va = String(a[key] || '').toLowerCase();
-          var vb = String(b[key] || '').toLowerCase();
-          if (va < vb) return asc ? -1 : 1;
-          if (va > vb) return asc ? 1 : -1;
-          return 0;
-        });
+        return txMemo(this);
       },
       get txTotalPages() {
         return Math.max(1, Math.ceil(this.txSorted.length / this.txPerPage));
@@ -300,10 +348,8 @@
       get txEnd() {
         return Math.min(this.txPage * this.txPerPage, this.txSorted.length);
       },
-      get txPageNumbers() {
-        var arr = [];
-        for (var n = 1; n <= this.txTotalPages; n++) arr.push(n);
-        return arr;
+      get txPageWindow() {
+        return posPageWindow(this.txPage, this.txTotalPages, 2);
       },
 
       /* ===== Computed: Shifts ===== */
@@ -515,6 +561,21 @@
         }
         var self = this;
         setTimeout(function () { self.paintSortArrows(); }, 100);
+        // Jaga halaman tetap valid saat hasil filter menyusut: perbesar
+        // per-halaman / ketik query / sort bisa membuat catalogPage naik di
+        // atas jumlah halaman yang tersisa → clamp otomatis ke halaman akhir.
+        if (typeof this.$watch === 'function') {
+          var clampCat = function () {
+            if (self.catalogPage > self.catalogTotalPages) { self.catalogPage = self.catalogTotalPages; }
+          };
+          var clampTx = function () {
+            if (self.txPage > self.txTotalPages) { self.txPage = self.txTotalPages; }
+          };
+          try { this.$watch(function () { return self.catalogFiltered.length; }, clampCat); } catch (e) { }
+          try { this.$watch(function () { return self.txSorted.length; }, clampTx); } catch (e) { }
+          try { this.$watch(function () { return self.catalogPerPage; }, clampCat); } catch (e) { }
+          try { this.$watch(function () { return self.txPerPage; }, clampTx); } catch (e) { }
+        }
       },
 
       syncTabFromHash() {
@@ -562,6 +623,7 @@
         } else {
           this.txSort = { key: key, asc: true };
         }
+        this.txPage = 1;
         this.paintSortArrows();
       },
       // Tutup semua dropdown aksi (panel per-baris mendengarkan event ini)
