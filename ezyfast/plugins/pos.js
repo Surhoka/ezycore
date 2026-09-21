@@ -11,10 +11,11 @@
   // file YANG BARU benar-benar tersaji & tereksekusi.
   window.__posJsRan = true;
 
-  /* ===== POS Feed Engine (Fase 2: dual-mode shell + tab-permalink) =======
+  /* ===== POS Feed Engine (hash shell + feed-sourced tab konten) ==========
      Setiap tab POS = post Blogger independen berlabel `ezy-pos-tab` +
-     `ezy-tab-<slug>` (URL /yyyy/mm/<slug>.html). Ketika shell #pos-page
-     aktif dan URL sedang di salah satu permalink tab, konten tab TIDAK lagi
+     `ezy-tab-<slug>` (URL permalink /yyyy/mm/<slug>.html) — berperan sebagai
+     SUMBER KONTEN & deep-link fallback. Navigasi/URL tab sendiri memakai hash
+     shell `/p/pos.html#<Tab>`: saat shell #pos-page aktif, konten tab TIDAK
      dibaca dari blok x-show di pos.html, melainkan di-fetch utuh dari feed
      Blogger (GET biasa, bebas CORS `*`; TANPA JSONP — lihat REFACTOR_PLAN
      keputusan #1) lalu di-inject ke #pos-tab-content oleh engine ini.
@@ -34,9 +35,20 @@
     }
   })();
 
-  // Slug tab dari pathname permalink post Blogger (/yyyy/mm/<slug>.html).
-  // '' bila bukan permalink tab POS. Satu-satunya sumber kebenaran pemetaan
-  // URL ke tab (dipakai router SPA & engine feed secara seragam).
+  // Normalisasi hash → slug tab. Menerima '#Catalog', '#catalog', atau ID apa
+  // pun yang dikenal; SELALU mengembalikan slug lowercase ('catalog') atau ''.
+  function posSlugFromHash(hash) {
+    var h = String(hash || '').replace(/^#/, '');
+    if (!h) { return ''; }
+    var lower = h.toLowerCase();
+    if (POS_TAB_SLUG_TO_ID[lower]) { return lower; }
+    return POS_TAB_ID_TO_SLUG[h] || '';
+  }
+
+  // Slug tab dari PATHNAME permalink post Blogger (/yyyy/mm/<slug>.html).
+  // '' bila bukan permalink tab POS. Dipakai untuk deep-link langsung
+  // (takeover) & matcher route; navigasi internal memakai hash shell
+  // (lihat posSlugFromLocation).
   function posTabSlugForPath(path) {
     var m = String(path || '').match(/^\/(\d{4})\/(\d{2})\/([a-z0-9-]+)\.html$/);
     if (m && POS_TAB_SLUG_TO_ID[m[3]]) { return m[3]; }
@@ -44,6 +56,34 @@
   }
   function posTabTitleFor(slug) {
     return POS_TAB_TITLES[slug] || (slug ? slug.charAt(0).toUpperCase() + slug.slice(1) : 'POS');
+  }
+  // Slug tab aktif dari location. Prioritas: permalink pathname (deep-link
+  // langsung) → hash shell /p/pos.html#<Tab> (navigasi internal) →
+  // __posBootSlug (shell dibangun via fetch saat pos.js belum sempat baca URL).
+  function posSlugFromLocation() {
+    var p = posTabSlugForPath(window.location.pathname);
+    if (p) { return p; }
+    var h = posSlugFromHash(window.location.hash);
+    if (h) { return h; }
+    return window.__posBootSlug || '';
+  }
+  // Adopsi URL kanonik tab: /p/pos.html#<Tab>. Bila SUDAH di shell ber-hash
+  // (peralihan antar-tab) → pushState (memberi riwayat antar-tab). Bila berasal
+  // dari URL lain (permalink deep-link / shell tanpa hash) → replaceState agar
+  // tidak memerangkap tombol back (entri lama diganti, bukan ditambah). TIDAK
+  // pernah mengarah ke permalink.
+  function adoptPosUrl(slug) {
+    var id = POS_TAB_SLUG_TO_ID[slug];
+    if (!id) { return; }
+    var want = POS_SHELL_PATH + '#' + id;
+    var cur = (window.location.pathname + window.location.hash).replace(/\/$/, '');
+    if (cur === want) { return; }
+    var onShellHash = window.location.pathname.replace(/\/$/, '') === POS_SHELL_PATH && !!window.location.hash;
+    var st = { spa: true, path: POS_SHELL_PATH, posTab: slug };
+    try {
+      if (onShellHash) { window.history.pushState(st, '', want); }
+      else { window.history.replaceState(st, '', want); }
+    } catch (e) { }
   }
 
   // Instance posPlugin yang sedang hidup (top data stack #pos-page).
@@ -120,7 +160,7 @@
   // tab legacy sudah DIHAPUS dari shell, jadi error TIDAK lagi jatuh ke tab
   // lama. markup & @click via Alpine (initTree di injectTabContent) sehingga
   // tombol "Coba Lagi" memanggil method retry aktif (resolveFeedMode /
-  // resolveHashCompat).
+  // syncHashRoute).
   function escFeedText(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
   function posFeedErrorCard(msg, retryFn) {
     return '<div class="pos-page-view flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">' +
@@ -426,10 +466,10 @@
     }));
     Alpine.data('posPlugin', () => ({
       activeTab: 'Sale',
-      // Mode feed (Fase 2): posFeedActive=true saat URL berada di permalink
-      // tab (/yyyy/mm/<slug>.html) & konten tab di-render dari feed Blogger
-      // ke #pos-tab-content. posFeedSlug = slug aktif; posFeedError pesan
-      // kegagalan feed. (Fase 4: blok tab legacy sudah dihapus dari shell —
+      // Mode feed: posFeedActive=true saat tab aktif dirender dari feed
+      // Blogger ke #pos-tab-content; URL tetap /p/pos.html#<Tab>. posFeedSlug =
+      // slug aktif; posFeedError pesan kegagalan feed. (Blok tab legacy sudah
+      // dihapus dari shell — seluruh konten tab berasal dari feed post.)
       posFeedActive: false,
       posFeedSlug: '',
       posFeedError: '',
@@ -723,20 +763,40 @@
 
       /* ===== Init ===== */
       async init() {
-        // Slug tab aktif dari URL. Pathname permalink (/yyyy/mm/<slug>.html)
-        // → mode feed; window.__posBootSlug hanya diisi saat shell dibangun
-        // lewat fetch (pos.js belum ter-eksekusi saat pathname dibaca).
-        this.posFeedSlug = posTabSlugForPath(window.location.pathname) || window.__posBootSlug || '';
-        // Shell feed-first (Fase 4): saat tiba di /p/pos.html (langsung atau
-        // via URL lama /p/pos.html#X) redirect diam-diam ke permalink tab
-        // (default 'sale'; #X → tab terkait) agar mode feed selalu aktif —
-        // tanpa blok tab legacy lagi (sudah dihapus dari pos.html).
-        await this.resolveHashCompat();
-        window.addEventListener('hashchange', () => this.resolveHashCompat());
+        // Slug tab aktif dari URL: permalink (deep-link langsung) → hash shell
+        // /p/pos.html#<Tab> (navigasi internal) → __posBootSlug (shell dibangun
+        // via fetch; pos.js belum sempat baca URL saat itu).
+        this.posFeedSlug = posSlugFromLocation();
+        // Shell feed-first: pertahankan URL hash shell (TIDAK redirect ke
+        // permalink post). syncHashRoute menormalkan /p/pos.html → /p/pos.html#<Tab>
+        // (default 'sale'; #X → tab terkait) + set posFeedSlug/activeTab; render
+        // dilakukan blok `if (this.posFeedSlug) resolveFeedMode()` di bawah.
+        await this.syncHashRoute();
+        // Listener hashchange terpasang SEKALI (shell bisa di-re-inject SPA →
+        // init berulang; tanpa guard, listener menumpuk). Handler me-resolve
+        // instance terkini via getPosInst().
+        if (!window.__posHashBound) {
+          window.__posHashBound = true;
+          window.addEventListener('hashchange', function () {
+            var inst = getPosInst();
+            if (!inst) { return; }
+            inst.syncHashRoute().then(function () {
+              try { inst.resolveFeedMode(); } catch (e) { }
+            }).catch(function () { });
+          });
+        }
         // Menu aksi fixed tidak mengikuti scroll — tutup saat ada scroll
         // di kontainer mana pun (capture: scroll tidak bubble) & saat resize.
-        window.addEventListener('scroll', () => { this.closeTxMenus(); }, true);
-        window.addEventListener('resize', () => { this.closeTxMenus(); });
+        // Terpasang SEKALI (guard) agar tidak menumpuk saat shell di-re-inject.
+        if (!window.__posScrollBound) {
+          window.__posScrollBound = true;
+          window.addEventListener('scroll', function () {
+            var i = getPosInst(); if (i) { try { i.closeTxMenus(); } catch (e) { } }
+          }, true);
+          window.addEventListener('resize', function () {
+            var i = getPosInst(); if (i) { try { i.closeTxMenus(); } catch (e) { } }
+          });
+        }
         // Boot: overlay loader GLOBAL (pola calendar.html) — tampil selama
         // pemulihan dbId (__ezyPosDbReady) + muat katalog awal, lalu hide di
         // SEMUA jalur selesai (try/catch/finally) agar show/hide berpasangan
@@ -794,18 +854,25 @@
         }
       },
 
-      // Fase 4 — kompat backward URL lama `/p/pos.html#X` + redirect shell
-      // feed-first. Saat pathname SUDAH permalink tab → no-op. Saat masih di
-      // shell /p/pos.html: set posFeedSlug + history.replaceState ke permalink
-      // (hash #X/tab terkait, default 'sale') TANPA reload; render feed
-      // dilakukan init lewat blok `if (this.posFeedSlug) resolveFeedMode()`.
-      async resolveHashCompat() {
-        if (posTabSlugForPath(window.location.pathname)) { return; }
-        var hash = String(window.location.hash || '').replace(/^#/, '');
-        var slugFromHash = '';
-        if (hash) {
-          slugFromHash = POS_TAB_ID_TO_SLUG[hash] || POS_TAB_SLUG_TO_ID[String(hash).toLowerCase()] || '';
+      // Sinkronisasi rute hash shell. Pathname SUDAH permalink tab (deep-link
+      // langsung /yyyy/mm/<slug>.html) → set state + kanonikalisasi URL ke hash
+      // shell. Selain itu: baca hash #<Tab> (default 'sale'), set
+      // posFeedSlug/activeTab, lalu NORMALKAN URL ke /p/pos.html#<Tab> tanpa
+      // reload — TIDAK mengganti ke permalink post, sesuai permintaan user.
+      // Render konten dilakukan pemanggil (init / hashchange) lewat
+      // resolveFeedMode() agar konten tetap berasal dari feed post.
+      async syncHashRoute() {
+        var permalinkSlug = posTabSlugForPath(window.location.pathname);
+        if (permalinkSlug) {
+          if (permalinkSlug !== this.posFeedSlug) {
+            this.posFeedSlug = permalinkSlug;
+            if (POS_TAB_SLUG_TO_ID[permalinkSlug]) { this.activeTab = POS_TAB_SLUG_TO_ID[permalinkSlug]; }
+          }
+          adoptPosUrl(permalinkSlug);
+          return;
         }
+        var hash = String(window.location.hash || '').replace(/^#/, '');
+        var slugFromHash = posSlugFromHash(hash);
         var idx = null;
         try { idx = await loadPosFeedIndex(); } catch (e) { idx = null; }
         var targetSlug = slugFromHash || (idx && idx.sale ? 'sale' : '');
@@ -817,15 +884,13 @@
         var meta = (idx && targetSlug && idx[targetSlug]) || null;
         if (!meta || !meta.url) {
           this.posFeedError = 'Post tab POS belum terbit. Publikasikan 4 post berlabel ezy-pos-tab (sale, catalog, transactions, shifts).';
-          this.injectTabContent(posFeedErrorCard(this.posFeedError, 'resolveHashCompat'));
+          this.injectTabContent(posFeedErrorCard(this.posFeedError, 'syncHashRoute'));
           this.posFeedActive = true;
           return;
         }
         this.posFeedSlug = targetSlug;
         if (POS_TAB_SLUG_TO_ID[targetSlug]) { this.activeTab = POS_TAB_SLUG_TO_ID[targetSlug]; }
-        if (window.location.pathname !== meta.url) {
-          try { window.history.replaceState({ spa: true, path: meta.url }, '', meta.url); } catch (e) { }
-        }
+        adoptPosUrl(targetSlug);
       },
 
       // Hybrid SPA: tab yang belum pernah dimuat (loader masih true) dimuat
@@ -839,8 +904,8 @@
       },
 
       selectTab(tabId) {
-        // Fase 4: tidak ada lagi tab legacy di shell — berpindah tab = navigasi
-        // ke permalink tab via engine feed (pushState + render, tanpa reload).
+        // Berpindah tab = engine feed goPosTab: URL /p/pos.html#<Tab>
+        // (pushState + render dari feed, tanpa reload & tanpa ke permalink).
         var slug = POS_TAB_ID_TO_SLUG[tabId] || '';
         this.closeTxMenus();
         if (slug) {
@@ -873,6 +938,20 @@
           }
         } catch (e) { }
         host.innerHTML = html;
+        // Anti-router: tautan internal ke tab POS (permalink /yyyy/mm/<slug>.html
+        // ATAU /p/pos.html) ditandai data-no-spa agar click-interceptor SPA tidak
+        // menavigasi ke permalink. Klik tetap ditangani posFeedClick → goPosTab
+        // (hash shell). Defensif: konten feed boleh saja memuat tautan antar-tab.
+        try {
+          var anchors = host.querySelectorAll('a[href]');
+          for (var ai = 0; ai < anchors.length; ai++) {
+            var hrefP = '';
+            try { hrefP = new URL(anchors[ai].getAttribute('href'), window.location.href).pathname; } catch (e2) { continue; }
+            if (posTabSlugForPath(hrefP) || hrefP.replace(/\/$/, '') === POS_SHELL_PATH) {
+              anchors[ai].setAttribute('data-no-spa', '1');
+            }
+          }
+        } catch (e) { }
         try {
           if (window.Alpine && typeof window.Alpine.initTree === 'function') {
             window.Alpine.initTree(host);
@@ -888,7 +967,7 @@
         } catch (e) { }
       },
       async resolveFeedMode() {
-        var slug = this.posFeedSlug || posTabSlugForPath(window.location.pathname);
+        var slug = this.posFeedSlug || posSlugFromLocation();
         if (!slug || !POS_TAB_SLUG_TO_ID[slug]) {
           if (this.posTabLoading) { this.posTabLoading = false; }
           if (this.posFeedActive) { this.posFeedActive = false; }
@@ -1770,16 +1849,19 @@
     }
   }, 100);
 
-  /* ===== Fase 2 — Engine energi: navigasi permalink & interaksi feed =====
-     - Klik pada tautan tab (link permalink antar-tab, atau /p/pos.html#X lama)
-       dicegat → pushState + feed render (tanpa reload, tanpa template Pjax).
+  /* ===== Feed Engine — navigasi tab (hash shell) & interaksi feed =====
+     - URL tab SELALU /p/pos.html#<Tab> (permintaan user); konten tab tetap
+       di-fetch dari feed post. TIDAK ada navigasi ke permalink post.
+     - Klik tautan tab (permalink antar-tab atau /p/pos.html#X) dicegat →
+       goPosTab (pushState hash + feed render, tanpa reload).
      - Route 'pos-tab' (matcher + handler) DIDAFTARKAN OLEH PLUGIN ini
        (registerRoute + registerRouteHandler) — template hanya menyediakan
        mekanisme generik registerRoute/registerRouteHandler, TIDAK ada daftar
        slug POS. Cold-load full page ditembak loader generik marker-based
        (data-ezy-plugin="pos" pada post tab → template muat pos.js).
      - Direct-hit permalink: pos.js (dimuat oleh loader generik template)
-       mengambil alih: bangun shell /p/pos.html lalu render tab dari feed.
+       mengambil alih: bangun shell /p/pos.html lalu normalisasi URL ke
+       /p/pos.html#<Tab> dan render tab dari feed.
      Semua idempoten terhadap re-exec pos.js oleh inject SPA. */
   function posShellActive() { return !!document.getElementById('pos-page'); }
   function resolvePosTarget(hrefAttr, hrefAbs) {
@@ -1793,9 +1875,10 @@
     var slug = posTabSlugForPath(path);
     if (slug) { return { slug: slug }; }
     if (path.replace(/\/$/, '') === '/p/pos.html') {
+      var want = String(hash || '').toLowerCase();
       for (var idName in POS_TAB_ID_TO_SLUG) {
         if (Object.prototype.hasOwnProperty.call(POS_TAB_ID_TO_SLUG, idName) &&
-          '#' + idName === '#' + hash) {
+          idName.toLowerCase() === want) {
           return { slug: POS_TAB_ID_TO_SLUG[idName] };
         }
       }
@@ -1812,10 +1895,9 @@
     if (!hrefAttr) { return; }
     var target = resolvePosTarget(hrefAttr, a.href);
     if (!target) { return; }
-    // Di pathname non-permalink (/p/pos.html), biarkan router template &
-    // hashchange menanganinya — shell akan me-redirect ke permalink via
-    // resolveHashCompat; interceptor ini hanya berlaku di URL permalink.
-    if (!posTabSlugForPath(window.location.pathname)) { return; }
+    // Shell aktif → cegat pindah tab lewat hash shell, apa pun URL saat ini
+    // (permalink deep-link atau /p/pos.html). Jangan biarkan router SPA
+    // menavigasi ke permalink post.
     e.preventDefault();
     goPosTab(target.slug);
   }
@@ -1823,17 +1905,12 @@
     if (!POS_TAB_SLUG_TO_ID[slug]) { return; }
     var inst = getPosInst();
     if (!inst) { return; }
-    loadPosFeedIndex().then(function (idx) {
-      var meta = (idx && idx[slug]) || null;
-      var inst2 = getPosInst();
-      if (!inst2 || !meta || !meta.url) { return; }
-      if (window.location.pathname !== meta.url) {
-        try { window.history.pushState({ spa: true, path: meta.url }, '', meta.url); } catch (e) { }
-      }
-      inst2.posFeedSlug = slug;
-      if (POS_TAB_SLUG_TO_ID[slug]) { inst2.activeTab = POS_TAB_SLUG_TO_ID[slug]; }
-      inst2.resolveFeedMode();
-    });
+    // Navigasi tab = hash shell (bukan permalink post). Meta feed hanya
+    // dipakai resolveFeedMode saat mengambil konten, bukan untuk URL.
+    adoptPosUrl(slug);
+    inst.posFeedSlug = slug;
+    if (POS_TAB_SLUG_TO_ID[slug]) { inst.activeTab = POS_TAB_SLUG_TO_ID[slug]; }
+    inst.resolveFeedMode();
   }
   function bootPosTabPage(slug) {
     if (window.__posShellBuilding) { return; }
@@ -1911,10 +1988,17 @@
         if (posShellActive()) {
           var inst = getPosInst();
           if (inst) {
-            if (slug && slug !== inst.posFeedSlug) {
-              inst.posFeedSlug = slug;
-              if (POS_TAB_SLUG_TO_ID[slug]) { inst.activeTab = POS_TAB_SLUG_TO_ID[slug]; }
-              inst.resolveFeedMode();
+            if (slug) {
+              if (slug !== inst.posFeedSlug) {
+                inst.posFeedSlug = slug;
+                if (POS_TAB_SLUG_TO_ID[slug]) { inst.activeTab = POS_TAB_SLUG_TO_ID[slug]; }
+                adoptPosUrl(slug);
+                inst.resolveFeedMode();
+              } else {
+                // Slug sama tapi URL masih permalink (mis. klik ulang tab yang
+                // sama) → cukup kanonikalisasi URL, tanpa render ulang.
+                adoptPosUrl(slug);
+              }
             }
             try {
               var st2 = window.Alpine && window.Alpine.store('admin');
@@ -2017,7 +2101,8 @@
         // Gagal dimuat (network/offline/preflight) → lepas pending agar retry
         // berikutnya (window load / timeout) bisa berjalan.
       }).then(clean);
-    })();
+  })();
+
   }
   try { runPosAutoReg(); } catch (e) { }
   // EzyFast bridge template bisa load belakangan — coba lagi saat window load.
