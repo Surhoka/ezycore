@@ -813,8 +813,8 @@
         try {
           await this.checkDbReady();
           if (this.dbReady) {
-            // Hybrid SPA: tab aktif (Sale) dimuat saat init; tab lain dimuat
-            // lazy via selectTab/ensureTabLoaded pada kunjungan pertamanya —
+            // Hybrid SPA: tab aktif dimuat saat init; tab lain dimuat lazy via
+            // ensureTabLoaded (dipicu resolveFeedMode saat tab dikunjungi) —
             // loader per-kartunya ikut aktif di kunjungan pertama tiap tab.
             await this.loadCatalog();
             // Deep-link langsung (#Transactions/#Shifts/#Catalog): tab aktif
@@ -911,20 +911,7 @@
         else if (tabId === 'Shifts' && !this.shiftsLoaded) { this.loadShifts(); }
       },
 
-      selectTab(tabId) {
-        // Berpindah tab = engine feed goPosTab: URL /p/pos.html#<Tab>
-        // (pushState + render dari feed, tanpa reload & tanpa ke permalink).
-        var slug = POS_TAB_ID_TO_SLUG[tabId] || '';
-        this.closeTxMenus();
-        if (slug) {
-          goPosTab(slug);
-          return;
-        }
-        this.activeTab = tabId;
-        this.ensureTabLoaded(tabId);
-      },
-
-      /* ===== Feed Mode (Fase 2) ===== */
+      /* ===== Feed Mode ===== */
       // Render konten tab dari feed Blogger ke #pos-tab-content. Membaca slug
       // dari posFeedSlug (set di init / goTab / route handler). Anti-race
       // sinkron vs async dilakukan oleh pemanggil lewat perbandingan slug
@@ -1922,6 +1909,7 @@
     adoptPosUrl(slug);
     inst.posFeedSlug = slug;
     if (POS_TAB_SLUG_TO_ID[slug]) { inst.activeTab = POS_TAB_SLUG_TO_ID[slug]; }
+    if (typeof inst.closeTxMenus === 'function') { inst.closeTxMenus(); }
     inst.resolveFeedMode();
   }
   function bootPosTabPage(slug) {
