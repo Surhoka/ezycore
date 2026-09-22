@@ -185,11 +185,16 @@
   // & <link> (post Blogger bisa menyimpan keduanya sembarangan). <style>
   // DISIMPAN — scoped CSS inline per tab (Fase 5, §9.5) menumpang di sini.
   // Wrapper #<slug>-page dibiarkan utuh.
+  // x-ignore pada akar (guard anti badai Alpine di homepage/search/archive —
+  // lihat komentar di masing-masing file tabs/*.html) DIHAPUS di sini: konten
+  // ini hanya akan masuk ke #pos-tab-content di DALAM shell (ada ancestor
+  // x-data="posPlugin"), jadi harus alive saat Alpine.initTree dijalankan.
   function cleanupFeedContent(raw) {
     var html = String(raw || '');
     html = html.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1');
     html = html.replace(/<script[\s\S]*?<\/script>/gi, '');
     html = html.replace(/<link[^>]*>/gi, '');
+    html = html.replace(/\s+x-ignore(?:="[^"]*"|='[^']*')?/gi, '');
     return html;
   }
 
@@ -962,6 +967,17 @@
           }
         } catch (e) { }
         host.innerHTML = html;
+        // Defensif: lepas x-ignore (guard anti badai Alpine di luar shell) dari
+        // akar konten SEBELUM MutationObserver/initTree melihatnya — konten ini
+        // sudah berada di dalam #pos-tab-content (ancestor x-data="posPlugin")
+        // yang HARUS mengevaluasi ekspresinya. cleanupFeedContent sudah menormalkan
+        // ini; strip di sini menjaga cache/pos.js versi lawas yang belum striping.
+        try {
+          var _root = host.firstElementChild;
+          if (_root && _root.hasAttribute && _root.hasAttribute('x-ignore')) {
+            _root.removeAttribute('x-ignore');
+          }
+        } catch (e) { }
         // Anti-router: tautan internal ke tab POS (permalink /yyyy/mm/<slug>.html
         // ATAU /p/pos.html) ditandai data-no-spa agar click-interceptor SPA tidak
         // menavigasi ke permalink. Klik tetap ditangani posFeedClick → goPosTab
