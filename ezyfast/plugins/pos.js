@@ -893,7 +893,7 @@
         if (!meta || !meta.url) {
           this.posFeedError = 'Post tab POS belum terbit. Publikasikan 4 post berlabel ezy-pos-tab (sale, catalog, transactions, shifts).';
           this.injectTabContent(posFeedErrorCard(this.posFeedError, 'syncHashRoute'));
-          this.posFeedActive = true;
+          this.revealTabContent();
           return;
         }
         this.posFeedSlug = targetSlug;
@@ -909,6 +909,35 @@
         if (tabId === 'Catalog' && !this.catalogLoaded) { this.loadCatalog(); }
         else if (tabId === 'Transactions' && !this.txLoaded) { this.loadTransactions(); }
         else if (tabId === 'Shifts' && !this.shiftsLoaded) { this.loadShifts(); }
+      },
+
+      /* ===== Anti-"bocor" konten tab =================================
+         maskTabContent(): sembunyikan & kosongkan #pos-tab-content serta
+         set posFeedActive=false SEBELUM memuat tab (fetch feed async).
+         Tanpa ini konten tab sebelumnya tetap terlihat selama loader —
+         terlihat seperti konten bocor antar-tab. revealTabContent():
+         tampilkan kembali konten yang siap setelah inject (display:'' +
+         posFeedActive=true). Idempoten & aman dipanggil berulang. */
+      maskTabContent() {
+        try {
+          var host = document.getElementById('pos-tab-content');
+          if (host) {
+            var prev = host.firstChild;
+            if (prev && window.Alpine && typeof window.Alpine.destroyTree === 'function') {
+              try { window.Alpine.destroyTree(prev); } catch (e) { }
+            }
+            host.innerHTML = '';
+            host.style.display = 'none';
+          }
+        } catch (e) { }
+        this.posFeedActive = false;
+      },
+      revealTabContent() {
+        try {
+          var host = document.getElementById('pos-tab-content');
+          if (host) { host.style.display = ''; }
+        } catch (e) { }
+        this.posFeedActive = true;
       },
 
       /* ===== Feed Mode ===== */
@@ -963,8 +992,11 @@
       },
       async resolveFeedMode() {
         var slug = this.posFeedSlug || posSlugFromLocation();
+        // Sembunyikan & kosongkan konten tab lama SEBELUM fetch feed. Tanpa
+        // ini konten tab SEBELUMNYA tetap tampil (host x-show posFeedActive
+        // masih true) selama tab baru dimuat — terasa "bocor" antar-tab.
+        this.maskTabContent();
         if (!slug || !POS_TAB_SLUG_TO_ID[slug]) {
-          if (this.posFeedActive) { this.posFeedActive = false; }
           return;
         }
         this.posFeedSlug = slug;
@@ -984,7 +1016,7 @@
           var html = await loadPosTabContent(slug);
           if (this.posFeedSlug !== slug) { return; }
           this.injectTabContent(html);
-          this.posFeedActive = true;
+          this.revealTabContent();
           this.posFeedError = '';
           this.setPosFeedTitle(slug);
           try {
@@ -997,9 +1029,8 @@
           this.posFeedError = (err && err.message) || 'Gagal memuat konten tab via feed.';
           // Fase 4: blok tab legacy sudah dihapus dari shell → tidak ada
           // fallback tab lama lagi; sajikan kartu error yang bisa di-retry.
-          this.posFeedActive = false;
           this.injectTabContent(posFeedErrorCard(this.posFeedError, 'resolveFeedMode'));
-          this.posFeedActive = true;
+          this.revealTabContent();
         } finally {
           // Setiap show dipasangkan tepat satu hide (job yang disusul pun).
           hidePosLoader();
